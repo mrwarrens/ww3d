@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.claude/
+tests/__screenshots__/
