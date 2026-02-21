@@ -2,12 +2,16 @@ import { useState, useCallback } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Board from './Board'
-import BoardCreator from './BoardCreator'
+import BoardCreator, { BoardData } from './BoardCreator'
+
+interface StoredBoard extends BoardData {
+  id: string
+}
 
 export default function Scene() {
-  const [boards, setBoards] = useState([])
+  const [boards, setBoards] = useState<StoredBoard[]>([])
 
-  const addBoard = useCallback((board) => {
+  const addBoard = useCallback((board: BoardData) => {
     setBoards((prev) => [...prev, { ...board, id: crypto.randomUUID() }])
   }, [])
 

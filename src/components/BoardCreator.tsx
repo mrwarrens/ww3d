@@ -1,16 +1,40 @@
 import { useRef, useState, useCallback } from 'react'
-import { useThree } from '@react-three/fiber'
+import { useThree, ThreeEvent } from '@react-three/fiber'
 import { BOARD_THICKNESS } from '../constants'
 
-export default function BoardCreator({ addBoard }) {
+export interface BoardData {
+  x: number
+  z: number
+  width: number
+  depth: number
+  color: string
+}
+
+interface BoardCreatorProps {
+  addBoard: (board: BoardData) => void
+}
+
+interface DragPoint {
+  x: number
+  z: number
+}
+
+interface Preview {
+  x: number
+  z: number
+  width: number
+  depth: number
+}
+
+export default function BoardCreator({ addBoard }: BoardCreatorProps) {
   const [dragging, setDragging] = useState(false)
-  const [preview, setPreview] = useState(null)
-  const dragStart = useRef(null)
-  const controls = useThree((s) => s.controls)
+  const [preview, setPreview] = useState<Preview | null>(null)
+  const dragStart = useRef<DragPoint | null>(null)
+  const controls = useThree((s) => s.controls) as { enabled: boolean } | null
 
-  const snap = (v) => Math.round(v)
+  const snap = (v: number) => Math.round(v)
 
-  const onPointerDown = useCallback((e) => {
+  const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0) return
     e.stopPropagation()
     const point = e.point
@@ -19,10 +43,10 @@ export default function BoardCreator({ addBoard }) {
     setDragging(true)
     setPreview({ x: start.x, z: start.z, width: 0.01, depth: 0.01 })
     if (controls) controls.enabled = false
-    e.target.setPointerCapture(e.pointerId)
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
   }, [controls])
 
-  const onPointerMove = useCallback((e) => {
+  const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (!dragging || !dragStart.current) return
     const point = e.point
     const hitX = snap(point.x)
@@ -37,7 +61,7 @@ export default function BoardCreator({ addBoard }) {
     })
   }, [dragging])
 
-  const onPointerUp = useCallback((e) => {
+  const onPointerUp = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0 || !dragging) return
     if (controls) controls.enabled = true
     setDragging(false)

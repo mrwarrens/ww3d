@@ -7,7 +7,11 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 ## Phase 1: React/R3F Setup & Core Data Model
 
 - [x] **Set up React + R3F** — Install React, react-three-fiber, and drei. Convert the app entry point to render a React root. Rewrite the existing Three.js scene (grid, lights, camera, OrbitControls) as R3F components. Remove the vanilla Three.js code in `src/main.js`.
-- [ ] **Define the Part data model** — Create a Part representation with properties: id, name, length, width, thickness, position, rotation, color (hex). All dimensions stored in inches internally.
+- [x] **Add TypeScript** — Install TypeScript and type declarations. Rename all `.js`/`.jsx` files to `.ts`/`.tsx`. Add `tsconfig.json`. Update CLAUDE.md ground rules and project structure.
+- [ ] **Establish file organization** — Set up `src/models/`, `src/utils/`, `src/hooks/`, `src/stores/` directories. Move existing files into the new structure. Update imports and CLAUDE.md.
+- [ ] **Set up Zustand** — Install Zustand. Create a project store that holds the boards/parts list and actions (addBoard, removeBoard). Migrate Scene.jsx state into the store.
+- [ ] **Split test configuration** — Configure Vitest to run pure unit tests (`.test.ts`) without browser mode alongside browser tests (`.browser.test.tsx`). Move/add tests accordingly.
+- [ ] **Define the Part data model** — Create a Part interface and factory function with properties: id, name, length, width, thickness, position, rotation, color (hex). All dimensions stored in inches internally.
 - [ ] **Inch display utilities** — Create a `src/units.js` module that converts decimal inches to fractional display ("3-1/2"") and parses user input ("3 1/2", "3.5", "3-1/2") back to decimal. Configurable precision (1/16", 1/32").
 - [ ] **Define the Project data model** — Project state holds a list of parts and project metadata (name, status, created/modified dates). Serializes to/from JSON.
 - [ ] **Board component** — Create a `<Board>` R3F component that renders a Part as a box mesh with correct dimensions, position, and edge lines. Color set by the Part's hex value.

@@ -4,7 +4,15 @@ import { BOARD_THICKNESS } from '../constants'
 
 const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })
 
-export default function Board({ x, z, width, depth, color }) {
+interface BoardProps {
+  x: number
+  z: number
+  width: number
+  depth: number
+  color: string
+}
+
+export default function Board({ x, z, width, depth, color }: BoardProps) {
   const edgesGeo = useMemo(() => {
     const box = new THREE.BoxGeometry(width, BOARD_THICKNESS, depth)
     const edges = new THREE.EdgesGeometry(box)
