@@ -6,7 +6,7 @@ Questions to resolve before and during implementation.
 
 ## 3D Engine & Rendering
 
-- Three.js or Babylon.js for the 3D engine? Three.js has a larger ecosystem, Babylon.js has stronger built-in features.
+- ~~Three.js or Babylon.js for the 3D engine?~~ **Decided: Three.js.** Larger ecosystem, already in use.
 - Which CSG (Constructive Solid Geometry) library for boolean operations? Options include three-bvh-csg, manifold (WASM), or custom implementation.
 - How to handle rendering performance for complex assemblies with many parts? Level-of-detail, instanced rendering, or occlusion culling?
 - What format to use for wood grain textures? Procedural shaders vs pre-built texture images?
@@ -42,7 +42,7 @@ Questions to resolve before and during implementation.
 
 ## UI Framework & Responsive Design
 
-- Which frontend framework? React, Svelte, Vue, or vanilla?
+- ~~Which frontend framework?~~ **Decided: React with react-three-fiber (R3F).** Declarative scene graph fits the data-driven part model. React manages both 3D viewport and UI panels. drei for common 3D helpers (OrbitControls, selection, etc.).
 - How to structure the three UI modes — separate routes/apps, or one adaptive layout?
 - How to handle the desktop toolbar/panel layout vs touch-friendly iPad layout?
 - Which UI component library, if any? Or custom components for the specialized woodworking UI?
