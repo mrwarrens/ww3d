@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ww3d is a web-based 3D woodworking design application. It lets users design furniture and woodworking projects in 3D, then reference those designs while building (iPad "shop mode") or buying lumber (phone "lumber yard mode").
 
-The project is in early stages — currently a proof-of-concept with a Three.js scene (cube placement on a grid with orbit controls). The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
+The project has completed Phase 1: a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
 
 **At the start of each session, read `roadmap.md` to find the current progress and pick up from the first unchecked item.**
 
@@ -31,9 +31,12 @@ npm test -- --run  # Run tests once and exit
 
 ## Testing
 
-Tests use **Vitest 4** with **browser mode** (Playwright, headless Chromium). Browser mode is required because the app depends on WebGL APIs only available in a real browser.
+Tests use **Vitest 4** with two modes configured in `vite.config.ts`:
 
-Test files live in `tests/` and follow the naming convention `*.browser.test.tsx`. Tests use `vitest-browser-react` to render R3F components inside a `<Canvas>`.
+- **Unit** (`*.test.ts`) — runs in Node.js, no browser; for stores, utilities, and pure logic
+- **Browser** (`*.browser.test.ts[x]`) — runs in Playwright headless Chromium; for R3F components and anything needing WebGL
+
+Browser-mode tests use `vitest-browser-react` to render R3F components inside a `<Canvas>`.
 
 ## Project Structure
 
@@ -41,9 +44,9 @@ Test files live in `tests/` and follow the naming convention `*.browser.test.tsx
 index.html              # Entry HTML — loads src/main.tsx
 src/
   main.tsx              # React entry point (createRoot)
-  App.tsx               # Info overlay + Canvas with camera config
+  App.tsx               # Info overlay, Save/Load buttons, selectedId state, PartPanel, Canvas
   components/
-    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads boards from store
+    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads parts from store; Delete key handler
     Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
     PartPanel.tsx       # DOM overlay showing selected part name and dimensions
@@ -55,7 +58,7 @@ src/
     units.ts            # Fractional inch display and parsing utilities
   hooks/                # Custom React hooks
   stores/
-    projectStore.ts     # Zustand store: parts list, addPart, removePart
+    projectStore.ts     # Zustand store: project object, addPart, removePart, setProjectName, loadProject
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
   partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
@@ -70,7 +73,7 @@ vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + brow
 
 ## Architecture
 
-**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` provides the info overlay and `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls). Board creation via drag interaction is handled by `BoardCreator.tsx`, and individual boards are rendered by `Board.tsx`.
+**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons, Cmd+S keyboard shortcut, and renders `<PartPanel>` alongside the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles Delete/Backspace to remove the selected part. Board creation via drag interaction is handled by `BoardCreator.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay showing the selected part's name and fractional-inch dimensions.
 
 **Target architecture (from requirements.md):**
 - Three.js-based 3D engine with CSG/boolean operations for joinery
@@ -137,7 +140,7 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 
 ### Testing
 - Tests ship with each task — don't defer tests to a separate "Tests for Phase N" item
-- Two test modes configured via `vitest.workspace.ts`:
+- Two test modes configured via `vite.config.ts` (using Vitest `projects`):
   - **Unit** (`*.test.ts`) — runs in Node.js, no browser; use for stores, utilities, pure logic
   - **Browser** (`*.browser.test.ts[x]`) — runs in Playwright/Chromium; use for R3F components and anything needing WebGL
 - R3F/3D tests: `*.browser.test.tsx`, use `vitest-browser-react` with R3F `<Canvas>`
