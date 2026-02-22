@@ -12,7 +12,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **Set up Zustand** — Install Zustand. Create a project store that holds the boards/parts list and actions (addBoard, removeBoard). Migrate Scene.jsx state into the store.
 - [x] **Split test configuration** — Configure Vitest to run pure unit tests (`.test.ts`) without browser mode alongside browser tests (`.browser.test.tsx`). Move/add tests accordingly.
 - [x] **Define the Part data model** — Create a Part interface and factory function with properties: id, name, length, width, thickness, position, rotation, color (hex). All dimensions stored in inches internally.
-- [ ] **Inch display utilities** — Create a `src/units.js` module that converts decimal inches to fractional display ("3-1/2"") and parses user input ("3 1/2", "3.5", "3-1/2") back to decimal. Configurable precision (1/16", 1/32").
+- [x] **Inch display utilities** — Create a `src/units.js` module that converts decimal inches to fractional display ("3-1/2"") and parses user input ("3 1/2", "3.5", "3-1/2") back to decimal. Configurable precision (1/16", 1/32").
 - [ ] **Define the Project data model** — Project state holds a list of parts and project metadata (name, status, created/modified dates). Serializes to/from JSON.
 - [ ] **Board component** — Create a `<Board>` R3F component that renders a Part as a box mesh with correct dimensions, position, and edge lines. Color set by the Part's hex value.
 - [ ] **Create Part via drag** — Drag-to-create interaction on the grid plane that adds a new Part to project state (default name like "Board 1"). Width/depth from the drag, thickness defaults to 3/4".
@@ -21,6 +21,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] **Property display** — React panel component that shows the selected part's properties (name, dimensions in fractional inches). No editing yet, just display.
 - [ ] **Save project to local file** — Button/keyboard shortcut that downloads the project state as a `.json` file.
 - [ ] **Load project from local file** — Button that opens a file picker, reads a `.json` file, and loads it into project state (R3F re-renders the scene automatically).
+- [ ] **Audit** Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review.
 
 ## Phase 2: Assembly & Constraints
 

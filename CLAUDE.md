@@ -50,6 +50,7 @@ src/
     Part.ts             # Part interface and createPart factory
   utils/
     constants.ts        # Shared constants (BOARD_THICKNESS)
+    units.ts            # Fractional inch display and parsing utilities
   hooks/                # Custom React hooks
   stores/
     projectStore.ts     # Zustand store: parts list, addPart, removePart
@@ -57,6 +58,7 @@ tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
+  units.test.ts           # Unit tests for inch display and parsing utilities
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
