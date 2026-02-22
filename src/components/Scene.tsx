@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Board from './Board'
@@ -6,6 +7,7 @@ import { useProjectStore } from '../stores/projectStore'
 
 export default function Scene() {
   const parts = useProjectStore((s) => s.project.parts)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   return (
     <>
@@ -27,10 +29,15 @@ export default function Scene() {
         }}
       />
 
-      <BoardCreator />
+      <BoardCreator onClearSelection={() => setSelectedId(null)} />
 
       {parts.map((p) => (
-        <Board key={p.id} {...p} />
+        <Board
+          key={p.id}
+          {...p}
+          isSelected={p.id === selectedId}
+          onSelect={() => setSelectedId(p.id)}
+        />
       ))}
     </>
   )

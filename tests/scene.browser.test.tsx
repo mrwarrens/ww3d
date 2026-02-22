@@ -84,13 +84,16 @@ describe('App scene setup', () => {
   })
 })
 
+const boardProps = {
+  id: '1', name: 'Test', length: 4, width: 3, thickness: BOARD_THICKNESS,
+  position: { x: 1, y: BOARD_THICKNESS / 2, z: 2 },
+  rotation: { x: 0, y: 0, z: 0 }, color: '#ff0000',
+  isSelected: false, onSelect: () => {},
+}
+
 describe('Board component', () => {
   it('creates a board mesh with correct dimensions', async () => {
-    const state = await renderInCanvas(
-      <Board id="1" name="Test" length={4} width={3} thickness={BOARD_THICKNESS}
-             position={{ x: 1, y: BOARD_THICKNESS / 2, z: 2 }}
-             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
-    )
+    const state = await renderInCanvas(<Board {...boardProps} />)
     const meshes = state.scene.children.filter(c => (c as THREE.Mesh).isMesh)
     expect(meshes.length).toBeGreaterThanOrEqual(1)
 
@@ -103,9 +106,8 @@ describe('Board component', () => {
 
   it('positions the board at the given position', async () => {
     const state = await renderInCanvas(
-      <Board id="1" name="Test" length={5} width={3} thickness={BOARD_THICKNESS}
-             position={{ x: 2.5, y: BOARD_THICKNESS / 2, z: 1.5 }}
-             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
+      <Board {...boardProps} length={5} width={3}
+             position={{ x: 2.5, y: BOARD_THICKNESS / 2, z: 1.5 }} />
     )
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
     expect(board.position.x).toBe(2.5)
@@ -114,13 +116,21 @@ describe('Board component', () => {
   })
 
   it('board has a wireframe edge child', async () => {
-    const state = await renderInCanvas(
-      <Board id="1" name="Test" length={3} width={2} thickness={BOARD_THICKNESS}
-             position={{ x: 0, y: BOARD_THICKNESS / 2, z: 0 }}
-             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
-    )
+    const state = await renderInCanvas(<Board {...boardProps} length={3} width={2} />)
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
     const wireframes = board.children.filter(c => (c as THREE.LineSegments).isLineSegments)
     expect(wireframes).toHaveLength(1)
+  })
+
+  it('unselected board has no extra children beyond the wireframe', async () => {
+    const state = await renderInCanvas(<Board {...boardProps} isSelected={false} />)
+    const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    expect(board.children).toHaveLength(1) // only the LineSegments wireframe
+  })
+
+  it('selected board has additional outline child', async () => {
+    const state = await renderInCanvas(<Board {...boardProps} isSelected={true} />)
+    const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    expect(board.children.length).toBeGreaterThan(1) // wireframe + Outlines group
   })
 })

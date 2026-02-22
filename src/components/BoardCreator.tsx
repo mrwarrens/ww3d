@@ -16,7 +16,11 @@ interface Preview {
   width: number
 }
 
-export default function BoardCreator() {
+interface BoardCreatorProps {
+  onClearSelection: () => void
+}
+
+export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
   const addPart = useProjectStore((s) => s.addPart)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
@@ -29,6 +33,7 @@ export default function BoardCreator() {
   const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0) return
     e.stopPropagation()
+    onClearSelection()
     const point = e.point
     const start = { x: snap(point.x), z: snap(point.z) }
     dragStart.current = start

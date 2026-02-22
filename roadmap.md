@@ -16,7 +16,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **Define the Project data model** — Project state holds a list of parts and project metadata (name, status, created/modified dates). Serializes to/from JSON.
 - [x] **Board component** — Create a `<Board>` R3F component that renders a Part as a box mesh with correct dimensions, position, and edge lines. Color set by the Part's hex value.
 - [x] **Create Part via drag** — Drag-to-create interaction on the grid plane that adds a new Part to project state (default name like "Board 1"). Width/depth from the drag, thickness defaults to 3/4".
-- [ ] **Select a Part** — Click a board to select it. Visual indicator (highlight or outline) via R3F/drei. Store selected part ID in React state.
+- [x] **Select a Part** — Click a board to select it. Visual indicator (highlight or outline) via R3F/drei. Store selected part ID in React state.
 - [ ] **Delete a Part** — Press Delete/Backspace with a part selected to remove it from project state (React handles scene cleanup).
 - [ ] **Property display** — React panel component that shows the selected part's properties (name, dimensions in fractional inches). No editing yet, just display.
 - [ ] **Save project to local file** — Button/keyboard shortcut that downloads the project state as a `.json` file.
