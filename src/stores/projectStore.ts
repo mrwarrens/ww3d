@@ -1,24 +1,20 @@
 import { create } from 'zustand'
-import type { BoardData } from '../components/Board'
-
-export interface StoredBoard extends BoardData {
-  id: string
-}
+import { type Part, type PartInit, createPart } from '../models/Part'
 
 interface ProjectStore {
-  boards: StoredBoard[]
-  addBoard: (board: BoardData) => void
-  removeBoard: (id: string) => void
+  parts: Part[]
+  addPart: (init: PartInit) => void
+  removePart: (id: string) => void
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
-  boards: [],
-  addBoard: (board) =>
+  parts: [],
+  addPart: (init) =>
     set((state) => ({
-      boards: [...state.boards, { ...board, id: crypto.randomUUID() }],
+      parts: [...state.parts, createPart(init)],
     })),
-  removeBoard: (id) =>
+  removePart: (id) =>
     set((state) => ({
-      boards: state.boards.filter((b) => b.id !== id),
+      parts: state.parts.filter((p) => p.id !== id),
     })),
 }))

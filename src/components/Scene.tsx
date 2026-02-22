@@ -5,7 +5,7 @@ import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
 
 export default function Scene() {
-  const boards = useProjectStore((s) => s.boards)
+  const parts = useProjectStore((s) => s.parts)
 
   return (
     <>
@@ -29,8 +29,8 @@ export default function Scene() {
 
       <BoardCreator />
 
-      {boards.map((b) => (
-        <Board key={b.id} x={b.x} z={b.z} width={b.width} depth={b.depth} color={b.color} />
+      {parts.map((p) => (
+        <Board key={p.id} {...p} />
       ))}
     </>
   )

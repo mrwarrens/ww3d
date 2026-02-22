@@ -87,7 +87,9 @@ describe('App scene setup', () => {
 describe('Board component', () => {
   it('creates a board mesh with correct dimensions', async () => {
     const state = await renderInCanvas(
-      <Board x={1} z={2} width={4} depth={3} color="#ff0000" />
+      <Board id="1" name="Test" length={4} width={3} thickness={BOARD_THICKNESS}
+             position={{ x: 1, y: BOARD_THICKNESS / 2, z: 2 }}
+             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
     )
     const meshes = state.scene.children.filter(c => (c as THREE.Mesh).isMesh)
     expect(meshes.length).toBeGreaterThanOrEqual(1)
@@ -99,9 +101,11 @@ describe('Board component', () => {
     expect(params.depth).toBe(3)
   })
 
-  it('positions the board centered at (x, BOARD_THICKNESS/2, z)', async () => {
+  it('positions the board at the given position', async () => {
     const state = await renderInCanvas(
-      <Board x={2.5} z={1.5} width={5} depth={3} color="#ff0000" />
+      <Board id="1" name="Test" length={5} width={3} thickness={BOARD_THICKNESS}
+             position={{ x: 2.5, y: BOARD_THICKNESS / 2, z: 1.5 }}
+             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
     )
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
     expect(board.position.x).toBe(2.5)
@@ -111,7 +115,9 @@ describe('Board component', () => {
 
   it('board has a wireframe edge child', async () => {
     const state = await renderInCanvas(
-      <Board x={0} z={0} width={3} depth={2} color="#ff0000" />
+      <Board id="1" name="Test" length={3} width={2} thickness={BOARD_THICKNESS}
+             position={{ x: 0, y: BOARD_THICKNESS / 2, z: 0 }}
+             rotation={{ x: 0, y: 0, z: 0 }} color="#ff0000" />
     )
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
     const wireframes = board.children.filter(c => (c as THREE.LineSegments).isLineSegments)

@@ -46,14 +46,16 @@ src/
     Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads boards from store
     Board.tsx           # Single board mesh with edge wireframe
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
-  models/               # Domain model types and factory functions (Part, Project, etc.)
+  models/
+    Part.ts             # Part interface and createPart factory
   utils/
     constants.ts        # Shared constants (BOARD_THICKNESS)
   hooks/                # Custom React hooks
   stores/
-    projectStore.ts     # Zustand store: boards list, addBoard, removeBoard
+    projectStore.ts     # Zustand store: parts list, addPart, removePart
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
+  part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)

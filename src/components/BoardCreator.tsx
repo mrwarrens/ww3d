@@ -12,12 +12,12 @@ interface DragPoint {
 interface Preview {
   x: number
   z: number
+  length: number
   width: number
-  depth: number
 }
 
 export default function BoardCreator() {
-  const addBoard = useProjectStore((s) => s.addBoard)
+  const addPart = useProjectStore((s) => s.addPart)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
   const dragStart = useRef<DragPoint | null>(null)
@@ -33,7 +33,7 @@ export default function BoardCreator() {
     const start = { x: snap(point.x), z: snap(point.z) }
     dragStart.current = start
     setDragging(true)
-    setPreview({ x: start.x, z: start.z, width: 0.01, depth: 0.01 })
+    setPreview({ x: start.x, z: start.z, length: 0.01, width: 0.01 })
     if (controls) controls.enabled = false
     gl.domElement.setPointerCapture(e.pointerId)
   }, [controls, gl])
@@ -43,13 +43,13 @@ export default function BoardCreator() {
     const point = e.point
     const hitX = snap(point.x)
     const hitZ = snap(point.z)
-    const w = hitX - dragStart.current.x
-    const d = hitZ - dragStart.current.z
+    const l = hitX - dragStart.current.x
+    const w = hitZ - dragStart.current.z
     setPreview({
-      x: dragStart.current.x + w / 2,
-      z: dragStart.current.z + d / 2,
+      x: dragStart.current.x + l / 2,
+      z: dragStart.current.z + w / 2,
+      length: l || 0.01,
       width: w || 0.01,
-      depth: d || 0.01,
     })
   }, [dragging])
 
@@ -62,20 +62,25 @@ export default function BoardCreator() {
       const point = e.point
       const hitX = snap(point.x)
       const hitZ = snap(point.z)
-      const width = Math.abs(hitX - dragStart.current.x)
-      const depth = Math.abs(hitZ - dragStart.current.z)
-      if (width > 0.1 || depth > 0.1) {
+      const length = Math.abs(hitX - dragStart.current.x)
+      const width = Math.abs(hitZ - dragStart.current.z)
+      if (length > 0.1 || width > 0.1) {
         const cx = (dragStart.current.x + hitX) / 2
         const cz = (dragStart.current.z + hitZ) / 2
         const hue = Math.random()
         const color = `hsl(${hue * 360}, 70%, 60%)`
-        addBoard({ x: cx, z: cz, width, depth, color })
+        addPart({
+          length,
+          width,
+          position: { x: cx, y: BOARD_THICKNESS / 2, z: cz },
+          color,
+        })
       }
     }
 
     dragStart.current = null
     setPreview(null)
-  }, [dragging, controls, addBoard])
+  }, [dragging, controls, addPart])
 
   return (
     <>
@@ -91,7 +96,7 @@ export default function BoardCreator() {
       </mesh>
       {preview && (
         <mesh position={[preview.x, BOARD_THICKNESS / 2, preview.z]}
-              scale={[preview.width, 1, preview.depth]}>
+              scale={[preview.length, 1, preview.width]}>
           <boxGeometry args={[1, BOARD_THICKNESS, 1]} />
           <meshStandardMaterial color={0x4488ff} transparent opacity={0.3} />
         </mesh>

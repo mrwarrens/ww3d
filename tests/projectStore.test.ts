@@ -1,60 +1,66 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useProjectStore } from '../src/stores/projectStore'
 
+const baseInit = {
+  length: 4,
+  width: 3,
+  position: { x: 1, y: 0.375, z: 2 },
+  color: '#ff0000',
+}
+
 beforeEach(() => {
-  useProjectStore.setState({ boards: [] })
+  useProjectStore.setState({ parts: [] })
 })
 
 describe('projectStore', () => {
-  it('starts with an empty boards array', () => {
-    const { boards } = useProjectStore.getState()
-    expect(boards).toEqual([])
+  it('starts with an empty parts array', () => {
+    const { parts } = useProjectStore.getState()
+    expect(parts).toEqual([])
   })
 
-  it('addBoard adds a board with all fields and a generated id', () => {
-    const { addBoard } = useProjectStore.getState()
-    addBoard({ x: 1, z: 2, width: 4, depth: 3, color: '#ff0000' })
+  it('addPart adds a part with all fields and a generated id', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart(baseInit)
 
-    const { boards } = useProjectStore.getState()
-    expect(boards).toHaveLength(1)
-    expect(boards[0].x).toBe(1)
-    expect(boards[0].z).toBe(2)
-    expect(boards[0].width).toBe(4)
-    expect(boards[0].depth).toBe(3)
-    expect(boards[0].color).toBe('#ff0000')
-    expect(typeof boards[0].id).toBe('string')
-    expect(boards[0].id.length).toBeGreaterThan(0)
+    const { parts } = useProjectStore.getState()
+    expect(parts).toHaveLength(1)
+    expect(parts[0].length).toBe(4)
+    expect(parts[0].width).toBe(3)
+    expect(parts[0].position).toEqual({ x: 1, y: 0.375, z: 2 })
+    expect(parts[0].color).toBe('#ff0000')
+    expect(typeof parts[0].id).toBe('string')
+    expect(parts[0].id.length).toBeGreaterThan(0)
   })
 
-  it('addBoard assigns unique ids to each board', () => {
-    const { addBoard } = useProjectStore.getState()
-    addBoard({ x: 0, z: 0, width: 1, depth: 1, color: '#aaa' })
-    addBoard({ x: 1, z: 1, width: 2, depth: 2, color: '#bbb' })
+  it('addPart assigns unique ids to each part', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 1, width: 1, position: { x: 0, y: 0.375, z: 0 }, color: '#aaa' })
+    addPart({ length: 2, width: 2, position: { x: 1, y: 0.375, z: 1 }, color: '#bbb' })
 
-    const { boards } = useProjectStore.getState()
-    expect(boards).toHaveLength(2)
-    expect(boards[0].id).not.toBe(boards[1].id)
+    const { parts } = useProjectStore.getState()
+    expect(parts).toHaveLength(2)
+    expect(parts[0].id).not.toBe(parts[1].id)
   })
 
-  it('removeBoard removes the board with the given id', () => {
-    const { addBoard } = useProjectStore.getState()
-    addBoard({ x: 0, z: 0, width: 1, depth: 1, color: '#aaa' })
-    addBoard({ x: 1, z: 1, width: 2, depth: 2, color: '#bbb' })
+  it('removePart removes the part with the given id', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 1, width: 1, position: { x: 0, y: 0.375, z: 0 }, color: '#aaa' })
+    addPart({ length: 2, width: 2, position: { x: 1, y: 0.375, z: 1 }, color: '#bbb' })
 
-    const id = useProjectStore.getState().boards[0].id
-    useProjectStore.getState().removeBoard(id)
+    const id = useProjectStore.getState().parts[0].id
+    useProjectStore.getState().removePart(id)
 
-    const { boards } = useProjectStore.getState()
-    expect(boards).toHaveLength(1)
-    expect(boards[0].color).toBe('#bbb')
+    const { parts } = useProjectStore.getState()
+    expect(parts).toHaveLength(1)
+    expect(parts[0].color).toBe('#bbb')
   })
 
-  it('removeBoard with unknown id leaves boards unchanged', () => {
-    const { addBoard } = useProjectStore.getState()
-    addBoard({ x: 0, z: 0, width: 1, depth: 1, color: '#aaa' })
-    useProjectStore.getState().removeBoard('nonexistent-id')
+  it('removePart with unknown id leaves parts unchanged', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 1, width: 1, position: { x: 0, y: 0.375, z: 0 }, color: '#aaa' })
+    useProjectStore.getState().removePart('nonexistent-id')
 
-    const { boards } = useProjectStore.getState()
-    expect(boards).toHaveLength(1)
+    const { parts } = useProjectStore.getState()
+    expect(parts).toHaveLength(1)
   })
 })
