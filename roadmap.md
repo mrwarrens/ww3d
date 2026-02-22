@@ -8,7 +8,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 
 - [x] **Set up React + R3F** — Install React, react-three-fiber, and drei. Convert the app entry point to render a React root. Rewrite the existing Three.js scene (grid, lights, camera, OrbitControls) as R3F components. Remove the vanilla Three.js code in `src/main.js`.
 - [x] **Add TypeScript** — Install TypeScript and type declarations. Rename all `.js`/`.jsx` files to `.ts`/`.tsx`. Add `tsconfig.json`. Update CLAUDE.md ground rules and project structure.
-- [ ] **Establish file organization** — Set up `src/models/`, `src/utils/`, `src/hooks/`, `src/stores/` directories. Move existing files into the new structure. Update imports and CLAUDE.md.
+- [x] **Establish file organization** — Set up `src/models/`, `src/utils/`, `src/hooks/`, `src/stores/` directories. Move existing files into the new structure. Update imports and CLAUDE.md.
 - [ ] **Set up Zustand** — Install Zustand. Create a project store that holds the boards/parts list and actions (addBoard, removeBoard). Migrate Scene.jsx state into the store.
 - [ ] **Split test configuration** — Configure Vitest to run pure unit tests (`.test.ts`) without browser mode alongside browser tests (`.browser.test.tsx`). Move/add tests accordingly.
 - [ ] **Define the Part data model** — Create a Part interface and factory function with properties: id, name, length, width, thickness, position, rotation, color (hex). All dimensions stored in inches internally.
@@ -21,7 +21,6 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] **Property display** — React panel component that shows the selected part's properties (name, dimensions in fractional inches). No editing yet, just display.
 - [ ] **Save project to local file** — Button/keyboard shortcut that downloads the project state as a `.json` file.
 - [ ] **Load project from local file** — Button that opens a file picker, reads a `.json` file, and loads it into project state (R3F re-renders the scene automatically).
-- [ ] **Tests for Phase 1** — Unit tests for inch conversion utilities. Browser tests for Part creation, selection, deletion, and save/load round-trip.
 
 ## Phase 2: Assembly & Constraints
 

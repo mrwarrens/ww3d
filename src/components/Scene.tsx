@@ -1,19 +1,11 @@
-import { useState, useCallback } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import Board, { BoardData } from './Board'
+import Board from './Board'
 import BoardCreator from './BoardCreator'
-
-interface StoredBoard extends BoardData {
-  id: string
-}
+import { useProjectStore } from '../stores/projectStore'
 
 export default function Scene() {
-  const [boards, setBoards] = useState<StoredBoard[]>([])
-
-  const addBoard = useCallback((board: BoardData) => {
-    setBoards((prev) => [...prev, { ...board, id: crypto.randomUUID() }])
-  }, [])
+  const boards = useProjectStore((s) => s.boards)
 
   return (
     <>
@@ -35,7 +27,7 @@ export default function Scene() {
         }}
       />
 
-      <BoardCreator addBoard={addBoard} />
+      <BoardCreator />
 
       {boards.map((b) => (
         <Board key={b.id} x={b.x} z={b.z} width={b.width} depth={b.depth} color={b.color} />

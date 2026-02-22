@@ -43,16 +43,18 @@ src/
   main.tsx              # React entry point (createRoot)
   App.tsx               # Info overlay + Canvas with camera config
   components/
-    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls, boards state
+    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads boards from store
     Board.tsx           # Single board mesh with edge wireframe
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
   models/               # Domain model types and factory functions (Part, Project, etc.)
   utils/
     constants.ts        # Shared constants (BOARD_THICKNESS)
   hooks/                # Custom React hooks
-  stores/               # Zustand stores
+  stores/
+    projectStore.ts     # Zustand store: boards list, addBoard, removeBoard
 tests/
-  scene.browser.test.tsx  # Browser-mode tests for R3F scene
+  scene.browser.test.tsx       # Browser-mode tests for R3F scene
+  projectStore.browser.test.ts # Store action tests
 tsconfig.json           # TypeScript configuration (strict mode)
 vite.config.ts          # Vite + React plugin + Vitest browser mode configuration
 ```
@@ -125,9 +127,11 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 - Zustand for global state (once added per roadmap)
 
 ### Testing
-- Tests in `tests/` as `*.browser.test.tsx`
-- Use `vitest-browser-react` with R3F `<Canvas>` for 3D tests
-- Test behavior and structure, not implementation details
+- Tests ship with each task — don't defer tests to a separate "Tests for Phase N" item
+- Tests live in `tests/` using browser mode (Playwright, headless Chromium)
+- R3F/3D tests: `*.browser.test.tsx`, use `vitest-browser-react` with R3F `<Canvas>`
+- Pure logic tests (stores, utilities): `*.browser.test.ts` — no canvas needed, but still run in browser mode until unit test config is split out
+- Test behavior and outcomes, not implementation details
 
 ### Documentation
 - Update `CLAUDE.md` project structure section when files are added/removed

@@ -2,11 +2,7 @@ import { useRef, useState, useCallback } from 'react'
 import { useThree, ThreeEvent } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { BOARD_THICKNESS } from '../utils/constants'
-import type { BoardData } from './Board'
-
-interface BoardCreatorProps {
-  addBoard: (board: BoardData) => void
-}
+import { useProjectStore } from '../stores/projectStore'
 
 interface DragPoint {
   x: number
@@ -20,7 +16,8 @@ interface Preview {
   depth: number
 }
 
-export default function BoardCreator({ addBoard }: BoardCreatorProps) {
+export default function BoardCreator() {
+  const addBoard = useProjectStore((s) => s.addBoard)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
   const dragStart = useRef<DragPoint | null>(null)
