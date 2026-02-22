@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import Scene from './components/Scene'
 import PartPanel from './components/PartPanel'
 import { useProjectStore } from './stores/projectStore'
-import { serializeProject } from './models/Project'
+import { serializeProject, deserializeProject } from './models/Project'
 
 export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const project = useProjectStore((s) => s.project)
+  const loadProject = useProjectStore((s) => s.loadProject)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const saveProject = useCallback(() => {
     const json = serializeProject(project)
@@ -20,6 +22,20 @@ export default function App() {
     a.click()
     URL.revokeObjectURL(url)
   }, [project])
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result
+      if (typeof text !== 'string') return
+      loadProject(deserializeProject(text))
+      setSelectedId(null)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }, [loadProject])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -38,6 +54,14 @@ export default function App() {
         Left-click drag: draw board &middot; Right-click drag: orbit &middot; Scroll: zoom
       </div>
       <button id="save-btn" onClick={saveProject}>Save</button>
+      <button id="load-btn" onClick={() => fileInputRef.current?.click()}>Load</button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
       <PartPanel part={selectedPart} />
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 100, position: [3, 2, 3] }}

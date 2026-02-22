@@ -7,6 +7,7 @@ interface ProjectStore {
   addPart: (init: PartInit) => void
   removePart: (id: string) => void
   setProjectName: (name: string) => void
+  loadProject: (project: Project) => void
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -35,4 +36,5 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     set((state) => ({
       project: { ...state.project, name },
     })),
+  loadProject: (project) => set(() => ({ project })),
 }))

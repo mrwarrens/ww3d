@@ -93,4 +93,25 @@ describe('projectStore', () => {
     useProjectStore.getState().addPart({ ...baseInit, name: 'Shelf' })
     expect(useProjectStore.getState().project.parts[0].name).toBe('Shelf')
   })
+
+  it('loadProject replaces the current project', () => {
+    useProjectStore.getState().addPart(baseInit)
+    const { loadProject } = useProjectStore.getState()
+    const newProject = { id: 'new-id', name: 'Loaded', parts: [] }
+    loadProject(newProject)
+    const { project } = useProjectStore.getState()
+    expect(project.id).toBe('new-id')
+    expect(project.name).toBe('Loaded')
+    expect(project.parts).toEqual([])
+  })
+
+  it('loadProject replaces parts with the loaded project parts', () => {
+    const { loadProject } = useProjectStore.getState()
+    const part = { id: 'p1', name: 'Shelf', length: 12, width: 6, thickness: 0.75,
+                   position: { x: 0, y: 0.375, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, color: '#fff' }
+    loadProject({ id: 'proj-1', name: 'Cabinet', parts: [part] })
+    const { project } = useProjectStore.getState()
+    expect(project.parts).toHaveLength(1)
+    expect(project.parts[0].name).toBe('Shelf')
+  })
 })

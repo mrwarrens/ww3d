@@ -12,6 +12,11 @@ describe('App', () => {
     await expect.element(screen.getByRole('button', { name: 'Save' })).toBeVisible()
   })
 
+  it('renders the load button', async () => {
+    const screen = await render(<App />)
+    await expect.element(screen.getByRole('button', { name: 'Load' })).toBeVisible()
+  })
+
   it('Cmd+S triggers a download', async () => {
     const anchors: HTMLAnchorElement[] = []
     const origCreate = document.createElement.bind(document)
