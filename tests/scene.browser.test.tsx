@@ -5,7 +5,7 @@ import type { RootState } from '@react-three/fiber'
 import * as THREE from 'three'
 import Scene from '../src/components/Scene'
 import Board from '../src/components/Board'
-import { BOARD_THICKNESS } from '../src/constants'
+import { BOARD_THICKNESS } from '../src/utils/constants'
 
 async function renderInCanvas(children: React.ReactNode, canvasProps = {}) {
   let resolveState: (state: RootState) => void

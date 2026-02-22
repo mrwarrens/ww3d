@@ -42,11 +42,15 @@ index.html              # Entry HTML — loads src/main.tsx
 src/
   main.tsx              # React entry point (createRoot)
   App.tsx               # Info overlay + Canvas with camera config
-  constants.ts          # Shared constants (BOARD_THICKNESS)
   components/
     Scene.tsx           # Scene setup: background, lights, grid, OrbitControls, boards state
     Board.tsx           # Single board mesh with edge wireframe
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
+  models/               # Domain model types and factory functions (Part, Project, etc.)
+  utils/
+    constants.ts        # Shared constants (BOARD_THICKNESS)
+  hooks/                # Custom React hooks
+  stores/               # Zustand stores
 tests/
   scene.browser.test.tsx  # Browser-mode tests for R3F scene
 tsconfig.json           # TypeScript configuration (strict mode)
@@ -115,7 +119,7 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 - TypeScript (`.ts`/`.tsx`) with strict mode
 - Functional components with hooks
 - Components live in `src/components/`
-- Shared constants in `src/constants.ts`
+- Shared constants in `src/utils/constants.ts`
 - Plain CSS for styling (no CSS-in-JS, no Tailwind)
 - Keep state as high as needed, no higher
 - Zustand for global state (once added per roadmap)

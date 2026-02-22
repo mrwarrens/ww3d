@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useThree, ThreeEvent } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { BOARD_THICKNESS } from '../constants'
+import { BOARD_THICKNESS } from '../utils/constants'
 import type { BoardData } from './Board'
 
 interface BoardCreatorProps {

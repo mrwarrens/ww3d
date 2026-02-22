@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { BOARD_THICKNESS } from '../constants'
+import { BOARD_THICKNESS } from '../utils/constants'
 
 const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })
 
