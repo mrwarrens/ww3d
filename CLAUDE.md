@@ -59,6 +59,7 @@ src/
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
   partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
+  app.browser.test.tsx        # Browser-mode tests for App-level features (save)
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
