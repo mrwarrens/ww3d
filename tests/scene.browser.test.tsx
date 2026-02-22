@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { Canvas } from '@react-three/fiber'
 import type { RootState } from '@react-three/fiber'
@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import Scene from '../src/components/Scene'
 import Board from '../src/components/Board'
 import { BOARD_THICKNESS } from '../src/utils/constants'
+import { useProjectStore } from '../src/stores/projectStore'
+import { createProject } from '../src/models/Project'
 
 async function renderInCanvas(children: React.ReactNode, canvasProps = {}) {
   let resolveState: (state: RootState) => void
@@ -132,5 +134,37 @@ describe('Board component', () => {
     const state = await renderInCanvas(<Board {...boardProps} isSelected={true} />)
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
     expect(board.children.length).toBeGreaterThan(1) // wireframe + Outlines group
+  })
+})
+
+describe('Delete a Part', () => {
+  beforeEach(() => {
+    useProjectStore.setState({ project: createProject() })
+  })
+
+  it('Delete key with no selection leaves store unchanged', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    await renderInCanvas(<Scene />)
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+
+    expect(useProjectStore.getState().project.parts).toHaveLength(1)
+  })
+
+  it('Backspace key with no selection leaves store unchanged', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    await renderInCanvas(<Scene />)
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
+
+    expect(useProjectStore.getState().project.parts).toHaveLength(1)
   })
 })

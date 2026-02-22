@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Board from './Board'
@@ -7,7 +7,19 @@ import { useProjectStore } from '../stores/projectStore'
 
 export default function Scene() {
   const parts = useProjectStore((s) => s.project.parts)
+  const removePart = useProjectStore((s) => s.removePart)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        removePart(selectedId)
+        setSelectedId(null)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedId, removePart])
 
   return (
     <>
