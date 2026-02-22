@@ -1,25 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Board from './Board'
 import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
 
-export default function Scene() {
+interface SceneProps {
+  selectedId: string | null
+  onSelectId: (id: string | null) => void
+}
+
+export default function Scene({ selectedId, onSelectId }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
   const removePart = useProjectStore((s) => s.removePart)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
         removePart(selectedId)
-        setSelectedId(null)
+        onSelectId(null)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, removePart])
+  }, [selectedId, removePart, onSelectId])
 
   return (
     <>
@@ -41,14 +45,14 @@ export default function Scene() {
         }}
       />
 
-      <BoardCreator onClearSelection={() => setSelectedId(null)} />
+      <BoardCreator onClearSelection={() => onSelectId(null)} />
 
       {parts.map((p) => (
         <Board
           key={p.id}
           {...p}
           isSelected={p.id === selectedId}
-          onSelect={() => setSelectedId(p.id)}
+          onSelect={() => onSelectId(p.id)}
         />
       ))}
     </>

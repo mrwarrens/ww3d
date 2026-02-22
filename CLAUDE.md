@@ -44,8 +44,9 @@ src/
   App.tsx               # Info overlay + Canvas with camera config
   components/
     Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads boards from store
-    Board.tsx           # Single board mesh with edge wireframe
+    Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
+    PartPanel.tsx       # DOM overlay showing selected part name and dimensions
   models/
     Part.ts             # Part interface and createPart factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
@@ -57,6 +58,7 @@ src/
     projectStore.ts     # Zustand store: parts list, addPart, removePart
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
+  partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store

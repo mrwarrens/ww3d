@@ -18,7 +18,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **Create Part via drag** — Drag-to-create interaction on the grid plane that adds a new Part to project state (default name like "Board 1"). Width/depth from the drag, thickness defaults to 3/4".
 - [x] **Select a Part** — Click a board to select it. Visual indicator (highlight or outline) via R3F/drei. Store selected part ID in React state.
 - [x] **Delete a Part** — Press Delete/Backspace with a part selected to remove it from project state (React handles scene cleanup).
-- [ ] **Property display** — React panel component that shows the selected part's properties (name, dimensions in fractional inches). No editing yet, just display.
+- [x] **Property display** — React panel component that shows the selected part's properties (name, dimensions in fractional inches). No editing yet, just display.
 - [ ] **Save project to local file** — Button/keyboard shortcut that downloads the project state as a `.json` file.
 - [ ] **Load project from local file** — Button that opens a file picker, reads a `.json` file, and loads it into project state (R3F re-renders the scene automatically).
 - [ ] **Audit** Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review.
