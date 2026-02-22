@@ -48,6 +48,7 @@ src/
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
   models/
     Part.ts             # Part interface and createPart factory
+    Project.ts          # Project interface, createProject, serializeProject, deserializeProject
   utils/
     constants.ts        # Shared constants (BOARD_THICKNESS)
     units.ts            # Fractional inch display and parsing utilities
@@ -56,6 +57,7 @@ src/
     projectStore.ts     # Zustand store: parts list, addPart, removePart
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
+  project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
   units.test.ts           # Unit tests for inch display and parsing utilities

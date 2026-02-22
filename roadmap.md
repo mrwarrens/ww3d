@@ -13,7 +13,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **Split test configuration** — Configure Vitest to run pure unit tests (`.test.ts`) without browser mode alongside browser tests (`.browser.test.tsx`). Move/add tests accordingly.
 - [x] **Define the Part data model** — Create a Part interface and factory function with properties: id, name, length, width, thickness, position, rotation, color (hex). All dimensions stored in inches internally.
 - [x] **Inch display utilities** — Create a `src/units.js` module that converts decimal inches to fractional display ("3-1/2"") and parses user input ("3 1/2", "3.5", "3-1/2") back to decimal. Configurable precision (1/16", 1/32").
-- [ ] **Define the Project data model** — Project state holds a list of parts and project metadata (name, status, created/modified dates). Serializes to/from JSON.
+- [x] **Define the Project data model** — Project state holds a list of parts and project metadata (name, status, created/modified dates). Serializes to/from JSON.
 - [ ] **Board component** — Create a `<Board>` R3F component that renders a Part as a box mesh with correct dimensions, position, and edge lines. Color set by the Part's hex value.
 - [ ] **Create Part via drag** — Drag-to-create interaction on the grid plane that adds a new Part to project state (default name like "Board 1"). Width/depth from the drag, thickness defaults to 3/4".
 - [ ] **Select a Part** — Click a board to select it. Visual indicator (highlight or outline) via R3F/drei. Store selected part ID in React state.

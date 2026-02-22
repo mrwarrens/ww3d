@@ -5,7 +5,7 @@ import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
 
 export default function Scene() {
-  const parts = useProjectStore((s) => s.parts)
+  const parts = useProjectStore((s) => s.project.parts)
 
   return (
     <>
