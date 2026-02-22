@@ -1,14 +1,8 @@
 import { useRef, useState, useCallback } from 'react'
 import { useThree, ThreeEvent } from '@react-three/fiber'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { BOARD_THICKNESS } from '../constants'
-
-export interface BoardData {
-  x: number
-  z: number
-  width: number
-  depth: number
-  color: string
-}
+import type { BoardData } from './Board'
 
 interface BoardCreatorProps {
   addBoard: (board: BoardData) => void
@@ -30,7 +24,8 @@ export default function BoardCreator({ addBoard }: BoardCreatorProps) {
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
   const dragStart = useRef<DragPoint | null>(null)
-  const controls = useThree((s) => s.controls) as { enabled: boolean } | null
+  const gl = useThree((s) => s.gl)
+  const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
 
   const snap = (v: number) => Math.round(v)
 
@@ -43,8 +38,8 @@ export default function BoardCreator({ addBoard }: BoardCreatorProps) {
     setDragging(true)
     setPreview({ x: start.x, z: start.z, width: 0.01, depth: 0.01 })
     if (controls) controls.enabled = false
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  }, [controls])
+    gl.domElement.setPointerCapture(e.pointerId)
+  }, [controls, gl])
 
   const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (!dragging || !dragStart.current) return

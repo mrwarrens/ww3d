@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import Board from './Board'
-import BoardCreator, { BoardData } from './BoardCreator'
+import Board, { BoardData } from './Board'
+import BoardCreator from './BoardCreator'
 
 interface StoredBoard extends BoardData {
   id: string
