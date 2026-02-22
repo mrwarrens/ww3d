@@ -74,4 +74,23 @@ describe('projectStore', () => {
     useProjectStore.getState().setProjectName('Bookshelf')
     expect(useProjectStore.getState().project.name).toBe('Bookshelf')
   })
+
+  it('addPart auto-names the first part "Board 1"', () => {
+    useProjectStore.getState().addPart(baseInit)
+    expect(useProjectStore.getState().project.parts[0].name).toBe('Board 1')
+  })
+
+  it('addPart auto-names subsequent parts sequentially', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart(baseInit)
+    addPart(baseInit)
+    const { parts } = useProjectStore.getState().project
+    expect(parts[0].name).toBe('Board 1')
+    expect(parts[1].name).toBe('Board 2')
+  })
+
+  it('addPart preserves explicit name when provided', () => {
+    useProjectStore.getState().addPart({ ...baseInit, name: 'Shelf' })
+    expect(useProjectStore.getState().project.parts[0].name).toBe('Shelf')
+  })
 })

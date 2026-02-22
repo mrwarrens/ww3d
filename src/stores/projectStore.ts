@@ -15,7 +15,13 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     set((state) => ({
       project: {
         ...state.project,
-        parts: [...state.project.parts, createPart(init)],
+        parts: [
+          ...state.project.parts,
+          createPart({
+            ...init,
+            name: init.name ?? `Board ${state.project.parts.length + 1}`,
+          }),
+        ],
       },
     })),
   removePart: (id) =>
