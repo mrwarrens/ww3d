@@ -53,10 +53,10 @@ src/
   stores/
     projectStore.ts     # Zustand store: boards list, addBoard, removeBoard
 tests/
-  scene.browser.test.tsx       # Browser-mode tests for R3F scene
-  projectStore.browser.test.ts # Store action tests
-tsconfig.json           # TypeScript configuration (strict mode)
-vite.config.ts          # Vite + React plugin + Vitest browser mode configuration
+  scene.browser.test.tsx  # Browser-mode R3F scene tests
+  projectStore.test.ts    # Unit tests for Zustand store
+tsconfig.json             # TypeScript configuration (strict mode)
+vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
 
 ## Architecture
@@ -128,9 +128,10 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 
 ### Testing
 - Tests ship with each task — don't defer tests to a separate "Tests for Phase N" item
-- Tests live in `tests/` using browser mode (Playwright, headless Chromium)
+- Two test modes configured via `vitest.workspace.ts`:
+  - **Unit** (`*.test.ts`) — runs in Node.js, no browser; use for stores, utilities, pure logic
+  - **Browser** (`*.browser.test.ts[x]`) — runs in Playwright/Chromium; use for R3F components and anything needing WebGL
 - R3F/3D tests: `*.browser.test.tsx`, use `vitest-browser-react` with R3F `<Canvas>`
-- Pure logic tests (stores, utilities): `*.browser.test.ts` — no canvas needed, but still run in browser mode until unit test config is split out
 - Test behavior and outcomes, not implementation details
 
 ### Documentation
