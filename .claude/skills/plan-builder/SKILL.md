@@ -82,7 +82,21 @@ N. **Write tests**
 - Push to origin
 ```
 
-### Step 5: Report
+### Step 5: Trim unnecessary complexity
+
+Before finalizing, review every item in the plan against the roadmap. For each of the following, ask: **which specific roadmap task reads or uses this?** If you cannot name one, remove it from the plan.
+
+Check:
+- Every field in a new data model or interface
+- Every type alias or union type
+- Every exported function beyond what the task description explicitly asks for
+- Every store action beyond what a UI component or test in this phase will call
+
+Apply CLAUDE.md's rule: "Don't design for hypothetical future requirements. The right amount of complexity is the minimum needed for the current task."
+
+Update the plan file to remove anything that doesn't pass this check.
+
+### Step 6: Report
 
 Output a brief summary:
 - The plan file path
