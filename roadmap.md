@@ -26,7 +26,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 ## Phase 2: UI Drawing Experience
 
 - [x] **Move parts by dragging** — Drag a selected board to reposition it on the grid plane. Update the Part's position in the store on pointer-up.
-- [ ] **Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
+- [x] **Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
 - [ ] **Adjustable floor/grid size** — Control in the UI (or panel) to increase/decrease the grid from its current 10×10 default. Store the grid size in project state so it saves/loads with the project.
 - [ ] **Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
 - [ ] **Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
