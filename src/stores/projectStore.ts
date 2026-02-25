@@ -6,6 +6,7 @@ interface ProjectStore {
   project: Project
   addPart: (init: PartInit) => void
   removePart: (id: string) => void
+  movePart: (id: string, position: { x: number; y: number; z: number }) => void
   setProjectName: (name: string) => void
   loadProject: (project: Project) => void
 }
@@ -30,6 +31,13 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       project: {
         ...state.project,
         parts: state.project.parts.filter((p) => p.id !== id),
+      },
+    })),
+  movePart: (id, position) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        parts: state.project.parts.map((p) => p.id === id ? { ...p, position } : p),
       },
     })),
   setProjectName: (name) =>

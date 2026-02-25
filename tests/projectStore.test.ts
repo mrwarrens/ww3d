@@ -105,6 +105,44 @@ describe('projectStore', () => {
     expect(project.parts).toEqual([])
   })
 
+  it('movePart updates the position of the matching part', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 4, width: 3, position: { x: 1, y: 0.375, z: 2 }, color: '#f00' })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    useProjectStore.getState().movePart(id, { x: 5, y: 0.375, z: 6 })
+
+    const part = useProjectStore.getState().project.parts[0]
+    expect(part.position).toEqual({ x: 5, y: 0.375, z: 6 })
+  })
+
+  it('movePart leaves other fields on the part unchanged', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 4, width: 3, position: { x: 1, y: 0.375, z: 2 }, color: '#f00', name: 'Shelf' })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    useProjectStore.getState().movePart(id, { x: 5, y: 0.375, z: 6 })
+
+    const part = useProjectStore.getState().project.parts[0]
+    expect(part.name).toBe('Shelf')
+    expect(part.length).toBe(4)
+    expect(part.width).toBe(3)
+    expect(part.color).toBe('#f00')
+  })
+
+  it('movePart only updates the targeted part when multiple parts exist', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 4, width: 3, position: { x: 0, y: 0.375, z: 0 }, color: '#f00' })
+    addPart({ length: 2, width: 2, position: { x: 1, y: 0.375, z: 1 }, color: '#00f' })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    useProjectStore.getState().movePart(id, { x: 9, y: 0.375, z: 9 })
+
+    const parts = useProjectStore.getState().project.parts
+    expect(parts[0].position).toEqual({ x: 9, y: 0.375, z: 9 })
+    expect(parts[1].position).toEqual({ x: 1, y: 0.375, z: 1 })
+  })
+
   it('loadProject replaces parts with the loaded project parts', () => {
     const { loadProject } = useProjectStore.getState()
     const part = { id: 'p1', name: 'Shelf', length: 12, width: 6, thickness: 0.75,

@@ -9,9 +9,10 @@ const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true
 interface BoardProps extends Part {
   isSelected: boolean
   onSelect: () => void
+  onDragStart?: (e: ThreeEvent<PointerEvent>) => void
 }
 
-export default function Board({ length, width, thickness, position, color, isSelected, onSelect }: BoardProps) {
+export default function Board({ length, width, thickness, position, color, isSelected, onSelect, onDragStart }: BoardProps) {
   const edgesGeo = useMemo(() => {
     const box = new THREE.BoxGeometry(length, thickness, width)
     const edges = new THREE.EdgesGeometry(box)
@@ -24,8 +25,14 @@ export default function Board({ length, width, thickness, position, color, isSel
     onSelect()
   }
 
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0 || !isSelected) return
+    e.stopPropagation()
+    onDragStart?.(e)
+  }
+
   return (
-    <mesh position={[position.x, position.y, position.z]} onClick={handleClick}>
+    <mesh position={[position.x, position.y, position.z]} onClick={handleClick} onPointerDown={handlePointerDown}>
       <boxGeometry args={[length, thickness, width]} />
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} />
       <lineSegments geometry={edgesGeo} material={lineMat} />

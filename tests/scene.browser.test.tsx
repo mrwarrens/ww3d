@@ -27,13 +27,13 @@ async function renderInCanvas(children: React.ReactNode, canvasProps = {}) {
 
 describe('App scene setup', () => {
   it('creates a scene with the correct background color', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     expect(state.scene).toBeInstanceOf(THREE.Scene)
     expect((state.scene.background as THREE.Color).getHexString()).toBe('1a1a2e')
   })
 
   it('configures a perspective camera at the expected position', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     const camera = state.camera as THREE.PerspectiveCamera
     expect(camera).toBeInstanceOf(THREE.PerspectiveCamera)
     expect(camera.fov).toBe(60)
@@ -43,14 +43,14 @@ describe('App scene setup', () => {
   })
 
   it('attaches a WebGL canvas to the document', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     const canvas = state.gl.domElement
     expect(canvas.tagName).toBe('CANVAS')
     expect(document.body.contains(canvas)).toBe(true)
   })
 
   it('sets up orbit controls with damping', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     // OrbitControls with makeDefault registers after onCreated, wait for it
     await new Promise<{ enableDamping: boolean; dampingFactor: number }>((resolve) => {
       const check = () => {
@@ -66,13 +66,13 @@ describe('App scene setup', () => {
   })
 
   it('includes a grid helper in the scene', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     const grids = state.scene.children.filter(c => c.type === 'GridHelper')
     expect(grids).toHaveLength(1)
   })
 
   it('includes ambient and directional lights', async () => {
-    const state = await renderInCanvas(<Scene />)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
     const lights = state.scene.children.filter(c => (c as THREE.Light).isLight)
     expect(lights).toHaveLength(2)
 
@@ -148,7 +148,7 @@ describe('Delete a Part', () => {
       position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
       color: '#ff0000',
     })
-    await renderInCanvas(<Scene />)
+    await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
 
@@ -161,7 +161,7 @@ describe('Delete a Part', () => {
       position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
       color: '#ff0000',
     })
-    await renderInCanvas(<Scene />)
+    await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
 

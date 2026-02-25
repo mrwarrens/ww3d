@@ -23,16 +23,31 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **Load project from local file** — Button that opens a file picker, reads a `.json` file, and loads it into project state (R3F re-renders the scene automatically).
 - [x] **Audit** Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review.
 
-## Phase 2: Assembly & Constraints
+## Phase 2: UI Drawing Experience
+
+- [x] **Move parts by dragging** — Drag a selected board to reposition it on the grid plane. Update the Part's position in the store on pointer-up.
+- [ ] **Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
+- [ ] **Adjustable floor/grid size** — Control in the UI (or panel) to increase/decrease the grid from its current 10×10 default. Store the grid size in project state so it saves/loads with the project.
+- [ ] **Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
+- [ ] **Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
+- [ ] **Editable properties panel** — All fields in the Part panel (name, length, width, thickness) become editable inputs. Parse fractional-inch input via the existing `parseInches` utility; commit on blur or Enter. Include the part name as an editable field.
+- [ ] **Board rotation on all 3 axes** — Add rotation inputs (X, Y, Z in degrees) to the properties panel. Update the Part's rotation in the store; the Board mesh rotates accordingly.
+- [ ] **Duplicate a part** — Cmd+D copies the selected part with a slight position offset and adds it to the store. New part becomes the selection.
+- [ ] **Color picker** — Color swatch in the properties panel opens a native color input. Updates the Part's hex color in the store; Board re-renders immediately.
+- [ ] **Undo/redo** — Cmd+Z / Cmd+Shift+Z to step through history. Implement a command stack in the project store that captures snapshots before each mutating action (add, delete, move, resize, rotate, recolor, duplicate).
+- [ ] **Part list/outliner** — Sidebar listing all parts by name; click to select, selected part highlighted. Updates reactively as parts are added/removed/renamed.
+- [ ] **Hide/show parts** — Visibility toggle per part in the outliner. Hidden parts are excluded from the scene but remain in project state and the cut list.
+- [ ] **Audit** Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review.
+
+## Phase 3: Assembly & Constraints
 
 - [ ] Assembly/group data model — parts can belong to named sub-assemblies
 - [ ] Parent/child relationships between parts
 - [ ] Basic constraints — "flush", "centered", "offset by X"
 - [ ] Constraint propagation — changing one dimension updates connected parts
-- [ ] Undo/redo system (command pattern)
-- [ ] Tests for Phase 2
+- [ ] Tests for Phase 3
 
-## Phase 3: Joinery
+## Phase 4: Joinery
 
 - [ ] CSG library integration (evaluate three-bvh-csg vs manifold WASM)
 - [ ] Dado joint — parametric channel cut across a board
@@ -42,20 +57,16 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] Mortise & tenon joint
 - [ ] Dovetail joint
 - [ ] Joint as a first-class object linking two parts
-- [ ] Tests for Phase 3
 
-## Phase 4: Desktop UI
+## Phase 5: Desktop UI Polish
 
 - [ ] Toolbar with drawing/selection tools
-- [ ] Property editor panel — edit part dimensions, name, color
-- [ ] Part list / outliner sidebar
 - [ ] Keyboard shortcuts system
 - [ ] Right-click context menus
 - [ ] Multi-select and group operations
 - [ ] Render mode toggle (solid, wireframe, transparent)
-- [ ] Tests for Phase 4
 
-## Phase 5: Cut List & 2D Output
+## Phase 6: Cut List & 2D Output
 
 - [ ] Auto-generated cut list from project data
 - [ ] Board optimization / nesting layout
@@ -65,9 +76,8 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] SVG export
 - [ ] DXF export
 - [ ] STL export for jigs
-- [ ] Tests for Phase 5
 
-## Phase 6: Responsive Modes (iPad / Phone)
+## Phase 7: Responsive Modes (iPad / Phone)
 
 - [ ] iPad shop mode — read-only 3D viewer with touch navigation
 - [ ] Tap-to-select with dimension overlay
@@ -76,9 +86,8 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] Phone mode — cut list / shopping list view
 - [ ] Check-off interface for in-store use
 - [ ] Cost estimator
-- [ ] Tests for Phase 6
 
-## Phase 7: GitHub Storage & PWA
+## Phase 8: GitHub Storage & PWA
 
 - [ ] GitHub OAuth flow (device flow or auth proxy)
 - [ ] Save/load projects to GitHub repo via API
@@ -86,4 +95,3 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] Version history via GitHub commits
 - [ ] Service worker for offline caching
 - [ ] PWA manifest
-- [ ] Tests for Phase 7
