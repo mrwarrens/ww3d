@@ -167,4 +167,25 @@ describe('Delete a Part', () => {
 
     expect(useProjectStore.getState().project.parts).toHaveLength(1)
   })
+
+  it('Escape key calls onSelectId with null', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    let capturedId: string | null | undefined = undefined
+    const onSelectId = (next: string | null) => { capturedId = next }
+
+    await renderInCanvas(<Scene selectedId={id} onSelectId={onSelectId} />)
+    // R3F triggers extra re-renders as WebGL initializes, causing Scene's useEffect
+    // to cleanup and re-register. Wait one tick for that cycle to complete.
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+
+    expect(capturedId).toBeNull()
+  })
 })

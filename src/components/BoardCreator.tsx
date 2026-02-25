@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useThree, ThreeEvent } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { BOARD_THICKNESS } from '../utils/constants'
+import { BOARD_THICKNESS, snapToGrid } from '../utils/constants'
 import { useProjectStore } from '../stores/projectStore'
 
 interface DragPoint {
@@ -28,14 +28,12 @@ export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
   const gl = useThree((s) => s.gl)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
 
-  const snap = (v: number) => Math.round(v)
-
   const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0) return
     e.stopPropagation()
     onClearSelection()
     const point = e.point
-    const start = { x: snap(point.x), z: snap(point.z) }
+    const start = { x: snapToGrid(point.x), z: snapToGrid(point.z) }
     dragStart.current = start
     setDragging(true)
     setPreview({ x: start.x, z: start.z, length: 0.01, width: 0.01 })
@@ -46,8 +44,8 @@ export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
   const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (!dragging || !dragStart.current) return
     const point = e.point
-    const hitX = snap(point.x)
-    const hitZ = snap(point.z)
+    const hitX = snapToGrid(point.x)
+    const hitZ = snapToGrid(point.z)
     const l = hitX - dragStart.current.x
     const w = hitZ - dragStart.current.z
     setPreview({
@@ -65,8 +63,8 @@ export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
 
     if (dragStart.current) {
       const point = e.point
-      const hitX = snap(point.x)
-      const hitZ = snap(point.z)
+      const hitX = snapToGrid(point.x)
+      const hitZ = snapToGrid(point.z)
       const length = Math.abs(hitX - dragStart.current.x)
       const width = Math.abs(hitZ - dragStart.current.z)
       if (length > 0.1 || width > 0.1) {

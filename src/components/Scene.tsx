@@ -7,6 +7,7 @@ import Board from './Board'
 import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
 import type { Part } from '../models/Part'
+import { snapToGrid } from '../utils/constants'
 
 interface SceneProps {
   selectedId: string | null
@@ -71,6 +72,9 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
         removePart(selectedId)
         onSelectId(null)
       }
+      if (e.key === 'Escape') {
+        onSelectId(null)
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -118,12 +122,16 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
       const hit = new THREE.Vector3()
       if (!raycaster.ray.intersectPlane(plane, hit)) return
 
+      const sx = snapToGrid(hit.x)
+      const sy = snapToGrid(hit.y)
+      const sz = snapToGrid(hit.z)
+
       if (d.planeNormal === 'y') {
-        setLivePos({ x: hit.x - d.offsetX, y: d.boardStartPos.y, z: hit.z - d.offsetZ })
+        setLivePos({ x: sx - d.offsetX, y: d.boardStartPos.y, z: sz - d.offsetZ })
       } else if (d.planeNormal === 'z') {
-        setLivePos({ x: hit.x - d.offsetX, y: hit.y - d.offsetY, z: d.boardStartPos.z })
+        setLivePos({ x: sx - d.offsetX, y: sy - d.offsetY, z: d.boardStartPos.z })
       } else {
-        setLivePos({ x: d.boardStartPos.x, y: hit.y - d.offsetY, z: hit.z - d.offsetZ })
+        setLivePos({ x: d.boardStartPos.x, y: sy - d.offsetY, z: sz - d.offsetZ })
       }
     }
 
