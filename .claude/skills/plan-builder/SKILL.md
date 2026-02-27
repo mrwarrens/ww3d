@@ -1,25 +1,26 @@
 ---
 name: plan-builder
-description: Explores the codebase and generates an implementation plan. Usage: /plan-builder Phase N - Task name
+description: Explores the codebase and generates an implementation plan. Usage: /plan-builder Phase N - TaskNumber - Task name
 ---
 
 # Plan Builder
 
-Generate an implementation plan for a roadmap task and save it to `.claude/plans/`.
+Generate an implementation plan for a roadmap task and save it to `.claude/plans/defined/`.
 
 ## Arguments
 
-`$ARGUMENTS` — the phase and task name, e.g. `Phase 1 - Establish file organization`
+`$ARGUMENTS` — the phase, task number, and task name, e.g. `Phase 2 - 3 - Adjustable floor/grid size`
 
 ## Instructions
 
 ### Step 1: Parse arguments
 
 Parse `$ARGUMENTS` to extract:
-- **Phase number** — the integer after "Phase " (e.g. `1`)
-- **Task name** — the text after " - " (e.g. `Establish file organization`)
-- **Task slug** — lowercase task name with spaces replaced by hyphens (e.g. `establish-file-organization`)
-- **Output path** — `.claude/plans/phase-{n}-{task-slug}.md`
+- **Phase number** — the integer after "Phase " (e.g. `2`)
+- **Task number** — the integer after the second " - " (e.g. `3`)
+- **Task name** — the text after the third " - " (e.g. `Adjustable floor/grid size`)
+- **Task slug** — lowercase task name with spaces replaced by hyphens (e.g. `adjustable-floor-grid-size`)
+- **Output path** — `/Users/mattwarrens/dev/ww3d/.claude/plans/defined/phase-{n}-{task-number}-{task-slug}.md`
 
 ### Step 2: Read project context
 
@@ -38,7 +39,7 @@ Use Glob, Grep, and Read to explore files related to the task:
 
 ### Step 4: Write the plan
 
-Save the plan to `.claude/plans/phase-{n}-{task-slug}.md` using this template:
+Save the plan to `/Users/mattwarrens/dev/ww3d/.claude/plans/defined/phase-{n}-{task-number}-{task-slug}.md` using this template:
 
 ```markdown
 # Plan: {Task Name}

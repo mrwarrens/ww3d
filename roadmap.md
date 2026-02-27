@@ -25,19 +25,19 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 
 ## Phase 2: UI Drawing Experience
 
-- [x] **Move parts by dragging** — Drag a selected board to reposition it on the grid plane. Update the Part's position in the store on pointer-up.
-- [x] **Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
-- [ ] **Adjustable floor/grid size** — Control in the UI (or panel) to increase/decrease the grid from its current 10×10 default. Store the grid size in project state so it saves/loads with the project.
-- [ ] **Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
-- [ ] **Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
-- [ ] **Editable properties panel** — All fields in the Part panel (name, length, width, thickness) become editable inputs. Parse fractional-inch input via the existing `parseInches` utility; commit on blur or Enter. Include the part name as an editable field.
-- [ ] **Board rotation on all 3 axes** — Add rotation inputs (X, Y, Z in degrees) to the properties panel. Update the Part's rotation in the store; the Board mesh rotates accordingly.
-- [ ] **Duplicate a part** — Cmd+D copies the selected part with a slight position offset and adds it to the store. New part becomes the selection.
-- [ ] **Color picker** — Color swatch in the properties panel opens a native color input. Updates the Part's hex color in the store; Board re-renders immediately.
-- [ ] **Undo/redo** — Cmd+Z / Cmd+Shift+Z to step through history. Implement a command stack in the project store that captures snapshots before each mutating action (add, delete, move, resize, rotate, recolor, duplicate).
-- [ ] **Part list/outliner** — Sidebar listing all parts by name; click to select, selected part highlighted. Updates reactively as parts are added/removed/renamed.
-- [ ] **Hide/show parts** — Visibility toggle per part in the outliner. Hidden parts are excluded from the scene but remain in project state and the cut list.
-- [ ] **Audit** Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review.
+- [x] **1. Move parts by dragging** — Drag a selected board to reposition it on the grid plane. Update the Part's position in the store on pointer-up.
+- [x] **2. Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
+- [ ] **3. Adjustable floor/grid size** — Control in the UI (or panel) to increase/decrease the grid from its current 10×10 default. Store the grid size in project state so it saves/loads with the project.
+- [ ] **4. Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
+- [ ] **5. Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
+- [ ] **6. Editable properties panel** — All fields in the Part panel (name, length, width, thickness) become editable inputs. Parse fractional-inch input via the existing `parseInches` utility; commit on blur or Enter. Include the part name as an editable field. _Blocks: #7, #8._
+- [ ] **7. Board rotation on all 3 axes** — Add rotation inputs (X, Y, Z in degrees) to the properties panel. Update the Part's rotation in the store; the Board mesh rotates accordingly. _Depends on: #6._
+- [ ] **8. Color picker** — Color swatch in the properties panel opens a native color input. Updates the Part's hex color in the store; Board re-renders immediately. _Depends on: #6._
+- [ ] **9. Duplicate a part** — Cmd+D copies the selected part with a slight position offset and adds it to the store. New part becomes the selection.
+- [x] **10. Part list/outliner** — Sidebar listing all parts by name; click to select, selected part highlighted. Updates reactively as parts are added/removed/renamed. _Blocks: #11._
+- [ ] **11. Hide/show parts** — Visibility toggle per part in the outliner. Hidden parts are excluded from the scene but remain in project state and the cut list. _Depends on: #10._
+- [ ] **12. Undo/redo** — Cmd+Z / Cmd+Shift+Z to step through history. Implement a command stack in the project store that captures snapshots before each mutating action (add, delete, move, resize, rotate, recolor, duplicate). _Depends on: #6, #7, #8, #9. Implement after all mutating actions are in place._
+- [ ] **13. Audit** — Audit the current state of the codebase against all documentation in /docs/, /plans/, and CLAUDE.md. For each document: 1) Read the doc and the relevant source files, 2) Identify any discrepancies—completed items not checked off, outdated architecture descriptions, missing new modules, stale technology references. 3) Update each document in place with accurate information. 4) At the end, give me a changelog of every doc change you made and flag any architectural decisions that may need human review. _Depends on: all other Phase 2 tasks._
 
 ## Phase 3: Assembly & Constraints
 

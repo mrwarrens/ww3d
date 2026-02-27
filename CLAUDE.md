@@ -50,6 +50,7 @@ src/
     Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
     PartPanel.tsx       # DOM overlay showing selected part name and dimensions
+    PartOutliner.tsx    # Sidebar listing all parts by name; click to select
   models/
     Part.ts             # Part interface and createPart factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
@@ -62,6 +63,7 @@ src/
 tests/
   scene.browser.test.tsx  # Browser-mode R3F scene tests
   partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
+  partOutliner.browser.test.tsx  # Browser-mode tests for PartOutliner
   app.browser.test.tsx        # Browser-mode tests for App-level features (save)
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
@@ -73,7 +75,7 @@ vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + brow
 
 ## Architecture
 
-**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons, Cmd+S keyboard shortcut, and renders `<PartPanel>` alongside the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles Delete/Backspace to remove the selected part. Board creation via drag interaction is handled by `BoardCreator.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay showing the selected part's name and fractional-inch dimensions.
+**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons, Cmd+S keyboard shortcut, and renders `<PartPanel>`, `<PartOutliner>`, and the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles Delete/Backspace to remove the selected part. Board creation via drag interaction is handled by `BoardCreator.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay showing the selected part's name and fractional-inch dimensions. `PartOutliner.tsx` is a sidebar listing all parts by name with click-to-select; includes a `.visibility-slot` placeholder per row for the future hide/show toggle.
 
 **Target architecture (from requirements.md):**
 - Three.js-based 3D engine with CSG/boolean operations for joinery

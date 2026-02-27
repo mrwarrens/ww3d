@@ -75,6 +75,39 @@
     #load-btn:hover {
       background: rgba(255,255,255,0.15);
     }
+    #part-outliner {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      width: 200px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 1;
+    }
+    #part-outliner ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #part-outliner li {
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #part-outliner li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    #part-outliner li.selected {
+      background: rgba(255,255,255,0.2);
+    }
+    .visibility-slot {
+      width: 16px;
+    }
   </style>
 </head>
 <body>
