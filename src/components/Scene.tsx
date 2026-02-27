@@ -46,6 +46,7 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
 
 export default function Scene({ selectedId, onSelectId }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
+  const gridSize = useProjectStore((s) => s.project.gridSize)
   const removePart = useProjectStore((s) => s.removePart)
   const movePart = useProjectStore((s) => s.movePart)
   const gl = useThree((s) => s.gl)
@@ -164,7 +165,7 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 8, 4]} intensity={1} />
 
-      <gridHelper args={[10, 10, 0x444466, 0x333355]} />
+      <gridHelper args={[gridSize, gridSize, 0x444466, 0x333355]} />
 
       <OrbitControls
         makeDefault
@@ -172,12 +173,12 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
         dampingFactor={0.08}
         mouseButtons={{
           LEFT: null,
-          MIDDLE: THREE.MOUSE.DOLLY,
+          MIDDLE: THREE.MOUSE.PAN,
           RIGHT: THREE.MOUSE.ROTATE,
         }}
       />
 
-      <BoardCreator onClearSelection={() => onSelectId(null)} />
+      <BoardCreator gridSize={gridSize} onClearSelection={() => onSelectId(null)} />
 
       {parts.map((p) => (
         <Board

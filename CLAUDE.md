@@ -65,6 +65,7 @@ tests/
   partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
   partOutliner.browser.test.tsx  # Browser-mode tests for PartOutliner
   app.browser.test.tsx        # Browser-mode tests for App-level features (save)
+  camera-pan.browser.test.tsx # Browser-mode tests for camera pan configuration
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store

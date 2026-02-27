@@ -28,7 +28,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **1. Move parts by dragging** — Drag a selected board to reposition it on the grid plane. Update the Part's position in the store on pointer-up.
 - [x] **2. Snap-to-grid** — When dragging or creating boards, snap position to a configurable grid increment (default 1/8"). Toggle with a keyboard shortcut (e.g., G).
 - [ ] **3. Adjustable floor/grid size** — Control in the UI (or panel) to increase/decrease the grid from its current 10×10 default. Store the grid size in project state so it saves/loads with the project.
-- [ ] **4. Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
+- [x] **4. Camera pan** — Middle-mouse-button drag or Shift+drag to pan the camera, complementing the existing orbit and zoom.
 - [ ] **5. Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
 - [ ] **6. Editable properties panel** — All fields in the Part panel (name, length, width, thickness) become editable inputs. Parse fractional-inch input via the existing `parseInches` utility; commit on blur or Enter. Include the part name as an editable field. _Blocks: #7, #8._
 - [ ] **7. Board rotation on all 3 axes** — Add rotation inputs (X, Y, Z in degrees) to the properties panel. Update the Part's rotation in the store; the Board mesh rotates accordingly. _Depends on: #6._

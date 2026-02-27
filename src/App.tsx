@@ -10,6 +10,8 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
+  const gridSize = useProjectStore((s) => s.project.gridSize)
+  const setGridSize = useProjectStore((s) => s.setGridSize)
   const loadProject = useProjectStore((s) => s.loadProject)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -53,10 +55,15 @@ export default function App() {
   return (
     <>
       <div id="info">
-        Left-click drag: draw board &middot; Right-click drag: orbit &middot; Scroll: zoom
+        Left-drag: draw board &middot; Right-drag: orbit &middot; Middle-drag or Shift+drag: pan &middot; Scroll: zoom
       </div>
       <button id="save-btn" onClick={saveProject}>Save</button>
       <button id="load-btn" onClick={() => fileInputRef.current?.click()}>Load</button>
+      <div id="grid-controls">
+        <button onClick={() => setGridSize(Math.max(5, gridSize - 5))}>Grid −</button>
+        <span>Grid: {gridSize}</span>
+        <button onClick={() => setGridSize(gridSize + 5)}>Grid +</button>
+      </div>
       <input
         ref={fileInputRef}
         type="file"
