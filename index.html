@@ -30,7 +30,6 @@
       padding: 10px 14px;
       border-radius: 4px;
       z-index: 1;
-      pointer-events: none;
     }
     .part-panel-name {
       font-weight: bold;
@@ -40,6 +39,26 @@
       display: flex;
       gap: 14px;
       opacity: 0.85;
+    }
+    .part-panel-dims label {
+      display: flex;
+      align-items: center;
+    }
+    .part-panel-input {
+      background: transparent;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      padding: 1px 3px;
+      outline: none;
+    }
+    .part-panel-input:focus {
+      border-color: rgba(255,255,255,0.4);
+    }
+    .part-panel-dim-input {
+      width: 5em;
     }
     #save-btn {
       position: absolute;
@@ -75,10 +94,41 @@
     #load-btn:hover {
       background: rgba(255,255,255,0.15);
     }
+    #grid-controls {
+      position: absolute;
+      top: 10px;
+      right: 148px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 1;
+    }
+    #grid-controls button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #grid-controls button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #grid-controls span {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
     #part-outliner {
       position: absolute;
       top: 50px;
-      right: 10px;
+      left: 10px;
       width: 200px;
       color: #fff;
       font-family: monospace;
@@ -105,8 +155,43 @@
     #part-outliner li.selected {
       background: rgba(255,255,255,0.2);
     }
-    .visibility-slot {
+    .visibility-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: monospace;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
       width: 16px;
+      line-height: 1;
+      opacity: 0.7;
+    }
+    .visibility-btn:hover {
+      opacity: 1;
+    }
+    #camera-presets {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 1;
+    }
+    #camera-presets button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+    }
+    #camera-presets button:hover {
+      background: rgba(255,255,255,0.15);
     }
   </style>
 </head>
