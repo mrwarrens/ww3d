@@ -153,3 +153,55 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 - Update `CLAUDE.md` project structure section when files are added/removed
 - Check off roadmap items when done
 - Don't create README or other docs unless asked
+
+## Automated Planning & Execution Pipeline
+
+Tasks are planned and executed through a pipeline of directories and two scripts. The human reviews work at each handoff point.
+
+```
+plan-feeder.sh → defined/ → (review) → ready/ → claude-queue.sh → done/ → (review) → accepted/
+```
+
+### Directories
+
+```
+.claude/plans/
+  defined/   # Plans written by plan-feeder.sh or /plan-builder; awaiting human review
+  ready/     # Plans approved by human and ready for claude-queue.sh to execute
+  done/      # Plans executed by claude-queue.sh; awaiting human review
+  accepted/  # Plans reviewed and accepted by human; considered complete
+  failed/    # Plans that errored during execution; includes a .log file
+```
+
+### Scripts
+
+**`scripts/plan-feeder.sh`** — Generates plans for unblocked roadmap tasks.
+- Polls `ready/` every 10 seconds
+- When `ready/` is empty, parses `roadmap.md` to find incomplete Phase 2 tasks whose dependencies are all `[x]`
+- Skips tasks that already have a plan in `defined/`, `done/`, or `accepted/`
+- For remaining tasks, runs the `/plan-builder` skill via `claude -p` and saves the plan to `defined/`
+- Does not touch `ready/` — human copies plans from `defined/` to `ready/` after review
+
+**`scripts/claude-queue.sh`** — Executes plans from `ready/`.
+- Polls `ready/` every 10 seconds for `*.md` plan files
+- For each file, runs `claude -p` with the plan content (max 30 turns, all tools auto-approved)
+- On success: moves plan to `done/`
+- On failure: moves plan to `failed/` with a `.log` file containing Claude's output
+- On rate limit or daily usage limit: waits and retries automatically
+
+### Human Review Points
+
+1. **`defined/` → `ready/`** — Read the generated plan. If it looks correct, `cp` it to `ready/`. Edit it first if adjustments are needed.
+2. **`done/` → `accepted/`** — Review the implementation (code diff, run the app, check tests). If satisfied, `cp` the plan to `accepted/`.
+
+### Running the Pipeline
+
+```bash
+# In one terminal — generates plans into defined/ as tasks become unblocked
+./scripts/plan-feeder.sh
+
+# In a second terminal — executes plans as they appear in ready/
+./scripts/claude-queue.sh
+```
+
+Both scripts run indefinitely. Stop them with Ctrl+C when done.

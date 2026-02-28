@@ -45,59 +45,62 @@ run_plan() {
       --allowedTools "$ALLOWED_TOOLS" \
       2>&1) || exit_code=$?
 
-    # Check for rate limit in output (exit code or message)
-    if echo "$output" | grep -qi "rate.limit\|rate_limit\|429\|too many requests"; then
-      local wait_secs="$RATE_LIMIT_WAIT"
+    # Parse JSON result using jq to classify outcome
+    local is_error result retry_after status
+    is_error=$(echo "$output" | jq -r '.is_error // false' 2>/dev/null || echo "parse_error")
+    result=$(echo "$output"   | jq -r '.result   // ""'    2>/dev/null || echo "")
+    retry_after=$(echo "$output" | jq -r '.retry_after // 0' 2>/dev/null || echo "0")
 
-      # Try to extract retry-after value from output
-      local retry_after
-      retry_after=$(echo "$output" | grep -oiE '"retry.after"[[:space:]]*:[[:space:]]*[0-9]+' | grep -oE '[0-9]+$' | head -1 || true)
-      if [[ -n "$retry_after" ]] && [[ "$retry_after" -gt 0 ]]; then
-        wait_secs="$retry_after"
-      fi
-
-      log "Rate limited on $plan_name. Waiting ${wait_secs}s before retry..."
-      sleep "$wait_secs"
-      log "Retrying $plan_name..."
-      continue
+    if echo "$result" | grep -qi "hit your limit\|you've hit"; then
+      status="usage_limit"
+    elif echo "$result" | grep -qi "rate.limit\|rate_limit\|429\|too many requests"; then
+      status="rate_limit"
+    elif [[ "$is_error" == "true" ]]; then
+      status="error"
+    elif [[ "$is_error" == "parse_error" ]]; then
+      status="parse_error"
+    else
+      status="success"
     fi
 
-    # Check for success: exit code 0 and no error in JSON
-    if [[ "$exit_code" -eq 0 ]]; then
-      # Check if JSON output contains a top-level error
-      local is_error
-      is_error=$(echo "$output" | python3 -c "
-import sys, json
-try:
-    data = json.loads(sys.stdin.read())
-    if isinstance(data, list):
-        for item in data:
-            if isinstance(item, dict) and item.get('type') == 'error':
-                print('yes')
-                sys.exit(0)
-    print('no')
-except Exception:
-    print('no')
-" 2>/dev/null || echo "no")
-
-      if [[ "$is_error" == "yes" ]]; then
-        log "ERROR: $plan_name returned an error result"
+    case "$status" in
+      rate_limit)
+        local wait_secs="$RATE_LIMIT_WAIT"
+        if [[ "$retry_after" -gt 0 ]]; then
+          wait_secs="$retry_after"
+        fi
+        log "Rate limited on $plan_name. Waiting ${wait_secs}s before retry..."
+        sleep "$wait_secs"
+        log "Retrying $plan_name..."
+        continue
+        ;;
+      usage_limit)
+        log "Daily usage limit hit on $plan_name. Waiting ${RATE_LIMIT_WAIT}s before retry..."
+        sleep "$RATE_LIMIT_WAIT"
+        log "Retrying $plan_name..."
+        continue
+        ;;
+      success)
+        if [[ "$exit_code" -ne 0 ]]; then
+          log "FAILURE: $plan_name exited with code $exit_code"
+          mv "$plan_file" "$FAILED_DIR/$plan_name"
+          echo "$output" > "$FAILED_DIR/${plan_name%.md}.log"
+          log "Moved to failed/: $plan_name"
+        else
+          log "SUCCESS: $plan_name completed"
+          mv "$plan_file" "$DONE_DIR/$plan_name"
+          log "Moved to done/: $plan_name"
+        fi
+        return
+        ;;
+      error|parse_error|*)
+        log "FAILURE: $plan_name — status=$status exit_code=$exit_code"
         mv "$plan_file" "$FAILED_DIR/$plan_name"
         echo "$output" > "$FAILED_DIR/${plan_name%.md}.log"
         log "Moved to failed/: $plan_name"
-      else
-        log "SUCCESS: $plan_name completed"
-        mv "$plan_file" "$DONE_DIR/$plan_name"
-        log "Moved to done/: $plan_name"
-      fi
-      return
-    else
-      log "FAILURE: $plan_name exited with code $exit_code"
-      mv "$plan_file" "$FAILED_DIR/$plan_name"
-      echo "$output" > "$FAILED_DIR/${plan_name%.md}.log"
-      log "Moved to failed/: $plan_name"
-      return
-    fi
+        return
+        ;;
+    esac
   done
 }
 

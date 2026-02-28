@@ -4,9 +4,10 @@ interface PartOutlinerProps {
   parts: Part[]
   selectedId: string | null
   onSelectId: (id: string) => void
+  onToggleVisibility: (id: string) => void
 }
 
-export default function PartOutliner({ parts, selectedId, onSelectId }: PartOutlinerProps) {
+export default function PartOutliner({ parts, selectedId, onSelectId, onToggleVisibility }: PartOutlinerProps) {
   return (
     <div id="part-outliner">
       <ul>
@@ -17,7 +18,13 @@ export default function PartOutliner({ parts, selectedId, onSelectId }: PartOutl
             onClick={() => onSelectId(part.id)}
           >
             {part.name}
-            <span className="visibility-slot" />
+            <button
+              className="visibility-btn"
+              onClick={(e) => { e.stopPropagation(); onToggleVisibility(part.id) }}
+              aria-label={part.visible !== false ? 'Hide' : 'Show'}
+            >
+              {part.visible !== false ? '●' : '○'}
+            </button>
           </li>
         ))}
       </ul>

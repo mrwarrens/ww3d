@@ -64,23 +64,19 @@ N. **Write tests**
    - For stores/utilities: test initial state and each action/function
    - For components: test rendered structure and behavior, not implementation details
 
+N+1. **Verify, commit, and push**
+   - Run `npm test -- --run` — all tests must pass
+   - Run `npm run build` — production build must succeed
+   - {Any task-specific manual checks}
+   - Edit `roadmap.md`: change `[ ]` to `[x]` for task #{task-number}
+   - Commit: `<type>: Phase <N> - <Task Name>`
+   - Push to origin
+
 ## Files to Create/Modify
 
 - `{path}` — {what changes}
 - `{path}` — {what changes}
 - `tests/{test-file}.browser.test.ts[x]` — {what is tested}
-
-## Verification
-
-- `npm test -- --run` — all tests pass (existing and new)
-- `npm run build` — production build succeeds
-- {Any task-specific checks}
-
-## Completion
-
-- Check off the task in `roadmap.md` (change `[ ]` to `[x]`)
-- Commit with message: `<type>: Phase <N> - <Task Name>`
-- Push to origin
 ```
 
 ### Step 5: Trim unnecessary complexity

@@ -4,6 +4,7 @@ export interface Project {
   id: string
   name: string
   parts: Part[]
+  gridSize: number
 }
 
 export function createProject(name = 'Untitled Project'): Project {
@@ -11,6 +12,7 @@ export function createProject(name = 'Untitled Project'): Project {
     id: crypto.randomUUID(),
     name,
     parts: [],
+    gridSize: 10,
   }
 }
 

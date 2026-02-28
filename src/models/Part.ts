@@ -7,6 +7,7 @@ export interface Part {
   position: { x: number; y: number; z: number }
   rotation: { x: number; y: number; z: number }  // Euler angles, radians
   color: string       // hex string
+  visible: boolean
 }
 
 export type PartInit = {
@@ -17,6 +18,7 @@ export type PartInit = {
   thickness?: number
   rotation?: { x: number; y: number; z: number }
   color?: string
+  visible?: boolean
 }
 
 export function createPart(init: PartInit): Part {
@@ -29,5 +31,6 @@ export function createPart(init: PartInit): Part {
     position: init.position,
     rotation: init.rotation ?? { x: 0, y: 0, z: 0 },
     color: init.color ?? '#8B6914',
+    visible: init.visible ?? true,
   }
 }

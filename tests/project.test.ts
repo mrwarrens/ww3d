@@ -8,6 +8,11 @@ describe('createProject', () => {
     expect(project).toHaveProperty('id')
     expect(project).toHaveProperty('name')
     expect(project).toHaveProperty('parts')
+    expect(project).toHaveProperty('gridSize')
+  })
+
+  it('defaults gridSize to 10', () => {
+    expect(createProject().gridSize).toBe(10)
   })
 
   it('defaults name to "Untitled Project"', () => {
@@ -49,5 +54,12 @@ describe('serializeProject / deserializeProject', () => {
     expect(restored.parts).toHaveLength(1)
     expect(restored.parts[0].length).toBe(12)
     expect(restored.parts[0].width).toBe(6)
+  })
+
+  it('preserves gridSize through round-trip', () => {
+    const project = createProject('Workbench')
+    project.gridSize = 20
+    const restored = deserializeProject(serializeProject(project))
+    expect(restored.gridSize).toBe(20)
   })
 })

@@ -17,10 +17,11 @@ interface Preview {
 }
 
 interface BoardCreatorProps {
+  gridSize: number
   onClearSelection: () => void
 }
 
-export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
+export default function BoardCreator({ gridSize, onClearSelection }: BoardCreatorProps) {
   const addPart = useProjectStore((s) => s.addPart)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
@@ -94,7 +95,7 @@ export default function BoardCreator({ onClearSelection }: BoardCreatorProps) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
       >
-        <planeGeometry args={[20, 20]} />
+        <planeGeometry args={[gridSize * 2, gridSize * 2]} />
         <meshBasicMaterial />
       </mesh>
       {preview && (
