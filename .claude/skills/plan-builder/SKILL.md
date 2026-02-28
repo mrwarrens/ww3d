@@ -1,6 +1,6 @@
 ---
 name: plan-builder
-description: Explores the codebase and generates an implementation plan. Usage: /plan-builder Phase N - TaskNumber - Task name
+description: Explores the codebase and generates an implementation plan. Usage: /plan-builder Phase N - GlobalTaskId - Task name
 ---
 
 # Plan Builder
@@ -9,18 +9,18 @@ Generate an implementation plan for a roadmap task and save it to `.claude/plans
 
 ## Arguments
 
-`$ARGUMENTS` — the phase, task number, and task name, e.g. `Phase 2 - 3 - Adjustable floor/grid size`
+`$ARGUMENTS` — the phase, global task ID, and task name, e.g. `Phase 3 - 23 - Assembly/group data model`
 
 ## Instructions
 
 ### Step 1: Parse arguments
 
 Parse `$ARGUMENTS` to extract:
-- **Phase number** — the integer after "Phase " (e.g. `2`)
-- **Task number** — the integer after the second " - " (e.g. `3`)
-- **Task name** — the text after the third " - " (e.g. `Adjustable floor/grid size`)
-- **Task slug** — lowercase task name with spaces replaced by hyphens (e.g. `adjustable-floor-grid-size`)
-- **Output path** — `/Users/mattwarrens/dev/ww3d/.claude/plans/defined/phase-{n}-{task-number}-{task-slug}.md`
+- **Phase number** — the integer after "Phase " (e.g. `3`)
+- **Task ID** — the global integer after the second " - " (e.g. `23`)
+- **Task name** — the text after the third " - " (e.g. `Assembly/group data model`)
+- **Task slug** — lowercase task name with non-alphanumeric runs collapsed to hyphens (e.g. `assembly-group-data-model`)
+- **Output path** — `.claude/plans/defined/phase-{n}-{task-id}-{task-slug}.md` (relative to project root)
 
 ### Step 2: Read project context
 
@@ -39,7 +39,7 @@ Use Glob, Grep, and Read to explore files related to the task:
 
 ### Step 4: Write the plan
 
-Save the plan to `/Users/mattwarrens/dev/ww3d/.claude/plans/defined/phase-{n}-{task-number}-{task-slug}.md` using this template:
+Save the plan to `.claude/plans/defined/phase-{n}-{task-id}-{task-slug}.md` (relative to project root) using this template:
 
 ```markdown
 # Plan: {Task Name}
@@ -68,7 +68,8 @@ N+1. **Verify, commit, and push**
    - Run `npm test -- --run` — all tests must pass
    - Run `npm run build` — production build must succeed
    - {Any task-specific manual checks}
-   - Edit `roadmap.md`: change `[ ]` to `[x]` for task #{task-number}
+   - Edit `roadmap.md`: change `[ ]` to `[x]` for this task
+   - Update `pipeline.yaml` is handled automatically by claude-queue.sh — do not edit it manually
    - Commit: `<type>: Phase <N> - <Task Name>`
    - Push to origin
 

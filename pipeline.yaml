@@ -1,0 +1,167 @@
+# pipeline.yaml — machine-readable task graph for the automated pipeline.
+# Add tasks here when ready for automation. Scripts update status fields.
+#
+# Statuses: pending → planned → ready → done → accepted
+#           pending → planned → ready → failed
+#
+# Fields:
+#   id          — global integer, unique across all phases (required)
+#   phase       — integer, for display/grouping only (required)
+#   name        — task name (required)
+#   description — optional detail, maps to roadmap description
+#   deps        — list of task IDs that must be done or accepted before plannable (default [])
+#   status      — pending | planned | ready | done | accepted | failed (default pending)
+
+tasks:
+  # Phase 2 tasks — all accepted
+  - id: 1
+    phase: 2
+    name: Move parts by dragging
+    status: accepted
+
+  - id: 2
+    phase: 2
+    name: Snap-to-grid
+    status: accepted
+
+  - id: 3
+    phase: 2
+    name: Adjustable floor/grid size
+    status: accepted
+
+  - id: 4
+    phase: 2
+    name: Camera pan
+    status: accepted
+
+  - id: 5
+    phase: 2
+    name: Camera preset views
+    status: accepted
+
+  - id: 6
+    phase: 2
+    name: Editable properties panel
+    status: accepted
+
+  - id: 7
+    phase: 2
+    name: Board rotation on all 3 axes
+    deps: [6]
+    status: accepted
+
+  - id: 8
+    phase: 2
+    name: Color picker
+    deps: [6]
+    status: accepted
+
+  - id: 9
+    phase: 2
+    name: Duplicate a part
+    status: accepted
+
+  - id: 10
+    phase: 2
+    name: Part list/outliner
+    status: accepted
+
+  - id: 11
+    phase: 2
+    name: Hide/show parts
+    deps: [10]
+    status: accepted
+
+  - id: 12
+    phase: 2
+    name: Undo/redo
+    deps: [6, 7, 8, 9]
+    status: accepted
+
+  - id: 13
+    phase: 2
+    name: Fix editable properties panel
+    deps: [6]
+    status: accepted
+
+  - id: 14
+    phase: 2
+    name: Fix Delete key in text inputs
+    deps: [6]
+    status: accepted
+
+  - id: 15
+    phase: 2
+    name: Float parts list on left side
+    deps: [10]
+    status: accepted
+
+  - id: 16
+    phase: 2
+    name: Help pane
+    status: accepted
+
+  - id: 17
+    phase: 2
+    name: Grid controls pane
+    deps: [3]
+    status: accepted
+
+  - id: 18
+    phase: 2
+    name: Bug: decimal input in properties panel
+    deps: [6, 13]
+    status: accepted
+
+  - id: 19
+    phase: 2
+    name: Bug: color picker shows black on first selection
+    deps: [8]
+    status: accepted
+
+  - id: 20
+    phase: 2
+    name: Bug: help panel z-index behind parts list
+    deps: [15, 16]
+    status: accepted
+
+  - id: 21
+    phase: 2
+    name: Position inputs in properties panel
+    deps: [6]
+    status: accepted
+
+  - id: 22
+    phase: 2
+    name: Audit
+    deps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+    status: accepted
+
+  # Phase 3 tasks
+  - id: 23
+    phase: 3
+    name: Assembly/group data model
+    description: Parts can belong to named sub-assemblies
+    deps: []
+    status: pending
+
+  - id: 24
+    phase: 3
+    name: Parent/child relationships between parts
+    description: Parts can be parented to other parts; moving a parent moves children
+    deps: [23]
+    status: pending
+
+  - id: 25
+    phase: 3
+    name: Basic constraints
+    description: Constraint types — flush, centered, offset by X — between pairs of parts
+    deps: [24]
+    status: pending
+
+  - id: 26
+    phase: 3
+    name: Constraint propagation
+    description: Changing one dimension updates connected parts via constraint graph
+    deps: [25]
+    status: pending

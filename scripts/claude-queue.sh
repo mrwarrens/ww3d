@@ -1,129 +1,103 @@
 #!/usr/bin/env bash
-# claude-queue.sh — Process plan files from .claude/plans/ready/
+# claude-queue.sh — Execute plans from .claude/plans/ready/ for tasks in pipeline.yaml.
+#
+# Polls pipeline.yaml for tasks with status == "ready", finds their plan files
+# in ready/, executes them via `claude -p`, and updates status to done or failed.
 #
 # Usage: ./scripts/claude-queue.sh
-#
-# Polls .claude/plans/ready/*.md, runs each plan via `claude -p`,
-# handles rate limits with automatic retry, and moves files to
-# done/ or failed/ based on outcome.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# shellcheck source=scripts/lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+
 READY_DIR="$PROJECT_ROOT/.claude/plans/ready"
 DONE_DIR="$PROJECT_ROOT/.claude/plans/done"
 FAILED_DIR="$PROJECT_ROOT/.claude/plans/failed"
 
-POLL_INTERVAL=10
-RATE_LIMIT_WAIT=300
-MAX_TURNS=30
+# Find the plan file for a task in ready/.
+# Prints the path if found, empty string if not.
+find_plan_file() {
+  local id="$1"
+  local phase="$2"
+  local slug="$3"
 
-ALLOWED_TOOLS="Read,Edit,Write,Bash,Glob,Grep,Task,WebSearch,WebFetch"
+  # Try exact slug match first
+  local exact="$READY_DIR/phase-${phase}-${id}-${slug}.md"
+  if [[ -f "$exact" ]]; then
+    echo "$exact"
+    return
+  fi
 
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+  # Fall back to any file matching phase-{phase}-{id}-*.md
+  local found
+  found=$(find "$READY_DIR" -maxdepth 1 -name "phase-${phase}-${id}-*.md" -type f 2>/dev/null | head -1)
+  echo "$found"
 }
 
 run_plan() {
-  local plan_file="$1"
+  local id="$1"
+  local phase="$2"
+  local name="$3"
+  local slug="$4"
+
+  local plan_file
+  plan_file=$(find_plan_file "$id" "$phase" "$slug")
+
+  if [[ -z "$plan_file" || ! -f "$plan_file" ]]; then
+    log "ERROR: No plan file found in ready/ for task #${id} (${name})"
+    log "  Expected: phase-${phase}-${id}-${slug}.md (or similar)"
+    log "  Skipping — set status back to planned to re-approve"
+    return
+  fi
+
   local plan_name
   plan_name="$(basename "$plan_file")"
   local plan_content
   plan_content="$(cat "$plan_file")"
 
-  log "Processing: $plan_name"
+  log "Executing: $plan_name (task #${id}: ${name})"
 
-  while true; do
-    local output
-    local exit_code=0
+  run_claude "$plan_content"
 
-    output=$(cd "$PROJECT_ROOT" && env -u CLAUDECODE claude -p "$plan_content" \
-      --output-format json \
-      --max-turns "$MAX_TURNS" \
-      --allowedTools "$ALLOWED_TOOLS" \
-      2>&1) || exit_code=$?
-
-    # Parse JSON result using jq to classify outcome
-    local is_error result retry_after status
-    is_error=$(echo "$output" | jq -r '.is_error // false' 2>/dev/null || echo "parse_error")
-    result=$(echo "$output"   | jq -r '.result   // ""'    2>/dev/null || echo "")
-    retry_after=$(echo "$output" | jq -r '.retry_after // 0' 2>/dev/null || echo "0")
-
-    if echo "$result" | grep -qi "hit your limit\|you've hit"; then
-      status="usage_limit"
-    elif echo "$result" | grep -qi "rate.limit\|rate_limit\|429\|too many requests"; then
-      status="rate_limit"
-    elif [[ "$is_error" == "true" ]]; then
-      status="error"
-    elif [[ "$is_error" == "parse_error" ]]; then
-      status="parse_error"
-    else
-      status="success"
-    fi
-
-    case "$status" in
-      rate_limit)
-        local wait_secs="$RATE_LIMIT_WAIT"
-        if [[ "$retry_after" -gt 0 ]]; then
-          wait_secs="$retry_after"
-        fi
-        log "Rate limited on $plan_name. Waiting ${wait_secs}s before retry..."
-        sleep "$wait_secs"
-        log "Retrying $plan_name..."
-        continue
-        ;;
-      usage_limit)
-        log "Daily usage limit hit on $plan_name. Waiting ${RATE_LIMIT_WAIT}s before retry..."
-        sleep "$RATE_LIMIT_WAIT"
-        log "Retrying $plan_name..."
-        continue
-        ;;
-      success)
-        if [[ "$exit_code" -ne 0 ]]; then
-          log "FAILURE: $plan_name exited with code $exit_code"
-          mv "$plan_file" "$FAILED_DIR/$plan_name"
-          echo "$output" > "$FAILED_DIR/${plan_name%.md}.log"
-          log "Moved to failed/: $plan_name"
-        else
-          log "SUCCESS: $plan_name completed"
-          mv "$plan_file" "$DONE_DIR/$plan_name"
-          log "Moved to done/: $plan_name"
-        fi
-        return
-        ;;
-      error|parse_error|*)
-        log "FAILURE: $plan_name — status=$status exit_code=$exit_code"
-        mv "$plan_file" "$FAILED_DIR/$plan_name"
-        echo "$output" > "$FAILED_DIR/${plan_name%.md}.log"
-        log "Moved to failed/: $plan_name"
-        return
-        ;;
-    esac
-  done
+  case "$CLAUDE_STATUS" in
+    success)
+      mv "$plan_file" "$DONE_DIR/$plan_name"
+      update_yaml_status "$id" "done"
+      log "SUCCESS: task #${id} → done (plan moved to done/)"
+      ;;
+    *)
+      mv "$plan_file" "$FAILED_DIR/$plan_name"
+      echo "$CLAUDE_OUTPUT" > "$FAILED_DIR/${plan_name%.md}.log"
+      update_yaml_status "$id" "failed"
+      log "FAILURE: task #${id} → failed (status=$CLAUDE_STATUS)"
+      log "  Plan moved to failed/, log written"
+      ;;
+  esac
 }
 
 log "Claude queue processor started"
-log "Watching: $READY_DIR"
+log "Project: $PROJECT_ROOT"
 log "Poll interval: ${POLL_INTERVAL}s"
 
 while true; do
-  # Collect ready plan files, sorted alphabetically (bash 3.2 compatible)
-  plan_files=()
-  while IFS= read -r f; do
-    plan_files+=("$f")
-  done < <(find "$READY_DIR" -maxdepth 1 -name '*.md' -type f | sort)
+  ready_tasks=()
+  while IFS=$'\t' read -r id phase name slug; do
+    [[ -n "$id" ]] || continue
+    ready_tasks+=("$id|$phase|$name|$slug")
+  done < <(get_ready_tasks)
 
-  if [[ ${#plan_files[@]} -eq 0 ]]; then
-    log "No plans found. Polling again in ${POLL_INTERVAL}s..."
+  if [[ ${#ready_tasks[@]} -eq 0 ]]; then
+    log "No tasks in ready status. Polling again in ${POLL_INTERVAL}s..."
     sleep "$POLL_INTERVAL"
     continue
   fi
 
-  for plan_file in "${plan_files[@]}"; do
-    # Skip if file was removed between listing and processing
-    [[ -f "$plan_file" ]] || continue
-    run_plan "$plan_file"
+  for entry in "${ready_tasks[@]}"; do
+    IFS='|' read -r id phase name slug <<< "$entry"
+    run_plan "$id" "$phase" "$name" "$slug"
   done
 done

@@ -54,7 +54,6 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [ ] Parent/child relationships between parts
 - [ ] Basic constraints — "flush", "centered", "offset by X"
 - [ ] Constraint propagation — changing one dimension updates connected parts
-- [ ] Tests for Phase 3
 
 ## Phase 4: Joinery
 

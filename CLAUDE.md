@@ -164,44 +164,59 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 Tasks are planned and executed through a pipeline of directories and two scripts. The human reviews work at each handoff point.
 
 ```
-plan-feeder.sh → defined/ → (review) → ready/ → claude-queue.sh → done/ → (review) → accepted/
+plan-feeder.sh → defined/ → approve-plan.sh → ready/ → claude-queue.sh → done/ → accept-plan.sh → accepted/
 ```
+
+**`pipeline.yaml`** is the machine-readable task graph and source of truth for task status. `roadmap.md` remains a freeform human thinking doc. Scripts update `pipeline.yaml` as tasks progress.
 
 ### Directories
 
 ```
 .claude/plans/
   defined/   # Plans written by plan-feeder.sh or /plan-builder; awaiting human review
-  ready/     # Plans approved by human and ready for claude-queue.sh to execute
+  ready/     # Plans approved via approve-plan.sh; ready for claude-queue.sh to execute
   done/      # Plans executed by claude-queue.sh; awaiting human review
-  accepted/  # Plans reviewed and accepted by human; considered complete
+  accepted/  # Plans accepted via accept-plan.sh; considered complete
   failed/    # Plans that errored during execution; includes a .log file
 ```
 
 ### Scripts
 
-**`scripts/plan-feeder.sh`** — Generates plans for unblocked roadmap tasks.
-- Polls `ready/` every 10 seconds
-- When `ready/` is empty, parses `roadmap.md` to find incomplete Phase 2 tasks whose dependencies are all `[x]`
-- Skips tasks that already have a plan in `defined/`, `done/`, or `accepted/`
-- For remaining tasks, runs the `/plan-builder` skill via `claude -p` and saves the plan to `defined/`
-- Does not touch `ready/` — human copies plans from `defined/` to `ready/` after review
+**`scripts/plan-feeder.sh`** — Generates plans for unblocked pending tasks.
+- Reads `pipeline.yaml` to find tasks where `status == pending` and all deps are `done` or `accepted`
+- Runs the `/plan-builder` skill via `claude -p` and saves the plan to `defined/`
+- Updates `pipeline.yaml` status to `planned`
+- Polls every 10 seconds
 
-**`scripts/claude-queue.sh`** — Executes plans from `ready/`.
-- Polls `ready/` every 10 seconds for `*.md` plan files
-- For each file, runs `claude -p` with the plan content (max 30 turns, all tools auto-approved)
-- On success: moves plan to `done/`
-- On failure: moves plan to `failed/` with a `.log` file containing Claude's output
+**`scripts/claude-queue.sh`** — Executes plans for tasks in `ready` status.
+- Reads `pipeline.yaml` to find tasks where `status == ready`
+- Finds the matching plan file in `ready/`, runs it via `claude -p`
+- On success: moves plan to `done/`, updates status to `done`
+- On failure: moves plan to `failed/` with a `.log` file, updates status to `failed`
 - On rate limit or daily usage limit: waits and retries automatically
+
+**`scripts/pipeline-status.sh`** — Prints a status dashboard grouped by phase and status.
+
+**`scripts/approve-plan.sh [id|name]`** — Moves plan from `defined/` → `ready/`, updates status to `ready`. No args: lists planned tasks.
+
+**`scripts/accept-plan.sh [id|name]`** — Moves plan from `done/` → `accepted/`, updates status to `accepted`. No args: lists done tasks.
+
+**`scripts/retry-plan.sh [id|name]`** — Moves plan from `failed/` → `ready/`, updates status to `ready`. No args: lists failed tasks.
+
+**`scripts/lib/common.sh`** — Shared functions sourced by plan-feeder and claude-queue: logging, YAML read/write, Claude execution with rate-limit retry, task discovery helpers.
 
 ### Human Review Points
 
-1. **`defined/` → `ready/`** — Read the generated plan. If it looks correct, `cp` it to `ready/`. Edit it first if adjustments are needed.
-2. **`done/` → `accepted/`** — Review the implementation (code diff, run the app, check tests). If satisfied, `cp` the plan to `accepted/`.
+1. **`defined/` → `ready/`** — Read the generated plan. Run `./scripts/approve-plan.sh` to list planned tasks, then `./scripts/approve-plan.sh <id>` to approve one.
+2. **`done/` → `accepted/`** — Review the implementation (code diff, run the app, check tests). Run `./scripts/accept-plan.sh` to list done tasks, then `./scripts/accept-plan.sh <id>` to accept one.
+3. **Bug fixes** — If manual testing reveals a problem, add a new task to `pipeline.yaml` with appropriate deps. The original task stays `accepted`.
 
 ### Running the Pipeline
 
 ```bash
+# Check status at any time
+./scripts/pipeline-status.sh
+
 # In one terminal — generates plans into defined/ as tasks become unblocked
 ./scripts/plan-feeder.sh
 
