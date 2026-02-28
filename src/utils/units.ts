@@ -36,8 +36,8 @@ export function parseInches(input: string): number {
   // Strip optional trailing inch mark (e.g. "24"" → "24", "3-1/2"" → "3-1/2")
   const normalized = trimmed.endsWith('"') ? trimmed.slice(0, -1).trim() : trimmed
 
-  // Decimal: "3.5"
-  if (/^-?\d+(\.\d+)?$/.test(normalized)) {
+  // Decimal: "3.5", ".5"
+  if (/^-?(\d+(\.\d*)?|\.\d+)$/.test(normalized)) {
     return parseFloat(normalized)
   }
 

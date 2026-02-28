@@ -56,6 +56,9 @@ describe('parseInches', () => {
     expect(parseInches('0.75')).toBe(0.75)
     expect(parseInches('24')).toBe(24)
     expect(parseInches('12')).toBe(12)
+    expect(parseInches('.5')).toBe(0.5)
+    expect(parseInches('.75')).toBe(0.75)
+    expect(parseInches('.0625')).toBe(0.0625)
   })
 
   it('parses fractions only', () => {
