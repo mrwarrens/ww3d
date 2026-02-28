@@ -105,7 +105,7 @@ Questions to resolve before and during implementation.
 ## Performance & Scalability
 
 - What is the target maximum number of parts in a single project?
-- How to handle undo/redo efficiently for large projects — command pattern, state snapshots, or incremental diffs?
+- ~~How to handle undo/redo efficiently for large projects — command pattern, state snapshots, or incremental diffs?~~ **Decided: State snapshots** stored in `history`/`future` arrays in the Zustand store. Simple and sufficient for current project sizes.
 - How to manage memory for projects with many instanced components?
 - Should the parametric engine run in a Web Worker to avoid blocking the UI thread?
 
@@ -120,7 +120,7 @@ Questions to resolve before and during implementation.
 
 - Where to host the static app — GitHub Pages, Vercel, Netlify, Cloudflare Pages?
 - How to handle the OAuth proxy if needed — serverless function or a minimal backend?
-- What build tool — Vite, webpack, or other?
+- ~~What build tool — Vite, webpack, or other?~~ **Decided: Vite.** Fast dev server with HMR, native ESM, Vitest integration.
 - How to handle WASM dependencies (if using OpenCascade or manifold)?
 - What is the target bundle size budget for initial load?
 

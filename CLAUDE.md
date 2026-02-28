@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ww3d is a web-based 3D woodworking design application. It lets users design furniture and woodworking projects in 3D, then reference those designs while building (iPad "shop mode") or buying lumber (phone "lumber yard mode").
 
-The project has completed Phase 1: a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
+The project has completed Phase 1 and Phase 2. Phase 1 delivered a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. Phase 2 added drag-to-move, snap-to-grid, adjustable grid, camera pan/presets, editable properties panel (name/dimensions/rotation/position/color), duplicate, parts outliner with hide/show, undo/redo, and several bug fixes. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
 
 **At the start of each session, read `roadmap.md` to find the current progress and pick up from the first unchecked item.**
 
@@ -44,39 +44,44 @@ Browser-mode tests use `vitest-browser-react` to render R3F components inside a 
 index.html              # Entry HTML — loads src/main.tsx
 src/
   main.tsx              # React entry point (createRoot)
-  App.tsx               # Info overlay, Save/Load buttons, selectedId state, PartPanel, Canvas
+  App.tsx               # Save/Load buttons, Cmd+S/Cmd+Z/Cmd+Shift+Z shortcuts, help pane, grid controls, camera preset buttons, selectedId state, PartPanel, PartOutliner, Canvas
   components/
-    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; reads parts from store; Delete key handler
-    Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines
+    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; drag-to-move parts; Delete/Backspace/Escape/Cmd+D key handlers; camera preset wiring
+    Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
-    PartPanel.tsx       # DOM overlay showing selected part name and dimensions
-    PartOutliner.tsx    # Sidebar listing all parts by name; click to select
+    PartPanel.tsx       # DOM overlay with editable inputs: name, length/width/thickness, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker
+    PartOutliner.tsx    # Sidebar listing all parts by name; click to select; visibility toggle button per row
   models/
     Part.ts             # Part interface and createPart factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
   utils/
-    constants.ts        # Shared constants (BOARD_THICKNESS)
+    constants.ts        # BOARD_THICKNESS, SNAP_INCREMENT, snapToGrid, CAMERA_PRESETS
     units.ts            # Fractional inch display and parsing utilities
-  hooks/                # Custom React hooks
+  hooks/
+    useCameraPreset.ts  # Hook: animates camera to a named preset position
   stores/
-    projectStore.ts     # Zustand store: project object, addPart, removePart, setProjectName, loadProject
+    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, setProjectName, setGridSize, loadProject, undo, redo
 tests/
-  scene.browser.test.tsx  # Browser-mode R3F scene tests
-  partPanel.browser.test.tsx  # Browser-mode DOM tests for PartPanel
-  partOutliner.browser.test.tsx  # Browser-mode tests for PartOutliner
-  app.browser.test.tsx        # Browser-mode tests for App-level features (save)
-  camera-pan.browser.test.tsx # Browser-mode tests for camera pan configuration
+  scene.browser.test.tsx           # Browser-mode R3F scene tests
+  partPanel.browser.test.tsx       # Browser-mode DOM tests for PartPanel
+  partOutliner.browser.test.tsx    # Browser-mode tests for PartOutliner
+  app.browser.test.tsx             # Browser-mode tests for App-level features (save)
+  camera-pan.browser.test.tsx      # Browser-mode tests for camera pan configuration
+  camera-presets.browser.test.tsx  # Browser-mode tests for camera preset views
+  move-part.browser.test.tsx       # Browser-mode tests for drag-to-move
+  duplicate-part.browser.test.tsx  # Browser-mode tests for Cmd+D duplicate
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
   units.test.ts           # Unit tests for inch display and parsing utilities
+  constants.test.ts       # Unit tests for snapToGrid and constants
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
 
 ## Architecture
 
-**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons, Cmd+S keyboard shortcut, and renders `<PartPanel>`, `<PartOutliner>`, and the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles Delete/Backspace to remove the selected part. Board creation via drag interaction is handled by `BoardCreator.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay showing the selected part's name and fractional-inch dimensions. `PartOutliner.tsx` is a sidebar listing all parts by name with click-to-select; includes a `.visibility-slot` placeholder per row for the future hide/show toggle.
+**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons (Cmd+S shortcut), undo/redo (Cmd+Z/Cmd+Shift+Z), help pane toggle, grid controls pane, camera preset buttons, and renders `<PartPanel>`, `<PartOutliner>`, and the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles keyboard events: Delete/Backspace to remove the selected part, Escape to deselect, Cmd+D to duplicate, and 1/2/3/4 for camera presets. Board creation via drag interaction is handled by `BoardCreator.tsx`; board movement via pointer-drag on the board mesh is handled in `Scene.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay with editable inputs for name, dimensions (L/W/T), rotation (Rx/Ry/Rz), position (Px/Py/Pz), and a color picker. `PartOutliner.tsx` is a sidebar listing all parts by name with click-to-select and a per-row visibility toggle button. Camera preset logic is encapsulated in `hooks/useCameraPreset.ts`.
 
 **Target architecture (from requirements.md):**
 - Three.js-based 3D engine with CSG/boolean operations for joinery
