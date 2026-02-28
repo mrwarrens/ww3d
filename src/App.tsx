@@ -10,6 +10,7 @@ import type { CAMERA_PRESETS } from './utils/constants'
 export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [gridPaneOpen, setGridPaneOpen] = useState(false)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
   const gridSize = useProjectStore((s) => s.project.gridSize)
@@ -74,9 +75,15 @@ export default function App() {
         <button onClick={() => cameraPresetRef.current?.('iso')}>4 Iso</button>
       </div>
       <div id="grid-controls">
-        <button onClick={() => setGridSize(Math.max(5, gridSize - 5))}>Grid −</button>
-        <span>Grid: {gridSize}</span>
-        <button onClick={() => setGridSize(gridSize + 5)}>Grid +</button>
+        <button id="grid-toggle-btn" onClick={() => setGridPaneOpen((o) => !o)}>
+          Grid: {gridSize}
+        </button>
+        {gridPaneOpen && (
+          <div id="grid-pane">
+            <button onClick={() => setGridSize(Math.max(5, gridSize - 5))}>Grid −</button>
+            <button onClick={() => setGridSize(gridSize + 5)}>Grid +</button>
+          </div>
+        )}
       </div>
       <input
         ref={fileInputRef}
