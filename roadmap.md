@@ -32,7 +32,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 - [x] **5. Camera preset views** — Buttons or keyboard shortcuts (Numpad-style: 1 front, 3 right, 7 top, 0 isometric) to jump the camera to standard angles.
 - [x] **6. Editable properties panel** — All fields in the Part panel (name, length, width, thickness) become editable inputs. Parse fractional-inch input via the existing `parseInches` utility; commit on blur or Enter. Include the part name as an editable field. _Blocks: #7, #8._
 - [x] **7. Board rotation on all 3 axes** — Add rotation inputs (X, Y, Z in degrees) to the properties panel. Update the Part's rotation in the store; the Board mesh rotates accordingly. _Depends on: #6._
-- [ ] **8. Color picker** — Color swatch in the properties panel opens a native color input. Updates the Part's hex color in the store; Board re-renders immediately. _Depends on: #6._
+- [x] **8. Color picker** — Color swatch in the properties panel opens a native color input. Updates the Part's hex color in the store; Board re-renders immediately. _Depends on: #6._
 - [x] **9. Duplicate a part** — Cmd+D copies the selected part with a slight position offset and adds it to the store. New part becomes the selection.
 - [x] **10. Part list/outliner** — Sidebar listing all parts by name; click to select, selected part highlighted. Updates reactively as parts are added/removed/renamed. _Blocks: #11._
 - [ ] **11. Hide/show parts** — Visibility toggle per part in the outliner. Hidden parts are excluded from the scene but remain in project state and the cut list. _Depends on: #10._

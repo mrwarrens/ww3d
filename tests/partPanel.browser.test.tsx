@@ -168,6 +168,39 @@ describe('PartPanel', () => {
     await expect.element(input).toHaveValue('0.0')
   })
 
+  it('renders a color input with the part color as its value', async () => {
+    const colorPart = createPart({
+      name: 'Colored',
+      length: 10,
+      width: 5,
+      thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+      color: '#ab1234',
+    })
+    const screen = await render(<PartPanel part={colorPart} onUpdate={vi.fn()} />)
+    const colorInput = screen.container.querySelector('input[type="color"]') as HTMLInputElement
+    expect(colorInput).not.toBeNull()
+    expect(colorInput.value).toBe('#ab1234')
+  })
+
+  it('calls onUpdate with new color when color input changes', async () => {
+    const colorPart = createPart({
+      name: 'Colored',
+      length: 10,
+      width: 5,
+      thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+      color: '#ab1234',
+    })
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={colorPart} onUpdate={onUpdate} />)
+    const colorInput = screen.container.querySelector('input[type="color"]') as HTMLInputElement
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+    nativeValueSetter.call(colorInput, '#ff0000')
+    colorInput.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(onUpdate).toHaveBeenCalledWith({ color: '#ff0000' })
+  })
+
   it('resets rotation drafts when switching to a different part', async () => {
     const partWithRot = createPart({
       name: 'Tilted',

@@ -4,7 +4,7 @@ import { toFractionalInches, parseInches } from '../utils/units'
 
 interface PartPanelProps {
   part: Part | null
-  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation'>>) => void
+  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color'>>) => void
 }
 
 export default function PartPanel({ part, onUpdate }: PartPanelProps) {
@@ -229,6 +229,17 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
             onBlur={() => commitRot(draftRotZ, 'z', currentRotZ)}
             onKeyDown={(e) => handleRotKeyDown(e, draftRotZ, 'z', currentRotZ)}
             aria-label="Rotation Z"
+          />
+        </label>
+      </div>
+      <div className="part-panel-color">
+        <label>
+          Color:&nbsp;
+          <input
+            type="color"
+            value={part.color}
+            onChange={(e) => onUpdate({ color: e.target.value })}
+            aria-label="Color"
           />
         </label>
       </div>

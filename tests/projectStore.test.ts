@@ -322,4 +322,28 @@ describe('projectStore', () => {
     expect(after[0].visible).toBe(false)
     expect(after[1].visible).toBe(true)
   })
+
+  it('updatePart with color updates the matching part color', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 4, width: 3, position: { x: 0, y: 0.375, z: 0 }, color: '#ff0000' })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    useProjectStore.getState().updatePart(id, { color: '#0000ff' })
+
+    const part = useProjectStore.getState().project.parts[0]
+    expect(part.color).toBe('#0000ff')
+  })
+
+  it('updatePart with color does not affect other parts', () => {
+    const { addPart } = useProjectStore.getState()
+    addPart({ length: 4, width: 3, position: { x: 0, y: 0.375, z: 0 }, color: '#ff0000' })
+    addPart({ length: 2, width: 2, position: { x: 1, y: 0.375, z: 1 }, color: '#00ff00' })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    useProjectStore.getState().updatePart(id, { color: '#ffffff' })
+
+    const parts = useProjectStore.getState().project.parts
+    expect(parts[0].color).toBe('#ffffff')
+    expect(parts[1].color).toBe('#00ff00')
+  })
 })
