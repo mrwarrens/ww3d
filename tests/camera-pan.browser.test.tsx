@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { act } from 'react'
 import { Canvas } from '@react-three/fiber'
 import type { RootState } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -47,11 +48,12 @@ describe('Camera pan configuration', () => {
   })
 })
 
-describe('Info overlay mentions pan', () => {
-  it('info div contains the word "pan"', async () => {
+describe('Help pane mentions pan', () => {
+  it('help pane contains the word "pan"', async () => {
     await render(<App />)
-    const info = document.getElementById('info')
-    expect(info).not.toBeNull()
-    expect(info!.textContent?.toLowerCase()).toContain('pan')
+    await act(async () => { document.getElementById('help-btn')!.click() })
+    const pane = document.getElementById('help-pane')
+    expect(pane).not.toBeNull()
+    expect(pane!.textContent?.toLowerCase()).toContain('pan')
   })
 })

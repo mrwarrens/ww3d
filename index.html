@@ -7,9 +7,26 @@
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
-    #info {
+    #help-btn {
       position: absolute;
       top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 1;
+      cursor: pointer;
+    }
+    #help-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #help-pane {
+      position: absolute;
+      top: 46px;
       left: 10px;
       color: #fff;
       font-family: monospace;
@@ -18,6 +35,7 @@
       padding: 8px 12px;
       border-radius: 4px;
       z-index: 1;
+      max-width: 420px;
     }
     #part-panel {
       position: absolute;
