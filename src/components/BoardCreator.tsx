@@ -4,6 +4,16 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { BOARD_THICKNESS, snapToGrid } from '../utils/constants'
 import { useProjectStore } from '../stores/projectStore'
 
+function hslToHex(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(255 * color).toString(16).padStart(2, '0')
+  }
+  return `#${f(0)}${f(8)}${f(4)}`
+}
+
 interface DragPoint {
   x: number
   z: number
@@ -72,7 +82,7 @@ export default function BoardCreator({ gridSize, onClearSelection }: BoardCreato
         const cx = (dragStart.current.x + hitX) / 2
         const cz = (dragStart.current.z + hitZ) / 2
         const hue = Math.random()
-        const color = `hsl(${hue * 360}, 70%, 60%)`
+        const color = hslToHex(hue * 360, 0.7, 0.6)
         addPart({
           length,
           width,

@@ -201,6 +201,21 @@ describe('PartPanel', () => {
     expect(onUpdate).toHaveBeenCalledWith({ color: '#ff0000' })
   })
 
+  it('color input shows part color on first render when color is a computed hex value', async () => {
+    const hexColorPart = createPart({
+      name: 'HexColored',
+      length: 10,
+      width: 5,
+      thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+      color: '#4da652',
+    })
+    const screen = await render(<PartPanel part={hexColorPart} onUpdate={vi.fn()} />)
+    const colorInput = screen.container.querySelector('input[type="color"]') as HTMLInputElement
+    expect(colorInput).not.toBeNull()
+    expect(colorInput.value).toBe('#4da652')
+  })
+
   it('resets rotation drafts when switching to a different part', async () => {
     const partWithRot = createPart({
       name: 'Tilted',
