@@ -10,7 +10,7 @@ interface ProjectStore {
   removePart: (id: string) => void
   duplicatePart: (id: string) => string | null
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
-  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color'>>) => void
+  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
   togglePartVisibility: (id: string) => void
   setProjectName: (name: string) => void
   setGridSize: (size: number) => void

@@ -4,7 +4,7 @@ import { toFractionalInches, parseInches } from '../utils/units'
 
 interface PartPanelProps {
   part: Part | null
-  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color'>>) => void
+  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
 }
 
 export default function PartPanel({ part, onUpdate }: PartPanelProps) {
@@ -15,6 +15,9 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
   const [draftRotX, setDraftRotX] = useState('')
   const [draftRotY, setDraftRotY] = useState('')
   const [draftRotZ, setDraftRotZ] = useState('')
+  const [draftPosX, setDraftPosX] = useState('')
+  const [draftPosY, setDraftPosY] = useState('')
+  const [draftPosZ, setDraftPosZ] = useState('')
   const skipBlurRef = useRef(false)
 
   const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
@@ -28,6 +31,9 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
     setDraftRotX(radToDeg(part.rotation.x))
     setDraftRotY(radToDeg(part.rotation.y))
     setDraftRotZ(radToDeg(part.rotation.z))
+    setDraftPosX(part.position.x.toFixed(3))
+    setDraftPosY(part.position.y.toFixed(3))
+    setDraftPosZ(part.position.z.toFixed(3))
   }, [part?.id])
 
   if (!part) return null
@@ -109,6 +115,42 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
     }
   }
 
+  function commitPos(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
+    if (skipBlurRef.current) {
+      skipBlurRef.current = false
+      return
+    }
+    const value = parseFloat(draft)
+    if (!isNaN(value)) {
+      onUpdate({ position: { ...part!.position, [axis]: value } })
+    } else {
+      resetPos(resetValue, axis)
+    }
+  }
+
+  function resetPos(resetValue: string, axis: 'x' | 'y' | 'z') {
+    if (axis === 'x') setDraftPosX(resetValue)
+    else if (axis === 'y') setDraftPosY(resetValue)
+    else setDraftPosZ(resetValue)
+  }
+
+  function handlePosKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    draft: string,
+    axis: 'x' | 'y' | 'z',
+    resetValue: string
+  ) {
+    if (e.key === 'Enter') {
+      commitPos(draft, axis, resetValue)
+      skipBlurRef.current = true
+      e.currentTarget.blur()
+    } else if (e.key === 'Escape') {
+      skipBlurRef.current = true
+      resetPos(resetValue, axis)
+      e.currentTarget.blur()
+    }
+  }
+
   function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       e.currentTarget.blur()
@@ -142,6 +184,9 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
   const currentRotX = radToDeg(part.rotation.x)
   const currentRotY = radToDeg(part.rotation.y)
   const currentRotZ = radToDeg(part.rotation.z)
+  const currentPosX = part.position.x.toFixed(3)
+  const currentPosY = part.position.y.toFixed(3)
+  const currentPosZ = part.position.z.toFixed(3)
 
   return (
     <div id="part-panel">
@@ -229,6 +274,44 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
             onBlur={() => commitRot(draftRotZ, 'z', currentRotZ)}
             onKeyDown={(e) => handleRotKeyDown(e, draftRotZ, 'z', currentRotZ)}
             aria-label="Rotation Z"
+          />
+        </label>
+      </div>
+      <div className="part-panel-dims">
+        <label>
+          Px:&nbsp;
+          <input
+            type="text"
+            className="part-panel-input part-panel-dim-input"
+            value={draftPosX}
+            onChange={(e) => setDraftPosX(e.target.value)}
+            onBlur={() => commitPos(draftPosX, 'x', currentPosX)}
+            onKeyDown={(e) => handlePosKeyDown(e, draftPosX, 'x', currentPosX)}
+            aria-label="Position X"
+          />
+        </label>
+        <label>
+          Py:&nbsp;
+          <input
+            type="text"
+            className="part-panel-input part-panel-dim-input"
+            value={draftPosY}
+            onChange={(e) => setDraftPosY(e.target.value)}
+            onBlur={() => commitPos(draftPosY, 'y', currentPosY)}
+            onKeyDown={(e) => handlePosKeyDown(e, draftPosY, 'y', currentPosY)}
+            aria-label="Position Y"
+          />
+        </label>
+        <label>
+          Pz:&nbsp;
+          <input
+            type="text"
+            className="part-panel-input part-panel-dim-input"
+            value={draftPosZ}
+            onChange={(e) => setDraftPosZ(e.target.value)}
+            onBlur={() => commitPos(draftPosZ, 'z', currentPosZ)}
+            onKeyDown={(e) => handlePosKeyDown(e, draftPosZ, 'z', currentPosZ)}
+            aria-label="Position Z"
           />
         </label>
       </div>

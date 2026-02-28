@@ -92,17 +92,19 @@ generate_plan() {
 
   log "Running plan-builder for: $args"
 
-  # Substitute $ARGUMENTS in the skill file content
+  # Strip YAML frontmatter and substitute $ARGUMENTS in the skill file content
   local prompt
   prompt=$(PLAN_ARGS="$args" python3 -c "
-import os, sys
+import os, sys, re
 content = open(sys.argv[1]).read()
+# Strip leading YAML frontmatter (--- ... ---)
+content = re.sub(r'^---\n.*?\n---\n', '', content, count=1, flags=re.DOTALL)
 print(content.replace('\$ARGUMENTS', os.environ['PLAN_ARGS']))
 " "$SKILL_FILE")
 
   while true; do
     local output exit_code=0
-    output=$(cd "$PROJECT_ROOT" && claude -p "$prompt" \
+    output=$(cd "$PROJECT_ROOT" && env -u CLAUDECODE claude -p "$prompt" \
       --output-format json \
       --max-turns "$MAX_TURNS" \
       --allowedTools "$ALLOWED_TOOLS" \
@@ -146,7 +148,7 @@ print(content.replace('\$ARGUMENTS', os.environ['PLAN_ARGS']))
         ;;
       *)
         log "ERROR: plan-builder failed for task #${num} (status=$status exit=$exit_code)"
-        log "Output: $result"
+        log "Output: $output"
         return
         ;;
     esac

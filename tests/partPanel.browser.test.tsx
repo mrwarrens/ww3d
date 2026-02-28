@@ -216,6 +216,43 @@ describe('PartPanel', () => {
     expect(colorInput.value).toBe('#4da652')
   })
 
+  it('renders Px input with initial value matching position.x', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await expect.element(input).toHaveValue('0.000')
+  })
+
+  it('commits position.x on Enter', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await input.fill('5.5')
+    await userEvent.keyboard('{Enter}')
+    expect(onUpdate).toHaveBeenCalledWith({
+      position: { ...testPart.position, x: 5.5 },
+    })
+  })
+
+  it('resets Px input on invalid value without calling onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await input.fill('abc')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).not.toHaveBeenCalled()
+    await expect.element(input).toHaveValue('0.000')
+  })
+
+  it('resets position drafts when switching to a different part', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const pxInput = screen.getByRole('textbox', { name: /position x/i })
+    await expect.element(pxInput).toHaveValue('0.000')
+
+    await screen.rerender(<PartPanel part={secondPart} onUpdate={onUpdate} />)
+    await expect.element(pxInput).toHaveValue('1.000')
+  })
+
   it('resets rotation drafts when switching to a different part', async () => {
     const partWithRot = createPart({
       name: 'Tilted',

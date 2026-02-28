@@ -39,7 +39,7 @@ run_plan() {
     local output
     local exit_code=0
 
-    output=$(cd "$PROJECT_ROOT" && claude -p "$plan_content" \
+    output=$(cd "$PROJECT_ROOT" && env -u CLAUDECODE claude -p "$plan_content" \
       --output-format json \
       --max-turns "$MAX_TURNS" \
       --allowedTools "$ALLOWED_TOOLS" \
