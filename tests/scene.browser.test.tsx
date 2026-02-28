@@ -137,6 +137,59 @@ describe('Board component', () => {
   })
 })
 
+describe('Grid size', () => {
+  beforeEach(() => {
+    useProjectStore.setState({ project: createProject() })
+  })
+
+  it('GridHelper reflects gridSize from the store', async () => {
+    useProjectStore.getState().setGridSize(20)
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const grid = state.scene.children.find(c => c.type === 'GridHelper') as THREE.GridHelper
+    expect(grid).toBeDefined()
+    // GridHelper size is stored as the first arg; accessible via geometry bounding box
+    // The scale of 20 means the grid spans ±10, so its bounding sphere radius ≈ 14.14
+    const box = new THREE.Box3().setFromObject(grid)
+    const size = new THREE.Vector3()
+    box.getSize(size)
+    expect(size.x).toBeCloseTo(20, 1)
+    expect(size.z).toBeCloseTo(20, 1)
+  })
+})
+
+describe('Part visibility', () => {
+  beforeEach(() => {
+    useProjectStore.setState({ project: createProject() })
+  })
+
+  it('a part with visible: false is not rendered in the scene', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    const id = useProjectStore.getState().project.parts[0].id
+    useProjectStore.getState().togglePartVisibility(id)
+
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    // Filter to visible meshes only — BoardCreator renders a hidden ground plane (visible:false)
+    const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
+    expect(meshes).toHaveLength(0)
+  })
+
+  it('a visible part is rendered in the scene', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+
+    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
+    expect(meshes.length).toBeGreaterThanOrEqual(1)
+  })
+})
+
 describe('Delete a Part', () => {
   beforeEach(() => {
     useProjectStore.setState({ project: createProject() })
@@ -166,6 +219,48 @@ describe('Delete a Part', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
 
     expect(useProjectStore.getState().project.parts).toHaveLength(1)
+  })
+
+  it('Delete key while a text input has focus does not remove the part', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    await renderInCanvas(<Scene selectedId={id} onSelectId={() => {}} />)
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+
+    expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    document.body.removeChild(input)
+  })
+
+  it('Backspace key while a text input has focus does not remove the part', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    const id = useProjectStore.getState().project.parts[0].id
+
+    await renderInCanvas(<Scene selectedId={id} onSelectId={() => {}} />)
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
+
+    expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    document.body.removeChild(input)
   })
 
   it('Escape key calls onSelectId with null', async () => {

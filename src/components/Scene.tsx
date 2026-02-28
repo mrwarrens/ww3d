@@ -7,11 +7,13 @@ import Board from './Board'
 import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
 import type { Part } from '../models/Part'
-import { snapToGrid } from '../utils/constants'
+import { snapToGrid, CAMERA_PRESETS } from '../utils/constants'
+import { useCameraPreset } from '../hooks/useCameraPreset'
 
 interface SceneProps {
   selectedId: string | null
   onSelectId: (id: string | null) => void
+  cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
 }
 
 interface DragState {
@@ -44,15 +46,22 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedId, onSelectId }: SceneProps) {
+export default function Scene({ selectedId, onSelectId, cameraPresetRef }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
   const gridSize = useProjectStore((s) => s.project.gridSize)
   const removePart = useProjectStore((s) => s.removePart)
+  const duplicatePart = useProjectStore((s) => s.duplicatePart)
   const movePart = useProjectStore((s) => s.movePart)
   const gl = useThree((s) => s.gl)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const camera = useThree((s) => s.camera)
   const raycaster = useThree((s) => s.raycaster)
+
+  const goToPreset = useCameraPreset(camera, controls)
+
+  useEffect(() => {
+    if (cameraPresetRef) cameraPresetRef.current = goToPreset
+  }, [cameraPresetRef, goToPreset])
 
   // Only livePos is state — it drives re-renders during drag.
   // Everything else is in refs so handlers never go stale.
@@ -69,17 +78,28 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+      const isTyping = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !isTyping) {
         removePart(selectedId)
         onSelectId(null)
       }
       if (e.key === 'Escape') {
         onSelectId(null)
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedId) {
+        e.preventDefault()
+        const newId = duplicatePart(selectedId)
+        if (newId) onSelectId(newId)
+      }
+      if (isTyping) return
+      if (e.key === '1') goToPreset('front')
+      else if (e.key === '2') goToPreset('right')
+      else if (e.key === '3') goToPreset('top')
+      else if (e.key === '4') goToPreset('iso')
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, removePart, onSelectId])
+  }, [selectedId, removePart, duplicatePart, onSelectId, goToPreset])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
@@ -180,7 +200,7 @@ export default function Scene({ selectedId, onSelectId }: SceneProps) {
 
       <BoardCreator gridSize={gridSize} onClearSelection={() => onSelectId(null)} />
 
-      {parts.map((p) => (
+      {parts.filter((p) => p.visible !== false).map((p) => (
         <Board
           key={p.id}
           {...p}
