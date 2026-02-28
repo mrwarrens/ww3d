@@ -10,7 +10,7 @@ const baseInit = {
 }
 
 beforeEach(() => {
-  useProjectStore.setState({ project: createProject() })
+  useProjectStore.setState({ project: createProject(), history: [], future: [] })
 })
 
 describe('projectStore', () => {
@@ -345,5 +345,120 @@ describe('projectStore', () => {
     const parts = useProjectStore.getState().project.parts
     expect(parts[0].color).toBe('#ffffff')
     expect(parts[1].color).toBe('#00ff00')
+  })
+
+  describe('undo/redo', () => {
+    it('undo does nothing when history is empty', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const after = useProjectStore.getState().project
+      useProjectStore.setState({ history: [] })
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project).toEqual(after)
+    })
+
+    it('redo does nothing when future is empty', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const after = useProjectStore.getState().project
+      useProjectStore.getState().redo()
+      expect(useProjectStore.getState().project).toEqual(after)
+    })
+
+    it('undo after addPart restores the empty parts list', () => {
+      useProjectStore.getState().addPart(baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+    })
+
+    it('redo after undo re-adds the part', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().undo()
+      useProjectStore.getState().redo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    })
+
+    it('undo after removePart restores the removed part', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().removePart(id)
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    })
+
+    it('undo after movePart restores previous position', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().movePart(id, { x: 9, y: 0.375, z: 9 })
+      useProjectStore.getState().undo()
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.position).toEqual(baseInit.position)
+    })
+
+    it('undo after updatePart restores the previous field value', () => {
+      useProjectStore.getState().addPart({ ...baseInit, name: 'Shelf' })
+      const id = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().updatePart(id, { name: 'Top Shelf' })
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts[0].name).toBe('Shelf')
+    })
+
+    it('undo after duplicatePart removes the duplicate', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().duplicatePart(id)
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    })
+
+    it('undo after togglePartVisibility restores previous visibility', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().togglePartVisibility(id)
+      expect(useProjectStore.getState().project.parts[0].visible).toBe(false)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts[0].visible).toBe(true)
+    })
+
+    it('undo after setGridSize restores previous grid size', () => {
+      const original = useProjectStore.getState().project.gridSize
+      useProjectStore.getState().setGridSize(original + 10)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.gridSize).toBe(original)
+    })
+
+    it('multiple undos step back through history correctly', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(3)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+    })
+
+    it('a new mutation clears the redo stack', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().future).toHaveLength(1)
+      useProjectStore.getState().addPart(baseInit)
+      expect(useProjectStore.getState().future).toHaveLength(0)
+    })
+
+    it('loadProject clears both history and future', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().undo()
+      // After two adds and one undo: history has 1 entry, future has 1 entry
+      expect(useProjectStore.getState().history.length).toBeGreaterThan(0)
+      expect(useProjectStore.getState().future.length).toBeGreaterThan(0)
+      useProjectStore.getState().loadProject(createProject())
+      expect(useProjectStore.getState().history).toHaveLength(0)
+      expect(useProjectStore.getState().future).toHaveLength(0)
+    })
   })
 })

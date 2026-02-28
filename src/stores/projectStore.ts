@@ -4,6 +4,8 @@ import { type Project, createProject } from '../models/Project'
 
 interface ProjectStore {
   project: Project
+  history: Project[]
+  future: Project[]
   addPart: (init: PartInit) => void
   removePart: (id: string) => void
   duplicatePart: (id: string) => string | null
@@ -13,12 +15,19 @@ interface ProjectStore {
   setProjectName: (name: string) => void
   setGridSize: (size: number) => void
   loadProject: (project: Project) => void
+  undo: () => void
+  redo: () => void
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   project: createProject(),
-  addPart: (init) =>
+  history: [],
+  future: [],
+  addPart: (init) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: [
@@ -29,14 +38,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           }),
         ],
       },
-    })),
-  removePart: (id) =>
+    }))
+  },
+  removePart: (id) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: state.project.parts.filter((p) => p.id !== id),
       },
-    })),
+    }))
+  },
   duplicatePart: (id) => {
     const source = get().project.parts.find((p) => p.id === id)
     if (!source) return null
@@ -46,7 +60,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       id: newId,
       position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
     }
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: [...state.project.parts, newPart],
@@ -54,38 +71,78 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }))
     return newId
   },
-  movePart: (id, position) =>
+  movePart: (id, position) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: state.project.parts.map((p) => p.id === id ? { ...p, position } : p),
       },
-    })),
-  updatePart: (id, changes) =>
+    }))
+  },
+  updatePart: (id, changes) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: state.project.parts.map((p) =>
           p.id === id ? { ...p, ...changes } : p
         ),
       },
-    })),
-  togglePartVisibility: (id) =>
+    }))
+  },
+  togglePartVisibility: (id) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: {
         ...state.project,
         parts: state.project.parts.map((p) =>
           p.id === id ? { ...p, visible: !p.visible } : p
         ),
       },
-    })),
-  setProjectName: (name) =>
+    }))
+  },
+  setProjectName: (name) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: { ...state.project, name },
-    })),
-  setGridSize: (size) =>
+    }))
+  },
+  setGridSize: (size) => {
+    const current = get().project
     set((state) => ({
+      history: [...state.history, current],
+      future: [],
       project: { ...state.project, gridSize: size },
-    })),
-  loadProject: (project) => set(() => ({ project })),
+    }))
+  },
+  loadProject: (project) => set(() => ({ project, history: [], future: [] })),
+  undo: () => {
+    const { history, project, future } = get()
+    if (history.length === 0) return
+    const previous = history[history.length - 1]
+    set({
+      history: history.slice(0, -1),
+      future: [project, ...future],
+      project: previous,
+    })
+  },
+  redo: () => {
+    const { future, project, history } = get()
+    if (future.length === 0) return
+    const next = future[0]
+    set({
+      future: future.slice(1),
+      history: [...history, project],
+      project: next,
+    })
+  },
 }))

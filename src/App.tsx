@@ -18,6 +18,8 @@ export default function App() {
   const loadProject = useProjectStore((s) => s.loadProject)
   const updatePart = useProjectStore((s) => s.updatePart)
   const togglePartVisibility = useProjectStore((s) => s.togglePartVisibility)
+  const undo = useProjectStore((s) => s.undo)
+  const redo = useProjectStore((s) => s.redo)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraPresetRef = useRef<((name: keyof typeof CAMERA_PRESETS) => void) | null>(null)
@@ -53,10 +55,19 @@ export default function App() {
         e.preventDefault()
         saveProject()
       }
+      const tag = (document.activeElement as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault()
+        redo()
+      } else if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z') {
+        e.preventDefault()
+        undo()
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [saveProject])
+  }, [saveProject, undo, redo])
 
   return (
     <>
