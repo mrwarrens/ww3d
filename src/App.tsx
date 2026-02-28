@@ -73,7 +73,7 @@ export default function App() {
     <>
       <button id="help-btn" onClick={() => setHelpOpen((o) => !o)}>?</button>
       {helpOpen && (
-        <div id="help-pane">
+        <div id="help-pane" style={{ zIndex: 10, background: 'rgba(20,20,20,1)' }}>
           Left-drag: draw board &middot; Right-drag: orbit &middot; Middle-drag or Shift+drag: pan &middot; Scroll: zoom
         </div>
       )}

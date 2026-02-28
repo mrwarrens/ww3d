@@ -9,7 +9,7 @@ interface PartOutlinerProps {
 
 export default function PartOutliner({ parts, selectedId, onSelectId, onToggleVisibility }: PartOutlinerProps) {
   return (
-    <div id="part-outliner">
+    <div id="part-outliner" style={{ zIndex: 1 }}>
       <ul>
         {parts.map((part) => (
           <li

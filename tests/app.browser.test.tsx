@@ -80,6 +80,27 @@ describe('App', () => {
     expect(toggleBtn.textContent?.trim()).toBe(`Grid: ${initialSize + 5}`)
   })
 
+  it('help pane z-index is greater than part outliner z-index', async () => {
+    await render(<App />)
+    await act(async () => { document.getElementById('help-btn')!.click() })
+    const helpPane = document.getElementById('help-pane')!
+    const outliner = document.getElementById('part-outliner')!
+    const helpZ = parseInt(getComputedStyle(helpPane).zIndex, 10)
+    const outlinerZ = parseInt(getComputedStyle(outliner).zIndex, 10)
+    expect(helpZ).toBeGreaterThan(outlinerZ)
+  })
+
+  it('help pane background is fully opaque', async () => {
+    await render(<App />)
+    await act(async () => { document.getElementById('help-btn')!.click() })
+    const helpPane = document.getElementById('help-pane')!
+    const bg = getComputedStyle(helpPane).backgroundColor
+    // Parse alpha from rgb(r,g,b) or rgba(r,g,b,a)
+    const match = bg.match(/rgba?\([\d\s,]+(?:,\s*([\d.]+))?\)/)
+    const alpha = match?.[1] !== undefined ? parseFloat(match[1]) : 1
+    expect(alpha).toBe(1)
+  })
+
   it('Cmd+S triggers a download', async () => {
     const anchors: HTMLAnchorElement[] = []
     const origCreate = document.createElement.bind(document)
