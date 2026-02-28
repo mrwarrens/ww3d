@@ -140,4 +140,49 @@ describe('PartPanel', () => {
     const lengthInput = screen.getByRole('textbox', { name: /length/i })
     await expect.element(lengthInput).toHaveValue('12"')
   })
+
+  it('renders Rx input with initial value 0.0', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /rotation x/i })
+    await expect.element(input).toHaveValue('0.0')
+  })
+
+  it('commits rotation.x on Enter with degrees converted to radians', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /rotation x/i })
+    await input.fill('90')
+    await userEvent.keyboard('{Enter}')
+    expect(onUpdate).toHaveBeenCalledWith({
+      rotation: expect.objectContaining({ x: expect.closeTo(Math.PI / 2, 5) }),
+    })
+  })
+
+  it('resets Rx input on invalid value without calling onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /rotation x/i })
+    await input.fill('abc')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).not.toHaveBeenCalled()
+    await expect.element(input).toHaveValue('0.0')
+  })
+
+  it('resets rotation drafts when switching to a different part', async () => {
+    const partWithRot = createPart({
+      name: 'Tilted',
+      length: 10,
+      width: 5,
+      thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+      rotation: { x: Math.PI / 2, y: 0, z: 0 },
+    })
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={partWithRot} onUpdate={onUpdate} />)
+    const rxInput = screen.getByRole('textbox', { name: /rotation x/i })
+    await expect.element(rxInput).toHaveValue('90.0')
+
+    await screen.rerender(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    await expect.element(rxInput).toHaveValue('0.0')
+  })
 })

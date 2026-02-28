@@ -12,7 +12,7 @@ interface BoardProps extends Part {
   onDragStart?: (e: ThreeEvent<PointerEvent>) => void
 }
 
-export default function Board({ length, width, thickness, position, color, isSelected, onSelect, onDragStart }: BoardProps) {
+export default function Board({ length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart }: BoardProps) {
   const edgesGeo = useMemo(() => {
     const box = new THREE.BoxGeometry(length, thickness, width)
     const edges = new THREE.EdgesGeometry(box)
@@ -32,7 +32,7 @@ export default function Board({ length, width, thickness, position, color, isSel
   }
 
   return (
-    <mesh position={[position.x, position.y, position.z]} onClick={handleClick} onPointerDown={handlePointerDown}>
+    <mesh position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} onClick={handleClick} onPointerDown={handlePointerDown}>
       <boxGeometry args={[length, thickness, width]} />
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} />
       <lineSegments geometry={edgesGeo} material={lineMat} />
