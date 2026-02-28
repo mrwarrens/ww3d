@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { render } from 'vitest-browser-react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, cleanup } from 'vitest-browser-react'
+import { userEvent } from '@vitest/browser/context'
 import PartPanel from '../src/components/PartPanel'
 import { createPart } from '../src/models/Part'
 
@@ -11,29 +12,132 @@ const testPart = createPart({
   position: { x: 0, y: 0.375, z: 0 },
 })
 
+const secondPart = createPart({
+  name: 'Side Panel',
+  length: 12,
+  width: 6,
+  thickness: 0.75,
+  position: { x: 1, y: 0.375, z: 1 },
+})
+
+afterEach(() => cleanup())
+
 describe('PartPanel', () => {
   it('renders nothing when part is null', async () => {
-    const { container } = await render(<PartPanel part={null} />)
+    const { container } = await render(<PartPanel part={null} onUpdate={vi.fn()} />)
     expect(container.firstChild).toBeNull()
   })
 
-  it('renders the part name', async () => {
-    const screen = await render(<PartPanel part={testPart} />)
-    await expect.element(screen.getByText('Shelf')).toBeVisible()
+  it('renders the part name in an input', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await expect.element(input).toHaveValue('Shelf')
   })
 
   it('renders length in fractional inches', async () => {
-    const screen = await render(<PartPanel part={testPart} />)
-    await expect.element(screen.getByText(/L: 24"/)).toBeVisible()
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await expect.element(input).toHaveValue('24"')
   })
 
   it('renders width in fractional inches', async () => {
-    const screen = await render(<PartPanel part={testPart} />)
-    await expect.element(screen.getByText(/W: 8"/)).toBeVisible()
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /width/i })
+    await expect.element(input).toHaveValue('8"')
   })
 
   it('renders thickness in fractional inches', async () => {
-    const screen = await render(<PartPanel part={testPart} />)
-    await expect.element(screen.getByText(/T: 3\/4"/)).toBeVisible()
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /thickness/i })
+    await expect.element(input).toHaveValue('3/4"')
+  })
+
+  it('commits name on blur when non-empty', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await input.fill('Top Rail')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).toHaveBeenCalledWith({ name: 'Top Rail' })
+  })
+
+  it('commits name on Enter', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await input.fill('Bottom Rail')
+    await userEvent.keyboard('{Enter}')
+    expect(onUpdate).toHaveBeenCalledWith({ name: 'Bottom Rail' })
+  })
+
+  it('resets name on Escape without calling onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await input.fill('Something else')
+    await userEvent.keyboard('{Escape}')
+    expect(onUpdate).not.toHaveBeenCalled()
+    await expect.element(input).toHaveValue('Shelf')
+  })
+
+  it('does not commit name when blurred with empty value', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await input.fill('')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).not.toHaveBeenCalled()
+    await expect.element(input).toHaveValue('Shelf')
+  })
+
+  it('commits name on Enter and retains the typed value', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /part name/i })
+    await input.fill('Leg')
+    await userEvent.keyboard('{Enter}')
+    expect(onUpdate).toHaveBeenCalledWith({ name: 'Leg' })
+    await expect.element(input).toHaveValue('Leg')
+  })
+
+  it('commits a valid fractional-inch length on Enter', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.fill('3-1/2"')
+    await userEvent.keyboard('{Enter}')
+    expect(onUpdate).toHaveBeenCalledWith({ length: 3.5 })
+  })
+
+  it('commits a valid dimension on Tab (blur)', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.fill('36"')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).toHaveBeenCalledWith({ length: 36 })
+  })
+
+  it('resets dimension input on invalid value blur without calling onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.fill('abc')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).not.toHaveBeenCalled()
+    await expect.element(input).toHaveValue('24"')
+  })
+
+  it('resets all inputs when a different part is selected', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const nameInput = screen.getByRole('textbox', { name: /part name/i })
+    await expect.element(nameInput).toHaveValue('Shelf')
+
+    await screen.rerender(<PartPanel part={secondPart} onUpdate={onUpdate} />)
+    await expect.element(nameInput).toHaveValue('Side Panel')
+
+    const lengthInput = screen.getByRole('textbox', { name: /length/i })
+    await expect.element(lengthInput).toHaveValue('12"')
   })
 })
