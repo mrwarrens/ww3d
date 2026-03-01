@@ -15,6 +15,7 @@ interface SceneProps {
   onSelectId: (id: string | null) => void
   onSelectAssembly?: (assemblyId: string) => void
   cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
+  isAssemblySelected?: boolean
 }
 
 interface DragState {
@@ -47,7 +48,7 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef }: SceneProps) {
+export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected }: SceneProps) {
   const selectedId = selectedIds[0] ?? null
   const parts = useProjectStore((s) => s.project.parts)
   const gridSize = useProjectStore((s) => s.project.gridSize)
@@ -88,7 +89,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
       if (e.key === 'Escape') {
         onSelectId(null)
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedId) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedId && !isAssemblySelected) {
         e.preventDefault()
         const newId = duplicatePart(selectedId)
         if (newId) onSelectId(newId)
@@ -101,7 +102,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, removePart, duplicatePart, onSelectId, goToPreset])
+  }, [selectedId, isAssemblySelected, removePart, duplicatePart, onSelectId, goToPreset])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)

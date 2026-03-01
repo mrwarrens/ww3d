@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import Scene from './components/Scene'
 import PartPanel from './components/PartPanel'
-import PartOutliner from './components/PartOutliner'
+import PartsList from './components/PartsList'
 import { useProjectStore } from './stores/projectStore'
 import { serializeProject, deserializeProject } from './models/Project'
 import type { CAMERA_PRESETS } from './utils/constants'
@@ -121,7 +121,7 @@ export default function App() {
           <div className="help-row"><span>Middle-drag / Shift+drag</span><span>Pan</span></div>
           <div className="help-row"><span>Scroll</span><span>Zoom</span></div>
           <div className="help-section">Selection</div>
-          <div className="help-row"><span>Click outliner row</span><span>Select part</span></div>
+          <div className="help-row"><span>Click parts list row</span><span>Select part</span></div>
           <div className="help-row"><span>Shift+click / Cmd+click</span><span>Multi-select</span></div>
           <div className="help-row"><span>Click assembly row</span><span>Select assembly</span></div>
           <div className="help-row"><span>Escape</span><span>Deselect</span></div>
@@ -132,7 +132,7 @@ export default function App() {
           <div className="help-row"><span>Cmd+Z</span><span>Undo</span></div>
           <div className="help-row"><span>Cmd+Shift+Z</span><span>Redo</span></div>
           <div className="help-row"><span>Cmd+S</span><span>Save project</span></div>
-          <div className="help-section">Outliner</div>
+          <div className="help-section">Parts List</div>
           <div className="help-row"><span>Drag part onto assembly</span><span>Assign to assembly</span></div>
           <div className="help-row"><span>Right-click member part</span><span>Remove from assembly</span></div>
           <div className="help-row"><span>● / ○ button</span><span>Toggle visibility</span></div>
@@ -178,7 +178,7 @@ export default function App() {
         onAddConstraint={(c) => addConstraint(c)}
         onRemoveConstraint={(id) => removeConstraint(id)}
       />
-      <PartOutliner
+      <PartsList
         parts={parts}
         assemblies={assemblies}
         selectedIds={selectedIds}
@@ -206,6 +206,7 @@ export default function App() {
           onSelectId={(id) => handleSelectIds(id ? [id] : [])}
           onSelectAssembly={handleSelectAssembly}
           cameraPresetRef={cameraPresetRef}
+          isAssemblySelected={!!selectedAssemblyId}
         />
       </Canvas>
     </>

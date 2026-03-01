@@ -199,19 +199,19 @@ tasks:
     name: Arrow key increment/decrement in properties panel inputs
     description: When the cursor is inside a text input in the properties panel, Up/Down arrow keys should nudge the value. Dimension fields (L/W/T) increment/decrement by 1/16" with a minimum of 1/16" — cannot go to zero or negative. Position fields (Px/Py/Pz) increment/decrement by 1/16" with no minimum. Rotation fields (Rx/Ry/Rz) increment/decrement by 1 degree with no minimum. The store should be updated on each keypress so the 3D viewport updates live.
     deps: [21, 7]
-    status: done
+    status: accepted
   - id: 34
     phase: 3
     name: Editable assembly name in properties panel
     description: When an assembly is selected, the properties panel should show an editable name field for the assembly (same pattern as the part name field). Committing the value updates the assembly name in the store and reflects in the parts list.
     deps: [30]
-    status: done
+    status: accepted
   - id: 35
     phase: 3
     name: Delete key removes selected assembly and all its parts
     description: When an assembly is selected, pressing Delete/Backspace should remove the assembly and all parts that belong to it from the project store. Should be undoable via Cmd+Z.
     deps: [30]
-    status: done
+    status: accepted
   - id: 36
     phase: 3
     name: Cmd+D duplicates selected assembly and all its parts
@@ -223,11 +223,22 @@ tasks:
     name: Rename outliner to parts list
     description: Rename all user-facing references from "outliner" to "parts list" — UI labels, component names (PartOutliner.tsx → PartsList.tsx), CSS classes, test files, and any documentation. Pure rename, no behavior change.
     deps: []
-    status: done
-
+    status: accepted
   - id: 38
     phase: 3
     name: Bug: parts list panel is not visible
     description: The parts list panel is not visible in the UI. Investigate and fix — likely a CSS issue (z-index, display, visibility, or positioning) introduced during the assembly UI or rename work.
     deps: []
-    status: pending
+    status: accepted
+  - id: 39
+    phase: 3
+    name: Bug: position fields increment with floating point rounding error
+    description: Position fields (Px/Py/Pz) are accumulating floating point error when incremented with arrow keys. Starting at 0, each 1/16" step produces 0.063, 0.126, 0.189... instead of 0.0625, 0.125, 0.1875. The cause is toFixed(3) rounding 0.0625 to 0.063, so each subsequent step compounds the error. Fix by using toFixed(4) or by displaying position values through toFractionalInches() like the dimension fields do.
+    deps: [33]
+    status: accepted
+  - id: 40
+    phase: 3
+    name: Bug: duplicating an assembly also duplicates a part into the original
+    description: When duplicating an assembly, one part from the original assembly is incorrectly duplicated into the original instead of only into the copy. Example — Assembly 1 contains parts A and B; after Cmd+D the result is Assembly 1 with parts A, B, A and Assembly 2 with parts A, B. The duplicate store action is likely iterating parts and accidentally appending one back to the source assembly. The original assembly should be unchanged after duplication.
+    deps: [36]
+    status: done
