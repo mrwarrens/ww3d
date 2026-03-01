@@ -284,4 +284,65 @@ describe('PartPanel', () => {
     await screen.rerender(<PartPanel part={testPart} onUpdate={onUpdate} />)
     await expect.element(rxInput).toHaveValue('0.0')
   })
+
+  it('ArrowUp on Length input increments by 1/16" and calls onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.click()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(onUpdate).toHaveBeenCalledWith({ length: expect.closeTo(24.0625, 4) })
+    await expect.element(input).toHaveValue('24-1/16"')
+  })
+
+  it('ArrowDown on Length input decrements by 1/16" and calls onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.click()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(onUpdate).toHaveBeenCalledWith({ length: expect.closeTo(23.9375, 4) })
+    await expect.element(input).toHaveValue('23-15/16"')
+  })
+
+  it('ArrowDown on Thickness at minimum 1/16" stays at 1/16" and calls onUpdate', async () => {
+    const thinPart = createPart({
+      name: 'Thin',
+      length: 12,
+      width: 6,
+      thickness: 0.0625,
+      position: { x: 0, y: 0, z: 0 },
+    })
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={thinPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /thickness/i })
+    await input.click()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(onUpdate).toHaveBeenCalledWith({ thickness: expect.closeTo(0.0625, 4) })
+    await expect.element(input).toHaveValue('1/16"')
+  })
+
+  it('ArrowUp on Rotation X increments by 1 degree and calls onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /rotation x/i })
+    await input.click()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(onUpdate).toHaveBeenCalledWith({
+      rotation: expect.objectContaining({ x: expect.closeTo(Math.PI / 180, 5) }),
+    })
+    await expect.element(input).toHaveValue('1.0')
+  })
+
+  it('ArrowUp on Position X increments by 1/16" and calls onUpdate', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await input.click()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(onUpdate).toHaveBeenCalledWith({
+      position: expect.objectContaining({ x: expect.closeTo(0.0625, 4) }),
+    })
+    await expect.element(input).toHaveValue('0.0625')
+  })
 })

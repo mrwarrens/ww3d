@@ -143,51 +143,91 @@ tasks:
     name: Assembly data model and grouping
     description: An Assembly is a named group with a position (a Three.js Group node). Parts belong to an assembly. Moving the assembly moves all its parts. The outliner shows assemblies with their parts nested inside. No single part is the parent — the assembly itself is the anchor.
     deps: []
-    status: done
+    status: accepted
   - id: 28
     phase: 3
     name: Multi-select in outliner
     description: Shift+click and Cmd+click on part rows in the outliner to select multiple parts. Selection is outliner-only for now — clicking in the 3D viewport still selects a single part.
     deps: []
-    status: ready
+    status: accepted
   - id: 29
     phase: 3
     name: Assembly UI — create, assign, remove
     description: "New Assembly" button in the outliner creates an empty named assembly. Drag part rows onto an assembly row to add them. Cmd+G groups the current outliner multi-selection into a new assembly. Right-click a part row to remove it from its assembly.
     deps: [23, 28]
-    status: pending
-
+    status: accepted
   - id: 30
     phase: 3
     name: Assembly selection and movement
     description: Clicking an assembly row in the outliner selects the assembly — panel shows the assembly position, dragging in the 3D viewport moves the whole group. Clicking a part row selects just that part. Single-click in the 3D viewport selects the part; double-click selects the assembly the part belongs to (if any).
     deps: [29]
-    status: pending
-
+    status: accepted
   - id: 31
     phase: 3
     name: Update help panel with all keyboard shortcuts and click behaviors
     description: Rewrite the help panel so every shortcut and interaction is listed one rule per line. Must include all existing shortcuts (Left-drag to draw, Right-drag to orbit, Middle/Shift-drag to pan, Scroll to zoom, Delete to delete, Escape to deselect, Cmd+D to duplicate, Cmd+Z/Cmd+Shift+Z to undo/redo, Cmd+S to save, G to toggle snap, 1/2/3/4 for camera presets) plus new assembly interactions (Cmd+G to group, single-click to select part, double-click to select assembly, click assembly row in outliner to select group, click part row in outliner to select part).
     deps: [30]
-    status: pending
-
+    status: accepted
   - id: 25
     phase: 3
     name: Basic constraints
     description: Constraint types — flush, centered, offset by X — between pairs of parts
     deps: [30]
-    status: pending
-
+    status: accepted
   - id: 26
     phase: 3
     name: Constraint propagation
     description: Changing one dimension updates connected parts via constraint graph
     deps: [25]
-    status: pending
-
+    status: accepted
   - id: 27
     phase: 2
     name: Bug: drag-to-move does not update position inputs
     description: When a part is dragged to a new position, the Px/Py/Pz fields in the properties panel do not update to reflect the new position until the part is deselected and re-selected.
     deps: [21]
     status: accepted
+
+  - id: 32
+    phase: 3
+    name: Bug: multi-select and assembly selection do not highlight 3D parts
+    description: Two related bugs sharing the same root cause — selection state is a single selectedId string instead of a set. (1) Cmd/Shift+clicking multiple parts in the outliner highlights them in the list but only one (or none) is highlighted in the 3D viewport. (2) Clicking an assembly row in the outliner selects its parts in the list but none are highlighted in the 3D viewport. Fix by changing selection state from selectedId to selectedIds (a Set or array), then update Board.tsx to highlight all selected parts and Scene.tsx to handle multi-selection keyboard interactions.
+    deps: [28, 23]
+    status: accepted
+
+  - id: 33
+    phase: 3
+    name: Arrow key increment/decrement in properties panel inputs
+    description: When the cursor is inside a text input in the properties panel, Up/Down arrow keys should nudge the value. Dimension fields (L/W/T) increment/decrement by 1/16" with a minimum of 1/16" — cannot go to zero or negative. Position fields (Px/Py/Pz) increment/decrement by 1/16" with no minimum. Rotation fields (Rx/Ry/Rz) increment/decrement by 1 degree with no minimum. The store should be updated on each keypress so the 3D viewport updates live.
+    deps: [21, 7]
+    status: done
+  - id: 34
+    phase: 3
+    name: Editable assembly name in properties panel
+    description: When an assembly is selected, the properties panel should show an editable name field for the assembly (same pattern as the part name field). Committing the value updates the assembly name in the store and reflects in the parts list.
+    deps: [30]
+    status: done
+  - id: 35
+    phase: 3
+    name: Delete key removes selected assembly and all its parts
+    description: When an assembly is selected, pressing Delete/Backspace should remove the assembly and all parts that belong to it from the project store. Should be undoable via Cmd+Z.
+    deps: [30]
+    status: done
+  - id: 36
+    phase: 3
+    name: Cmd+D duplicates selected assembly and all its parts
+    description: When an assembly is selected, Cmd+D should duplicate the assembly and all its parts with a slight position offset. The new assembly becomes the active selection. Should be undoable via Cmd+Z.
+    deps: [30]
+    status: done
+  - id: 37
+    phase: 3
+    name: Rename outliner to parts list
+    description: Rename all user-facing references from "outliner" to "parts list" — UI labels, component names (PartOutliner.tsx → PartsList.tsx), CSS classes, test files, and any documentation. Pure rename, no behavior change.
+    deps: []
+    status: done
+
+  - id: 38
+    phase: 3
+    name: Bug: parts list panel is not visible
+    description: The parts list panel is not visible in the UI. Investigate and fix — likely a CSS issue (z-index, display, visibility, or positioning) introduced during the assembly UI or rename work.
+    deps: []
+    status: pending

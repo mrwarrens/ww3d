@@ -112,7 +112,17 @@ export default function PartPanel({
     }
 
     function handleAsmPosKeyDown(e: React.KeyboardEvent<HTMLInputElement>, draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
-      if (e.key === 'Enter') {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        let current = parseFloat(draft)
+        if (isNaN(current)) current = parseFloat(resetValue) || 0
+        const newValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+        const newStr = newValue.toFixed(4)
+        if (axis === 'x') setDraftAsmPosX(newStr)
+        else if (axis === 'y') setDraftAsmPosY(newStr)
+        else setDraftAsmPosZ(newStr)
+        onMoveAssembly({ ...assembly!.position, [axis]: newValue })
+      } else if (e.key === 'Enter') {
         commitAsmPos(draft, axis, resetValue)
         skipBlurRef.current = true
         e.currentTarget.blur()
@@ -256,7 +266,17 @@ export default function PartPanel({
     axis: 'x' | 'y' | 'z',
     resetValue: string
   ) {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      let currentDeg = parseFloat(draft)
+      if (isNaN(currentDeg)) currentDeg = parseFloat(resetValue) || 0
+      const newDeg = currentDeg + (e.key === 'ArrowUp' ? 1 : -1)
+      const newStr = newDeg.toFixed(1)
+      if (axis === 'x') setDraftRotX(newStr)
+      else if (axis === 'y') setDraftRotY(newStr)
+      else setDraftRotZ(newStr)
+      onUpdate({ rotation: { ...part!.rotation, [axis]: newDeg * Math.PI / 180 } })
+    } else if (e.key === 'Enter') {
       commitRot(draft, axis, resetValue)
       skipBlurRef.current = true
       e.currentTarget.blur()
@@ -292,7 +312,17 @@ export default function PartPanel({
     axis: 'x' | 'y' | 'z',
     resetValue: string
   ) {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      let current = parseFloat(draft)
+      if (isNaN(current)) current = parseFloat(resetValue) || 0
+      const newValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+      const newStr = newValue.toFixed(4)
+      if (axis === 'x') setDraftPosX(newStr)
+      else if (axis === 'y') setDraftPosY(newStr)
+      else setDraftPosZ(newStr)
+      onUpdate({ position: { ...part!.position, [axis]: newValue } })
+    } else if (e.key === 'Enter') {
       commitPos(draft, axis, resetValue)
       skipBlurRef.current = true
       e.currentTarget.blur()
@@ -319,7 +349,17 @@ export default function PartPanel({
     field: 'length' | 'width' | 'thickness',
     resetValue: string
   ) {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      let current: number
+      try { current = parseInches(draft) } catch { try { current = parseInches(resetValue) } catch { current = 0.0625 } }
+      const newValue = Math.max(0.0625, current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625))
+      const newStr = toFractionalInches(newValue)
+      if (field === 'length') setDraftLength(newStr)
+      else if (field === 'width') setDraftWidth(newStr)
+      else setDraftThickness(newStr)
+      onUpdate({ [field]: newValue })
+    } else if (e.key === 'Enter') {
       commitDim(draft, field, resetValue)
       skipBlurRef.current = true
       e.currentTarget.blur()
