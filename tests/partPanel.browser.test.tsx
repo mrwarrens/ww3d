@@ -253,6 +253,20 @@ describe('PartPanel', () => {
     await expect.element(pxInput).toHaveValue('1.000')
   })
 
+  it('updates position inputs when the same part is moved (simulating drag)', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const pxInput = screen.getByRole('textbox', { name: /position x/i })
+    const pzInput = screen.getByRole('textbox', { name: /position z/i })
+    await expect.element(pxInput).toHaveValue('0.000')
+    await expect.element(pzInput).toHaveValue('0.000')
+
+    const movedPart = { ...testPart, position: { x: 3, y: 0.375, z: 5 } }
+    await screen.rerender(<PartPanel part={movedPart} onUpdate={onUpdate} />)
+    await expect.element(pxInput).toHaveValue('3.000')
+    await expect.element(pzInput).toHaveValue('5.000')
+  })
+
   it('resets rotation drafts when switching to a different part', async () => {
     const partWithRot = createPart({
       name: 'Tilted',

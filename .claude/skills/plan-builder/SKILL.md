@@ -68,8 +68,8 @@ N+1. **Verify, commit, and push**
    - Run `npm test -- --run` — all tests must pass
    - Run `npm run build` — production build must succeed
    - {Any task-specific manual checks}
-   - Edit `roadmap.md`: change `[ ]` to `[x]` for this task
    - Update `pipeline.yaml` is handled automatically by claude-queue.sh — do not edit it manually
+   - If this task has a corresponding entry in `roadmap.md`, check it off (`[ ]` → `[x]`)
    - Commit: `<type>: Phase <N> - <Task Name>`
    - Push to origin
 

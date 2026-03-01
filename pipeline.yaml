@@ -143,8 +143,7 @@ tasks:
     name: Assembly/group data model
     description: Parts can belong to named sub-assemblies
     deps: []
-    status: pending
-
+    status: planned
   - id: 24
     phase: 3
     name: Parent/child relationships between parts
@@ -165,3 +164,10 @@ tasks:
     description: Changing one dimension updates connected parts via constraint graph
     deps: [25]
     status: pending
+
+  - id: 27
+    phase: 2
+    name: Bug: drag-to-move does not update position inputs
+    description: When a part is dragged to a new position, the Px/Py/Pz fields in the properties panel do not update to reflect the new position until the part is deselected and re-selected.
+    deps: [21]
+    status: done

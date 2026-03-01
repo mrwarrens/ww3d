@@ -36,6 +36,13 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
     setDraftPosZ(part.position.z.toFixed(3))
   }, [part?.id])
 
+  useEffect(() => {
+    if (!part) return
+    setDraftPosX(part.position.x.toFixed(3))
+    setDraftPosY(part.position.y.toFixed(3))
+    setDraftPosZ(part.position.z.toFixed(3))
+  }, [part?.id, part?.position.x, part?.position.y, part?.position.z])
+
   if (!part) return null
 
   function commitName() {
