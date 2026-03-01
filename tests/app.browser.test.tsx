@@ -80,11 +80,16 @@ describe('App', () => {
     expect(toggleBtn.textContent?.trim()).toBe(`Grid: ${initialSize + 5}`)
   })
 
+  it('renders the parts-list panel', async () => {
+    await render(<App />)
+    expect(document.getElementById('parts-list')).not.toBeNull()
+  })
+
   it('help pane z-index is greater than part outliner z-index', async () => {
     await render(<App />)
     await act(async () => { document.getElementById('help-btn')!.click() })
     const helpPane = document.getElementById('help-pane')!
-    const outliner = document.getElementById('part-outliner')!
+    const outliner = document.getElementById('parts-list')!
     const helpZ = parseInt(getComputedStyle(helpPane).zIndex, 10)
     const outlinerZ = parseInt(getComputedStyle(outliner).zIndex, 10)
     expect(helpZ).toBeGreaterThan(outlinerZ)

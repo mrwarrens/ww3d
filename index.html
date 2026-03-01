@@ -191,7 +191,7 @@
       padding: 4px;
       z-index: 1;
     }
-    #part-outliner {
+    #parts-list {
       position: absolute;
       top: 50px;
       left: 10px;
@@ -203,23 +203,31 @@
       border-radius: 4px;
       z-index: 1;
     }
-    #part-outliner ul {
+    #parts-list ul {
       list-style: none;
       margin: 0;
       padding: 0;
     }
-    #part-outliner li {
+    #parts-list li {
       padding: 6px 10px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    #part-outliner li:hover {
+    #parts-list li:hover {
       background: rgba(255,255,255,0.1);
     }
-    #part-outliner li.selected {
+    #parts-list li.selected {
       background: rgba(255,255,255,0.2);
+    }
+    #parts-list .assembly-row {
+      display: block;
+    }
+    #parts-list .assembly-row > ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 12px;
     }
     .visibility-btn {
       background: transparent;
