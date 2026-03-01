@@ -20,6 +20,10 @@ export default function App() {
   const loadProject = useProjectStore((s) => s.loadProject)
   const updatePart = useProjectStore((s) => s.updatePart)
   const togglePartVisibility = useProjectStore((s) => s.togglePartVisibility)
+  const addAssembly = useProjectStore((s) => s.addAssembly)
+  const assignPartToAssembly = useProjectStore((s) => s.assignPartToAssembly)
+  const removePartFromAssembly = useProjectStore((s) => s.removePartFromAssembly)
+  const groupPartsIntoAssembly = useProjectStore((s) => s.groupPartsIntoAssembly)
   const undo = useProjectStore((s) => s.undo)
   const redo = useProjectStore((s) => s.redo)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
@@ -65,11 +69,16 @@ export default function App() {
       } else if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z') {
         e.preventDefault()
         undo()
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'g') {
+        e.preventDefault()
+        if (selectedIds.length > 0) {
+          groupPartsIntoAssembly(selectedIds, 'Assembly ' + (assemblies.length + 1))
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [saveProject, undo, redo])
+  }, [saveProject, undo, redo, selectedIds, assemblies, groupPartsIntoAssembly])
 
   return (
     <>
@@ -109,7 +118,16 @@ export default function App() {
         part={selectedPart}
         onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
       />
-      <PartOutliner parts={parts} assemblies={assemblies} selectedIds={selectedIds} onSelectIds={setSelectedIds} onToggleVisibility={togglePartVisibility} />
+      <PartOutliner
+        parts={parts}
+        assemblies={assemblies}
+        selectedIds={selectedIds}
+        onSelectIds={setSelectedIds}
+        onToggleVisibility={togglePartVisibility}
+        onAddAssembly={() => addAssembly('Assembly ' + (assemblies.length + 1))}
+        onAssignPart={assignPartToAssembly}
+        onRemoveFromAssembly={removePartFromAssembly}
+      />
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 100, position: [3, 2, 3] }}
         gl={{ antialias: true }}

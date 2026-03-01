@@ -485,6 +485,166 @@ describe('projectStore', () => {
     })
   })
 
+  describe('assignPartToAssembly', () => {
+    it('sets assemblyId on the correct part', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      const partId = useProjectStore.getState().project.parts[0].id
+
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.assemblyId).toBe(assemblyId)
+    })
+
+    it('does not affect other parts', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const parts = useProjectStore.getState().project.parts
+      const partId = parts[0].id
+
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+
+      const after = useProjectStore.getState().project.parts
+      expect(after[0].assemblyId).toBe(assemblyId)
+      expect(after[1].assemblyId).toBeUndefined()
+    })
+
+    it('pushes to undo history; undo clears the assemblyId', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+      expect(useProjectStore.getState().history).toHaveLength(1)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts[0].assemblyId).toBeUndefined()
+    })
+  })
+
+  describe('removePartFromAssembly', () => {
+    it('clears assemblyId on the correct part', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+
+      useProjectStore.getState().removePartFromAssembly(partId)
+
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.assemblyId).toBeUndefined()
+    })
+
+    it('does not affect other parts', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const parts = useProjectStore.getState().project.parts
+      useProjectStore.getState().assignPartToAssembly(parts[0].id, assemblyId)
+      useProjectStore.getState().assignPartToAssembly(parts[1].id, assemblyId)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removePartFromAssembly(parts[0].id)
+
+      const after = useProjectStore.getState().project.parts
+      expect(after[0].assemblyId).toBeUndefined()
+      expect(after[1].assemblyId).toBe(assemblyId)
+    })
+
+    it('pushes to undo history; undo restores the assemblyId', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart(baseInit)
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removePartFromAssembly(partId)
+      expect(useProjectStore.getState().history).toHaveLength(1)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts[0].assemblyId).toBe(assemblyId)
+    })
+  })
+
+  describe('groupPartsIntoAssembly', () => {
+    it('creates a new assembly with the given name', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Cabinet')
+
+      const { assemblies } = useProjectStore.getState().project
+      expect(assemblies).toHaveLength(1)
+      expect(assemblies[0].name).toBe('Cabinet')
+    })
+
+    it('assigns all given parts to the new assembly', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      const assemblyId = useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Cabinet')
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts[0].assemblyId).toBe(assemblyId)
+      expect(parts[1].assemblyId).toBe(assemblyId)
+    })
+
+    it('does not assign parts not in the list', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const parts = useProjectStore.getState().project.parts
+      const partId = parts[0].id
+
+      useProjectStore.getState().groupPartsIntoAssembly([partId], 'Cabinet')
+
+      const after = useProjectStore.getState().project.parts
+      expect(after[0].assemblyId).toBeDefined()
+      expect(after[1].assemblyId).toBeUndefined()
+    })
+
+    it('returns the new assembly id', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const partId = useProjectStore.getState().project.parts[0].id
+
+      const result = useProjectStore.getState().groupPartsIntoAssembly([partId], 'Frame')
+
+      expect(typeof result).toBe('string')
+      expect(result.length).toBeGreaterThan(0)
+      expect(useProjectStore.getState().project.assemblies[0].id).toBe(result)
+    })
+
+    it('creates exactly one history entry', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Cabinet')
+
+      expect(useProjectStore.getState().history).toHaveLength(1)
+    })
+
+    it('undo removes the assembly and clears assemblyId on all parts', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Cabinet')
+      useProjectStore.getState().undo()
+
+      const { assemblies, parts } = useProjectStore.getState().project
+      expect(assemblies).toHaveLength(0)
+      expect(parts[0].assemblyId).toBeUndefined()
+      expect(parts[1].assemblyId).toBeUndefined()
+    })
+  })
+
   describe('moveAssembly', () => {
     it('updates assembly position', () => {
       const id = useProjectStore.getState().addAssembly('Cabinet')

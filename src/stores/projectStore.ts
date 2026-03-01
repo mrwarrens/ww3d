@@ -14,6 +14,9 @@ interface ProjectStore {
   updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
   togglePartVisibility: (id: string) => void
   addAssembly: (name: string) => string
+  assignPartToAssembly: (partId: string, assemblyId: string) => void
+  removePartFromAssembly: (partId: string) => void
+  groupPartsIntoAssembly: (partIds: string[], name: string) => string
   moveAssembly: (id: string, position: { x: number; y: number; z: number }) => void
   setProjectName: (name: string) => void
   setGridSize: (size: number) => void
@@ -120,6 +123,48 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       project: {
         ...state.project,
         assemblies: [...state.project.assemblies, assembly],
+      },
+    }))
+    return assembly.id
+  },
+  assignPartToAssembly: (partId, assemblyId) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: state.project.parts.map((p) =>
+          p.id === partId ? { ...p, assemblyId } : p
+        ),
+      },
+    }))
+  },
+  removePartFromAssembly: (partId) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: state.project.parts.map((p) =>
+          p.id === partId ? { ...p, assemblyId: undefined } : p
+        ),
+      },
+    }))
+  },
+  groupPartsIntoAssembly: (partIds, name) => {
+    const assembly = createAssembly(name)
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        assemblies: [...state.project.assemblies, assembly],
+        parts: state.project.parts.map((p) =>
+          partIds.includes(p.id) ? { ...p, assemblyId: assembly.id } : p
+        ),
       },
     }))
     return assembly.id

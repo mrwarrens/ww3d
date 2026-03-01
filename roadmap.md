@@ -52,7 +52,7 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 
 - [ ] Assembly data model and grouping — named group with a Three.js Group node; parts belong to it; moving the assembly moves all parts
 - [x] Multi-select in outliner — Shift+click and Cmd+click on part rows
-- [ ] Assembly UI — New Assembly button, drag parts onto assembly row, Cmd+G to group selection, remove from assembly
+- [x] Assembly UI — New Assembly button, drag parts onto assembly row, Cmd+G to group selection, remove from assembly
 - [ ] Assembly selection and movement — click assembly row selects group; double-click part in viewport selects its assembly; panel shows assembly position
 - [ ] Update help panel — one rule per line for all keyboard shortcuts and click behaviors
 - [ ] Basic constraints — "flush", "centered", "offset by X"
