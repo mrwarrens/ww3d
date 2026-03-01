@@ -25,6 +25,8 @@ export default function App() {
   const assignPartToAssembly = useProjectStore((s) => s.assignPartToAssembly)
   const removePartFromAssembly = useProjectStore((s) => s.removePartFromAssembly)
   const groupPartsIntoAssembly = useProjectStore((s) => s.groupPartsIntoAssembly)
+  const removeAssembly = useProjectStore((s) => s.removeAssembly)
+  const duplicateAssembly = useProjectStore((s) => s.duplicateAssembly)
   const renameAssembly = useProjectStore((s) => s.renameAssembly)
   const moveAssembly = useProjectStore((s) => s.moveAssembly)
   const addConstraint = useProjectStore((s) => s.addConstraint)
@@ -80,6 +82,15 @@ export default function App() {
       }
       const tag = (document.activeElement as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedAssemblyId) {
+        removeAssembly(selectedAssemblyId)
+        handleSelectAssembly(null)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedAssemblyId && selectedIds.length === 0) {
+        e.preventDefault()
+        const newId = duplicateAssembly(selectedAssemblyId)
+        if (newId) handleSelectAssembly(newId)
+      }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') {
         e.preventDefault()
         redo()
@@ -95,7 +106,7 @@ export default function App() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [saveProject, undo, redo, selectedIds, assemblies, groupPartsIntoAssembly, handleSelectIds])
+  }, [saveProject, undo, redo, selectedIds, assemblies, groupPartsIntoAssembly, handleSelectIds, selectedAssemblyId, removeAssembly, handleSelectAssembly, duplicateAssembly])
 
   return (
     <>
@@ -115,8 +126,8 @@ export default function App() {
           <div className="help-row"><span>Click assembly row</span><span>Select assembly</span></div>
           <div className="help-row"><span>Escape</span><span>Deselect</span></div>
           <div className="help-section">Edit</div>
-          <div className="help-row"><span>Delete / Backspace</span><span>Delete selected part</span></div>
-          <div className="help-row"><span>Cmd+D</span><span>Duplicate selected part</span></div>
+          <div className="help-row"><span>Delete / Backspace</span><span>Delete selected part or assembly</span></div>
+          <div className="help-row"><span>Cmd+D</span><span>Duplicate selected part or assembly</span></div>
           <div className="help-row"><span>Cmd+G</span><span>Group selection into assembly</span></div>
           <div className="help-row"><span>Cmd+Z</span><span>Undo</span></div>
           <div className="help-row"><span>Cmd+Shift+Z</span><span>Redo</span></div>

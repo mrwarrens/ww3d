@@ -15,10 +15,12 @@ interface ProjectStore {
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
   updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
   togglePartVisibility: (id: string) => void
+  duplicateAssembly: (id: string) => string | null
   addAssembly: (name: string) => string
   assignPartToAssembly: (partId: string, assemblyId: string) => void
   removePartFromAssembly: (partId: string) => void
   groupPartsIntoAssembly: (partIds: string[], name: string) => string
+  removeAssembly: (id: string) => void
   renameAssembly: (id: string, name: string) => void
   moveAssembly: (id: string, position: { x: number; y: number; z: number }) => void
   addConstraint: (constraint: Omit<Constraint, 'id'>) => void
@@ -81,6 +83,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
     return newId
+  },
+  duplicateAssembly: (id) => {
+    const source = get().project.assemblies.find((a) => a.id === id)
+    if (!source) return null
+    const newAssembly = createAssembly(source.name)
+    const memberParts = get().project.parts.filter((p) => p.assemblyId === id)
+    const newParts = memberParts.map((p) => ({
+      ...p,
+      id: crypto.randomUUID(),
+      assemblyId: newAssembly.id,
+      position: { ...p.position, x: p.position.x + 1, z: p.position.z + 1 },
+    }))
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        assemblies: [...state.project.assemblies, newAssembly],
+        parts: [...state.project.parts, ...newParts],
+      },
+    }))
+    return newAssembly.id
   },
   movePart: (id, position) => {
     const current = get().project
@@ -173,6 +198,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
     return assembly.id
+  },
+  removeAssembly: (id) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        assemblies: state.project.assemblies.filter((a) => a.id !== id),
+        parts: state.project.parts.filter((p) => p.assemblyId !== id),
+      },
+    }))
   },
   renameAssembly: (id, name) => {
     const current = get().project
