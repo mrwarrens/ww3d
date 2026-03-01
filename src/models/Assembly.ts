@@ -2,6 +2,7 @@ export interface Assembly {
   id: string
   name: string
   position: { x: number; y: number; z: number }
+  visible?: boolean
 }
 
 export function createAssembly(name: string): Assembly {

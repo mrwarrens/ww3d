@@ -13,6 +13,7 @@ export default function App() {
   const [selectedAssemblyId, setSelectedAssemblyId] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [gridPaneOpen, setGridPaneOpen] = useState(false)
+  const [eyedropperActive, setEyedropperActive] = useState(false)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
@@ -21,6 +22,7 @@ export default function App() {
   const loadProject = useProjectStore((s) => s.loadProject)
   const updatePart = useProjectStore((s) => s.updatePart)
   const togglePartVisibility = useProjectStore((s) => s.togglePartVisibility)
+  const toggleAssemblyVisibility = useProjectStore((s) => s.toggleAssemblyVisibility)
   const addAssembly = useProjectStore((s) => s.addAssembly)
   const assignPartToAssembly = useProjectStore((s) => s.assignPartToAssembly)
   const removePartFromAssembly = useProjectStore((s) => s.removePartFromAssembly)
@@ -177,6 +179,7 @@ export default function App() {
         allParts={parts}
         onAddConstraint={(c) => addConstraint(c)}
         onRemoveConstraint={(id) => removeConstraint(id)}
+        onEyedropperActivate={selectedPart ? () => setEyedropperActive(true) : undefined}
       />
       <PartsList
         parts={parts}
@@ -186,6 +189,7 @@ export default function App() {
         selectedAssemblyId={selectedAssemblyId}
         onSelectAssembly={handleSelectAssembly}
         onToggleVisibility={togglePartVisibility}
+        onToggleAssemblyVisibility={toggleAssemblyVisibility}
         onAddAssembly={() => addAssembly('Assembly ' + (assemblies.length + 1))}
         onAssignPart={assignPartToAssembly}
         onRemoveFromAssembly={removePartFromAssembly}
@@ -207,6 +211,9 @@ export default function App() {
           onSelectAssembly={handleSelectAssembly}
           cameraPresetRef={cameraPresetRef}
           isAssemblySelected={!!selectedAssemblyId}
+          eyedropperActive={eyedropperActive}
+          onColorSample={(color) => { if (selectedId) updatePart(selectedId, { color }); setEyedropperActive(false) }}
+          onEyedropperCancel={() => setEyedropperActive(false)}
         />
       </Canvas>
     </>

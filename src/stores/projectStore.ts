@@ -15,6 +15,7 @@ interface ProjectStore {
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
   updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
   togglePartVisibility: (id: string) => void
+  toggleAssemblyVisibility: (id: string) => void
   duplicateAssembly: (id: string) => string | null
   addAssembly: (name: string) => string
   assignPartToAssembly: (partId: string, assemblyId: string) => void
@@ -140,6 +141,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         ...state.project,
         parts: state.project.parts.map((p) =>
           p.id === id ? { ...p, visible: !p.visible } : p
+        ),
+      },
+    }))
+  },
+  toggleAssemblyVisibility: (id) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        assemblies: state.project.assemblies.map((a) =>
+          a.id === id ? { ...a, visible: a.visible === false ? true : false } : a
         ),
       },
     }))

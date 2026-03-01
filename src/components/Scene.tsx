@@ -16,6 +16,9 @@ interface SceneProps {
   onSelectAssembly?: (assemblyId: string) => void
   cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
   isAssemblySelected?: boolean
+  eyedropperActive?: boolean
+  onColorSample?: (color: string) => void
+  onEyedropperCancel?: () => void
 }
 
 interface DragState {
@@ -48,9 +51,10 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected }: SceneProps) {
+export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel }: SceneProps) {
   const selectedId = selectedIds[0] ?? null
   const parts = useProjectStore((s) => s.project.parts)
+  const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
   const removePart = useProjectStore((s) => s.removePart)
   const duplicatePart = useProjectStore((s) => s.duplicatePart)
@@ -65,6 +69,11 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
   useEffect(() => {
     if (cameraPresetRef) cameraPresetRef.current = goToPreset
   }, [cameraPresetRef, goToPreset])
+
+  useEffect(() => {
+    gl.domElement.style.cursor = eyedropperActive ? 'crosshair' : ''
+    return () => { gl.domElement.style.cursor = '' }
+  }, [eyedropperActive, gl.domElement])
 
   // Only livePos is state — it drives re-renders during drag.
   // Everything else is in refs so handlers never go stale.
@@ -88,6 +97,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
       }
       if (e.key === 'Escape') {
         onSelectId(null)
+        onEyedropperCancel?.()
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedId && !isAssemblySelected) {
         e.preventDefault()
@@ -102,7 +112,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, isAssemblySelected, removePart, duplicatePart, onSelectId, goToPreset])
+  }, [selectedId, isAssemblySelected, removePart, duplicatePart, onSelectId, goToPreset, onEyedropperCancel])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
@@ -201,9 +211,9 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
         }}
       />
 
-      <BoardCreator gridSize={gridSize} onClearSelection={() => onSelectId(null)} />
+      <BoardCreator gridSize={gridSize} onClearSelection={() => { onSelectId(null); onEyedropperCancel?.() }} />
 
-      {parts.filter((p) => p.visible !== false).map((p) => (
+      {parts.filter((p) => p.visible !== false && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
         <Board
           key={p.id}
           {...p}
@@ -212,6 +222,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
           onSelect={() => onSelectId(p.id)}
           onDragStart={(e) => handleDragStart(e, p)}
           onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
+          onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
         />
       ))}
     </>

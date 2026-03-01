@@ -2,12 +2,15 @@ import { useRef } from 'react'
 import { Part } from '../models/Part'
 import { Assembly } from '../models/Assembly'
 
-interface PartOutlinerProps {
+interface PartsListProps {
   parts: Part[]
   assemblies: Assembly[]
   selectedIds: string[]
   onSelectIds: (ids: string[]) => void
+  selectedAssemblyId?: string | null
+  onSelectAssembly?: (id: string | null) => void
   onToggleVisibility: (id: string) => void
+  onToggleAssemblyVisibility: (id: string) => void
   onAddAssembly: () => void
   onAssignPart: (partId: string, assemblyId: string) => void
   onRemoveFromAssembly: (partId: string) => void
@@ -24,6 +27,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
   onRemoveFromAssembly: (partId: string) => void
 }) {
   const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (e.shiftKey) {
       const anchor = lastClickedIdxRef.current >= 0 ? lastClickedIdxRef.current : 0
       const lo = Math.min(anchor, index)
@@ -71,12 +75,12 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
   )
 }
 
-export default function PartOutliner({ parts, assemblies, selectedIds, onSelectIds, onToggleVisibility, onAddAssembly, onAssignPart, onRemoveFromAssembly }: PartOutlinerProps) {
+export default function PartsList({ parts, assemblies, selectedIds, onSelectIds, selectedAssemblyId, onSelectAssembly, onToggleVisibility, onToggleAssemblyVisibility, onAddAssembly, onAssignPart, onRemoveFromAssembly }: PartsListProps) {
   const lastClickedIdxRef = useRef<number>(-1)
   const unassignedParts = parts.filter((p) => !p.assemblyId)
 
   return (
-    <div id="part-outliner" style={{ zIndex: 1 }}>
+    <div id="parts-list" style={{ zIndex: 1 }}>
       <button onClick={onAddAssembly}>New Assembly</button>
       <ul>
         {assemblies.map((assembly) => {
@@ -84,14 +88,23 @@ export default function PartOutliner({ parts, assemblies, selectedIds, onSelectI
           return (
             <li
               key={assembly.id}
-              className="assembly-row"
+              className={`assembly-row${selectedAssemblyId === assembly.id ? ' selected' : ''}`}
+              onClick={() => onSelectAssembly(assembly.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
+                e.stopPropagation()
                 const draggedPartId = e.dataTransfer.getData('text/plain')
                 if (draggedPartId) onAssignPart(draggedPartId, assembly.id)
               }}
             >
               {assembly.name}
+              <button
+                className="visibility-btn"
+                onClick={(e) => { e.stopPropagation(); onToggleAssemblyVisibility(assembly.id) }}
+                aria-label={assembly.visible !== false ? 'Hide' : 'Show'}
+              >
+                {assembly.visible !== false ? '●' : '○'}
+              </button>
               <ul>
                 {members.map((part) => {
                   const index = parts.indexOf(part)
