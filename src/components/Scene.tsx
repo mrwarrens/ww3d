@@ -11,8 +11,9 @@ import { snapToGrid, CAMERA_PRESETS } from '../utils/constants'
 import { useCameraPreset } from '../hooks/useCameraPreset'
 
 interface SceneProps {
-  selectedId: string | null
+  selectedIds: string[]
   onSelectId: (id: string | null) => void
+  onSelectAssembly?: (assemblyId: string) => void
   cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
 }
 
@@ -46,7 +47,8 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedId, onSelectId, cameraPresetRef }: SceneProps) {
+export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef }: SceneProps) {
+  const selectedId = selectedIds[0] ?? null
   const parts = useProjectStore((s) => s.project.parts)
   const gridSize = useProjectStore((s) => s.project.gridSize)
   const removePart = useProjectStore((s) => s.removePart)
@@ -205,9 +207,10 @@ export default function Scene({ selectedId, onSelectId, cameraPresetRef }: Scene
           key={p.id}
           {...p}
           position={draggingRef.current?.partId === p.id && livePos ? livePos : p.position}
-          isSelected={p.id === selectedId}
+          isSelected={selectedIds.includes(p.id)}
           onSelect={() => onSelectId(p.id)}
           onDragStart={(e) => handleDragStart(e, p)}
+          onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
         />
       ))}
     </>

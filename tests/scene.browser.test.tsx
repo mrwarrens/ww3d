@@ -27,13 +27,13 @@ async function renderInCanvas(children: React.ReactNode, canvasProps = {}) {
 
 describe('App scene setup', () => {
   it('creates a scene with the correct background color', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     expect(state.scene).toBeInstanceOf(THREE.Scene)
     expect((state.scene.background as THREE.Color).getHexString()).toBe('1a1a2e')
   })
 
   it('configures a perspective camera at the expected position', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const camera = state.camera as THREE.PerspectiveCamera
     expect(camera).toBeInstanceOf(THREE.PerspectiveCamera)
     expect(camera.fov).toBe(60)
@@ -43,14 +43,14 @@ describe('App scene setup', () => {
   })
 
   it('attaches a WebGL canvas to the document', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const canvas = state.gl.domElement
     expect(canvas.tagName).toBe('CANVAS')
     expect(document.body.contains(canvas)).toBe(true)
   })
 
   it('sets up orbit controls with damping', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     // OrbitControls with makeDefault registers after onCreated, wait for it
     await new Promise<{ enableDamping: boolean; dampingFactor: number }>((resolve) => {
       const check = () => {
@@ -66,13 +66,13 @@ describe('App scene setup', () => {
   })
 
   it('includes a grid helper in the scene', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const grids = state.scene.children.filter(c => c.type === 'GridHelper')
     expect(grids).toHaveLength(1)
   })
 
   it('includes ambient and directional lights', async () => {
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const lights = state.scene.children.filter(c => (c as THREE.Light).isLight)
     expect(lights).toHaveLength(2)
 
@@ -144,7 +144,7 @@ describe('Grid size', () => {
 
   it('GridHelper reflects gridSize from the store', async () => {
     useProjectStore.getState().setGridSize(20)
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const grid = state.scene.children.find(c => c.type === 'GridHelper') as THREE.GridHelper
     expect(grid).toBeDefined()
     // GridHelper size is stored as the first arg; accessible via geometry bounding box
@@ -171,7 +171,7 @@ describe('Part visibility', () => {
     const id = useProjectStore.getState().project.parts[0].id
     useProjectStore.getState().togglePartVisibility(id)
 
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     // Filter to visible meshes only — BoardCreator renders a hidden ground plane (visible:false)
     const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
     expect(meshes).toHaveLength(0)
@@ -184,7 +184,7 @@ describe('Part visibility', () => {
       color: '#ff0000',
     })
 
-    const state = await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    const state = await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
     const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
     expect(meshes.length).toBeGreaterThanOrEqual(1)
   })
@@ -201,7 +201,7 @@ describe('Delete a Part', () => {
       position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
       color: '#ff0000',
     })
-    await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
 
@@ -214,7 +214,7 @@ describe('Delete a Part', () => {
       position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
       color: '#ff0000',
     })
-    await renderInCanvas(<Scene selectedId={null} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
 
@@ -229,7 +229,7 @@ describe('Delete a Part', () => {
     })
     const id = useProjectStore.getState().project.parts[0].id
 
-    await renderInCanvas(<Scene selectedId={id} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[id]} onSelectId={() => {}} />)
     await new Promise(resolve => setTimeout(resolve, 50))
 
     const input = document.createElement('input')
@@ -250,7 +250,7 @@ describe('Delete a Part', () => {
     })
     const id = useProjectStore.getState().project.parts[0].id
 
-    await renderInCanvas(<Scene selectedId={id} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[id]} onSelectId={() => {}} />)
     await new Promise(resolve => setTimeout(resolve, 50))
 
     const input = document.createElement('input')
@@ -274,7 +274,7 @@ describe('Delete a Part', () => {
     let capturedId: string | null | undefined = undefined
     const onSelectId = (next: string | null) => { capturedId = next }
 
-    await renderInCanvas(<Scene selectedId={id} onSelectId={onSelectId} />)
+    await renderInCanvas(<Scene selectedIds={[id]} onSelectId={onSelectId} />)
     // R3F triggers extra re-renders as WebGL initializes, causing Scene's useEffect
     // to cleanup and re-register. Wait one tick for that cycle to complete.
     await new Promise(resolve => setTimeout(resolve, 50))
@@ -282,5 +282,93 @@ describe('Delete a Part', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 
     expect(capturedId).toBeNull()
+  })
+})
+
+describe('multi-select and assembly highlight', () => {
+  beforeEach(() => {
+    useProjectStore.setState({ project: createProject() })
+  })
+
+  it('both parts receive outline child when both IDs are in selectedIds', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    useProjectStore.getState().addPart({
+      length: 2, width: 2,
+      position: { x: 5, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#00ff00',
+    })
+    const parts = useProjectStore.getState().project.parts
+    const id1 = parts[0].id
+    const id2 = parts[1].id
+
+    const state = await renderInCanvas(
+      <Scene selectedIds={[id1, id2]} onSelectId={() => {}} />
+    )
+    const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
+    // Both boards should have more than 1 child (wireframe + outline)
+    expect(meshes).toHaveLength(2)
+    meshes.forEach((mesh) => {
+      expect((mesh as THREE.Mesh).children.length).toBeGreaterThan(1)
+    })
+  })
+
+  it('a part whose ID is in selectedIds receives outline child', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    useProjectStore.getState().addPart({
+      length: 2, width: 2,
+      position: { x: 5, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#00ff00',
+    })
+    const parts = useProjectStore.getState().project.parts
+    const id1 = parts[0].id
+    const id2 = parts[1].id
+
+    // Only select the first part
+    const state = await renderInCanvas(
+      <Scene selectedIds={[id1]} onSelectId={() => {}} />
+    )
+    const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible) as THREE.Mesh[]
+    expect(meshes).toHaveLength(2)
+
+    // Find meshes by position to distinguish them
+    const mesh1 = meshes.find((m) => Math.abs(m.position.x) < 1)
+    const mesh2 = meshes.find((m) => m.position.x > 4)
+    expect(mesh1).toBeDefined()
+    expect(mesh2).toBeDefined()
+    expect(mesh1!.children.length).toBeGreaterThan(1) // has outline
+    expect(mesh2!.children).toHaveLength(1)           // wireframe only
+  })
+
+  it('assembly members all receive outline when their IDs are passed in selectedIds', async () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    useProjectStore.getState().addPart({
+      length: 2, width: 2,
+      position: { x: 5, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#00ff00',
+    })
+    const parts = useProjectStore.getState().project.parts
+    const memberIds = parts.map((p) => p.id)
+
+    // Simulate what App passes when an assembly is selected: all member IDs
+    const state = await renderInCanvas(
+      <Scene selectedIds={memberIds} onSelectId={() => {}} />
+    )
+    const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible) as THREE.Mesh[]
+    expect(meshes).toHaveLength(2)
+    meshes.forEach((mesh) => {
+      expect(mesh.children.length).toBeGreaterThan(1)
+    })
   })
 })

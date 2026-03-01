@@ -20,7 +20,7 @@ async function renderSceneInCanvas(
       gl={{ antialias: true }}
       onCreated={(s) => resolveState(s)}
     >
-      <Scene selectedId={null} onSelectId={() => {}} cameraPresetRef={cameraPresetRef} />
+      <Scene selectedIds={[]} onSelectId={() => {}} cameraPresetRef={cameraPresetRef} />
     </Canvas>
   )
   return statePromise

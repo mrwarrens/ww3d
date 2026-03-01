@@ -182,7 +182,18 @@ export default function App() {
         gl={{ antialias: true }}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       >
-        <Scene selectedId={selectedId} onSelectId={(id) => handleSelectIds(id ? [id] : [])} onSelectAssembly={handleSelectAssembly} cameraPresetRef={cameraPresetRef} />
+        <Scene
+          selectedIds={
+            selectedIds.length > 0
+              ? selectedIds
+              : selectedAssemblyId
+                ? parts.filter((p) => p.assemblyId === selectedAssemblyId).map((p) => p.id)
+                : []
+          }
+          onSelectId={(id) => handleSelectIds(id ? [id] : [])}
+          onSelectAssembly={handleSelectAssembly}
+          cameraPresetRef={cameraPresetRef}
+        />
       </Canvas>
     </>
   )
