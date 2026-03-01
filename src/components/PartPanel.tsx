@@ -66,16 +66,16 @@ export default function PartPanel({
     setDraftRotX(radToDeg(part.rotation.x))
     setDraftRotY(radToDeg(part.rotation.y))
     setDraftRotZ(radToDeg(part.rotation.z))
-    setDraftPosX(part.position.x.toFixed(3))
-    setDraftPosY(part.position.y.toFixed(3))
-    setDraftPosZ(part.position.z.toFixed(3))
+    setDraftPosX(part.position.x.toFixed(4))
+    setDraftPosY(part.position.y.toFixed(4))
+    setDraftPosZ(part.position.z.toFixed(4))
   }, [part?.id])
 
   useEffect(() => {
     if (!part) return
-    setDraftPosX(part.position.x.toFixed(3))
-    setDraftPosY(part.position.y.toFixed(3))
-    setDraftPosZ(part.position.z.toFixed(3))
+    setDraftPosX(part.position.x.toFixed(4))
+    setDraftPosY(part.position.y.toFixed(4))
+    setDraftPosZ(part.position.z.toFixed(4))
   }, [part?.id, part?.position.x, part?.position.y, part?.position.z])
 
   // Assembly draft state
@@ -87,17 +87,17 @@ export default function PartPanel({
   useEffect(() => {
     if (!assembly) return
     setDraftAsmName(assembly.name)
-    setDraftAsmPosX(assembly.position.x.toFixed(3))
-    setDraftAsmPosY(assembly.position.y.toFixed(3))
-    setDraftAsmPosZ(assembly.position.z.toFixed(3))
+    setDraftAsmPosX(assembly.position.x.toFixed(4))
+    setDraftAsmPosY(assembly.position.y.toFixed(4))
+    setDraftAsmPosZ(assembly.position.z.toFixed(4))
   }, [assembly?.id, assembly?.position.x, assembly?.position.y, assembly?.position.z])
 
   if (!part && !assembly) return null
 
   if (assembly && !part) {
-    const currentAsmPosX = assembly.position.x.toFixed(3)
-    const currentAsmPosY = assembly.position.y.toFixed(3)
-    const currentAsmPosZ = assembly.position.z.toFixed(3)
+    const currentAsmPosX = assembly.position.x.toFixed(4)
+    const currentAsmPosY = assembly.position.y.toFixed(4)
+    const currentAsmPosZ = assembly.position.z.toFixed(4)
 
     function commitAsmPos(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
       if (skipBlurRef.current) { skipBlurRef.current = false; return }
@@ -116,7 +116,8 @@ export default function PartPanel({
         e.preventDefault()
         let current = parseFloat(draft)
         if (isNaN(current)) current = parseFloat(resetValue) || 0
-        const newValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+        const rawValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+        const newValue = parseFloat(rawValue.toFixed(10))
         const newStr = newValue.toFixed(4)
         if (axis === 'x') setDraftAsmPosX(newStr)
         else if (axis === 'y') setDraftAsmPosY(newStr)
@@ -316,7 +317,8 @@ export default function PartPanel({
       e.preventDefault()
       let current = parseFloat(draft)
       if (isNaN(current)) current = parseFloat(resetValue) || 0
-      const newValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+      const rawValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
+      const newValue = parseFloat(rawValue.toFixed(10))
       const newStr = newValue.toFixed(4)
       if (axis === 'x') setDraftPosX(newStr)
       else if (axis === 'y') setDraftPosY(newStr)
@@ -376,9 +378,9 @@ export default function PartPanel({
   const currentRotX = radToDeg(part.rotation.x)
   const currentRotY = radToDeg(part.rotation.y)
   const currentRotZ = radToDeg(part.rotation.z)
-  const currentPosX = part.position.x.toFixed(3)
-  const currentPosY = part.position.y.toFixed(3)
-  const currentPosZ = part.position.z.toFixed(3)
+  const currentPosX = part.position.x.toFixed(4)
+  const currentPosY = part.position.y.toFixed(4)
+  const currentPosZ = part.position.z.toFixed(4)
 
   return (
     <div id="part-panel">

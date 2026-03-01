@@ -219,7 +219,7 @@ describe('PartPanel', () => {
   it('renders Px input with initial value matching position.x', async () => {
     const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
     const input = screen.getByRole('textbox', { name: /position x/i })
-    await expect.element(input).toHaveValue('0.000')
+    await expect.element(input).toHaveValue('0.0000')
   })
 
   it('commits position.x on Enter', async () => {
@@ -240,17 +240,17 @@ describe('PartPanel', () => {
     await input.fill('abc')
     await userEvent.keyboard('{Tab}')
     expect(onUpdate).not.toHaveBeenCalled()
-    await expect.element(input).toHaveValue('0.000')
+    await expect.element(input).toHaveValue('0.0000')
   })
 
   it('resets position drafts when switching to a different part', async () => {
     const onUpdate = vi.fn()
     const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
     const pxInput = screen.getByRole('textbox', { name: /position x/i })
-    await expect.element(pxInput).toHaveValue('0.000')
+    await expect.element(pxInput).toHaveValue('0.0000')
 
     await screen.rerender(<PartPanel part={secondPart} onUpdate={onUpdate} />)
-    await expect.element(pxInput).toHaveValue('1.000')
+    await expect.element(pxInput).toHaveValue('1.0000')
   })
 
   it('updates position inputs when the same part is moved (simulating drag)', async () => {
@@ -258,13 +258,13 @@ describe('PartPanel', () => {
     const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
     const pxInput = screen.getByRole('textbox', { name: /position x/i })
     const pzInput = screen.getByRole('textbox', { name: /position z/i })
-    await expect.element(pxInput).toHaveValue('0.000')
-    await expect.element(pzInput).toHaveValue('0.000')
+    await expect.element(pxInput).toHaveValue('0.0000')
+    await expect.element(pzInput).toHaveValue('0.0000')
 
     const movedPart = { ...testPart, position: { x: 3, y: 0.375, z: 5 } }
     await screen.rerender(<PartPanel part={movedPart} onUpdate={onUpdate} />)
-    await expect.element(pxInput).toHaveValue('3.000')
-    await expect.element(pzInput).toHaveValue('5.000')
+    await expect.element(pxInput).toHaveValue('3.0000')
+    await expect.element(pzInput).toHaveValue('5.0000')
   })
 
   it('resets rotation drafts when switching to a different part', async () => {
@@ -344,5 +344,39 @@ describe('PartPanel', () => {
       position: expect.objectContaining({ x: expect.closeTo(0.0625, 4) }),
     })
     await expect.element(input).toHaveValue('0.0625')
+  })
+
+  it('displays position with 4 decimal places on initial render', async () => {
+    const part = createPart({
+      name: 'Board',
+      length: 12,
+      width: 6,
+      thickness: 0.75,
+      position: { x: 0.3, y: 0, z: 0 },
+    })
+    const screen = await render(<PartPanel part={part} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await expect.element(input).toHaveValue('0.3000')
+  })
+
+  it('ArrowUp on Position X from non-binary-fraction starting value produces clean increments', async () => {
+    const part = createPart({
+      name: 'Board',
+      length: 12,
+      width: 6,
+      thickness: 0.75,
+      position: { x: 0.3, y: 0, z: 0 },
+    })
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={part} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /position x/i })
+    await input.click()
+    // Press ArrowUp 5 times from 0.3; each step adds 0.0625
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}')
+    // 0.3 + 5 * 0.0625 = 0.6125 — should display cleanly without float noise
+    await expect.element(input).toHaveValue('0.6125')
+    // The last onUpdate call should pass a clean value, not 0.6125000000000001
+    const lastCall = onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0]
+    expect(lastCall.position.x).toBe(0.6125)
   })
 })
