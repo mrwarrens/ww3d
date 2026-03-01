@@ -36,6 +36,30 @@
       border-radius: 4px;
       z-index: 10;
       max-width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .help-section {
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .help-section:first-child {
+      margin-top: 0;
+    }
+    .help-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 2px 0;
+    }
+    .help-row span:last-child {
+      color: rgba(255,255,255,0.55);
+      text-align: right;
     }
     #part-panel {
       position: absolute;

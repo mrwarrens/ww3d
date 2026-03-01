@@ -54,18 +54,21 @@ src/
   models/
     Part.ts             # Part interface and createPart factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
+    Constraint.ts       # Constraint interface and createConstraint factory
   utils/
     constants.ts        # BOARD_THICKNESS, SNAP_INCREMENT, snapToGrid, CAMERA_PRESETS
     units.ts            # Fractional inch display and parsing utilities
+    constraints.ts      # getPartFacePosition, computeConstrainedPosition
   hooks/
     useCameraPreset.ts  # Hook: animates camera to a named preset position
   stores/
-    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, setProjectName, setGridSize, loadProject, undo, redo
+    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addConstraint, removeConstraint, setProjectName, setGridSize, loadProject, undo, redo
 tests/
   scene.browser.test.tsx           # Browser-mode R3F scene tests
   partPanel.browser.test.tsx       # Browser-mode DOM tests for PartPanel
   partOutliner.browser.test.tsx    # Browser-mode tests for PartOutliner
   app.browser.test.tsx             # Browser-mode tests for App-level features (save)
+  help-panel.browser.test.tsx      # Browser-mode tests for help panel shortcut entries
   camera-pan.browser.test.tsx      # Browser-mode tests for camera pan configuration
   camera-presets.browser.test.tsx  # Browser-mode tests for camera preset views
   move-part.browser.test.tsx       # Browser-mode tests for drag-to-move
@@ -75,6 +78,7 @@ tests/
   projectStore.test.ts    # Unit tests for Zustand store
   units.test.ts           # Unit tests for inch display and parsing utilities
   constants.test.ts       # Unit tests for snapToGrid and constants
+  constraints.test.ts     # Unit tests for constraint math and store actions
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
