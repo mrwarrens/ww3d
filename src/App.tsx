@@ -25,6 +25,7 @@ export default function App() {
   const assignPartToAssembly = useProjectStore((s) => s.assignPartToAssembly)
   const removePartFromAssembly = useProjectStore((s) => s.removePartFromAssembly)
   const groupPartsIntoAssembly = useProjectStore((s) => s.groupPartsIntoAssembly)
+  const renameAssembly = useProjectStore((s) => s.renameAssembly)
   const moveAssembly = useProjectStore((s) => s.moveAssembly)
   const addConstraint = useProjectStore((s) => s.addConstraint)
   const removeConstraint = useProjectStore((s) => s.removeConstraint)
@@ -160,6 +161,7 @@ export default function App() {
         onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
         assembly={selectedAssembly}
         onMoveAssembly={(position) => selectedAssemblyId && moveAssembly(selectedAssemblyId, position)}
+        onRenameAssembly={(name) => selectedAssemblyId && renameAssembly(selectedAssemblyId, name)}
         constraints={project.constraints.filter((c) => c.constrainedPartId === selectedId)}
         allParts={parts}
         onAddConstraint={(c) => addConstraint(c)}

@@ -19,6 +19,7 @@ interface ProjectStore {
   assignPartToAssembly: (partId: string, assemblyId: string) => void
   removePartFromAssembly: (partId: string) => void
   groupPartsIntoAssembly: (partIds: string[], name: string) => string
+  renameAssembly: (id: string, name: string) => void
   moveAssembly: (id: string, position: { x: number; y: number; z: number }) => void
   addConstraint: (constraint: Omit<Constraint, 'id'>) => void
   removeConstraint: (id: string) => void
@@ -172,6 +173,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
     return assembly.id
+  },
+  renameAssembly: (id, name) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        assemblies: state.project.assemblies.map((a) =>
+          a.id === id ? { ...a, name } : a
+        ),
+      },
+    }))
   },
   moveAssembly: (id, position) => {
     const current = get().project

@@ -1,13 +1,41 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Part } from '../models/Part'
+import type { Assembly } from '../models/Assembly'
+import type { Constraint } from '../models/Constraint'
 import { toFractionalInches, parseInches } from '../utils/units'
+
+type ConstraintPreset = 'flush-min' | 'flush-max' | 'centered' | 'offset'
+
+const PRESET_LABELS: Record<ConstraintPreset, string> = {
+  'flush-min': 'Flush (min faces)',
+  'flush-max': 'Flush (max faces)',
+  'centered': 'Centered',
+  'offset': 'Offset by X',
+}
 
 interface PartPanelProps {
   part: Part | null
   onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
+  assembly: Assembly | null
+  onMoveAssembly: (position: { x: number; y: number; z: number }) => void
+  onRenameAssembly?: (name: string) => void
+  constraints?: Constraint[]
+  allParts?: Part[]
+  onAddConstraint?: (c: Omit<Constraint, 'id'>) => void
+  onRemoveConstraint?: (id: string) => void
 }
 
-export default function PartPanel({ part, onUpdate }: PartPanelProps) {
+export default function PartPanel({
+  part,
+  onUpdate,
+  assembly,
+  onMoveAssembly,
+  onRenameAssembly,
+  constraints = [],
+  allParts = [],
+  onAddConstraint,
+  onRemoveConstraint,
+}: PartPanelProps) {
   const [draftName, setDraftName] = useState('')
   const [draftLength, setDraftLength] = useState('')
   const [draftWidth, setDraftWidth] = useState('')
@@ -19,6 +47,13 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
   const [draftPosY, setDraftPosY] = useState('')
   const [draftPosZ, setDraftPosZ] = useState('')
   const skipBlurRef = useRef(false)
+
+  // Constraint add form state
+  const [addingConstraint, setAddingConstraint] = useState(false)
+  const [cAnchorId, setCAnchorId] = useState('')
+  const [cPreset, setCPreset] = useState<ConstraintPreset>('flush-min')
+  const [cAxis, setCAxis] = useState<'x' | 'y' | 'z'>('x')
+  const [cOffset, setCOffset] = useState('0')
 
   const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
 
@@ -43,7 +78,117 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
     setDraftPosZ(part.position.z.toFixed(3))
   }, [part?.id, part?.position.x, part?.position.y, part?.position.z])
 
-  if (!part) return null
+  // Assembly draft state
+  const [draftAsmName, setDraftAsmName] = useState('')
+  const [draftAsmPosX, setDraftAsmPosX] = useState('')
+  const [draftAsmPosY, setDraftAsmPosY] = useState('')
+  const [draftAsmPosZ, setDraftAsmPosZ] = useState('')
+
+  useEffect(() => {
+    if (!assembly) return
+    setDraftAsmName(assembly.name)
+    setDraftAsmPosX(assembly.position.x.toFixed(3))
+    setDraftAsmPosY(assembly.position.y.toFixed(3))
+    setDraftAsmPosZ(assembly.position.z.toFixed(3))
+  }, [assembly?.id, assembly?.position.x, assembly?.position.y, assembly?.position.z])
+
+  if (!part && !assembly) return null
+
+  if (assembly && !part) {
+    const currentAsmPosX = assembly.position.x.toFixed(3)
+    const currentAsmPosY = assembly.position.y.toFixed(3)
+    const currentAsmPosZ = assembly.position.z.toFixed(3)
+
+    function commitAsmPos(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
+      if (skipBlurRef.current) { skipBlurRef.current = false; return }
+      const value = parseFloat(draft)
+      if (!isNaN(value)) {
+        onMoveAssembly({ ...assembly!.position, [axis]: value })
+      } else {
+        if (axis === 'x') setDraftAsmPosX(resetValue)
+        else if (axis === 'y') setDraftAsmPosY(resetValue)
+        else setDraftAsmPosZ(resetValue)
+      }
+    }
+
+    function handleAsmPosKeyDown(e: React.KeyboardEvent<HTMLInputElement>, draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
+      if (e.key === 'Enter') {
+        commitAsmPos(draft, axis, resetValue)
+        skipBlurRef.current = true
+        e.currentTarget.blur()
+      } else if (e.key === 'Escape') {
+        skipBlurRef.current = true
+        if (axis === 'x') setDraftAsmPosX(resetValue)
+        else if (axis === 'y') setDraftAsmPosY(resetValue)
+        else setDraftAsmPosZ(resetValue)
+        e.currentTarget.blur()
+      }
+    }
+
+    function commitAsmName() {
+      if (skipBlurRef.current) { skipBlurRef.current = false; return }
+      const trimmed = draftAsmName.trim()
+      if (trimmed && onRenameAssembly) {
+        onRenameAssembly(trimmed)
+      } else {
+        setDraftAsmName(assembly!.name)
+      }
+    }
+
+    function handleAsmNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      if (e.key === 'Enter') {
+        commitAsmName()
+        skipBlurRef.current = true
+        e.currentTarget.blur()
+      } else if (e.key === 'Escape') {
+        skipBlurRef.current = true
+        setDraftAsmName(assembly!.name)
+        e.currentTarget.blur()
+      }
+    }
+
+    return (
+      <div id="part-panel">
+        <div className="part-panel-name">
+          <input
+            type="text"
+            className="part-panel-input"
+            value={draftAsmName}
+            onChange={(e) => setDraftAsmName(e.target.value)}
+            onBlur={commitAsmName}
+            onKeyDown={handleAsmNameKeyDown}
+            aria-label="Assembly name"
+          />
+        </div>
+        <div className="part-panel-dims">
+          <label>
+            Px:&nbsp;
+            <input type="text" className="part-panel-input part-panel-dim-input" value={draftAsmPosX}
+              onChange={(e) => setDraftAsmPosX(e.target.value)}
+              onBlur={() => commitAsmPos(draftAsmPosX, 'x', currentAsmPosX)}
+              onKeyDown={(e) => handleAsmPosKeyDown(e, draftAsmPosX, 'x', currentAsmPosX)}
+              aria-label="Assembly Position X" />
+          </label>
+          <label>
+            Py:&nbsp;
+            <input type="text" className="part-panel-input part-panel-dim-input" value={draftAsmPosY}
+              onChange={(e) => setDraftAsmPosY(e.target.value)}
+              onBlur={() => commitAsmPos(draftAsmPosY, 'y', currentAsmPosY)}
+              onKeyDown={(e) => handleAsmPosKeyDown(e, draftAsmPosY, 'y', currentAsmPosY)}
+              aria-label="Assembly Position Y" />
+          </label>
+          <label>
+            Pz:&nbsp;
+            <input type="text" className="part-panel-input part-panel-dim-input" value={draftAsmPosZ}
+              onChange={(e) => setDraftAsmPosZ(e.target.value)}
+              onBlur={() => commitAsmPos(draftAsmPosZ, 'z', currentAsmPosZ)}
+              onKeyDown={(e) => handleAsmPosKeyDown(e, draftAsmPosZ, 'z', currentAsmPosZ)}
+              aria-label="Assembly Position Z" />
+          </label>
+        </div>
+      </div>
+    )
+  }
 
   function commitName() {
     if (skipBlurRef.current) {
@@ -332,6 +477,104 @@ export default function PartPanel({ part, onUpdate }: PartPanelProps) {
             aria-label="Color"
           />
         </label>
+      </div>
+      <div className="part-panel-constraints">
+        <div className="part-panel-constraints-header">
+          <strong>Constraints</strong>
+          {onAddConstraint && !addingConstraint && (
+            <button
+              onClick={() => {
+                const firstOther = allParts.find((p) => p.id !== part.id)
+                setCAnchorId(firstOther?.id ?? '')
+                setCPreset('flush-min')
+                setCAxis('x')
+                setCOffset('0')
+                setAddingConstraint(true)
+              }}
+              aria-label="Add constraint"
+            >
+              + Add
+            </button>
+          )}
+        </div>
+        {constraints.map((c) => {
+          const anchor = allParts.find((p) => p.id === c.anchorPartId)
+          const presetLabel = `${c.anchorFace}/${c.constrainedFace}` === 'min/min' ? 'Flush (min)'
+            : `${c.anchorFace}/${c.constrainedFace}` === 'max/max' ? 'Flush (max)'
+            : `${c.anchorFace}/${c.constrainedFace}` === 'center/center' ? 'Centered'
+            : `Offset ${c.offset}"`
+          return (
+            <div key={c.id} className="part-panel-constraint-row">
+              <span>{c.axis.toUpperCase()} — {presetLabel} → {anchor?.name ?? c.anchorPartId}</span>
+              {onRemoveConstraint && (
+                <button onClick={() => onRemoveConstraint(c.id)} aria-label="Remove constraint">✕</button>
+              )}
+            </div>
+          )
+        })}
+        {addingConstraint && (
+          <div className="part-panel-constraint-form">
+            <label>
+              Anchor:&nbsp;
+              <select value={cAnchorId} onChange={(e) => setCAnchorId(e.target.value)} aria-label="Anchor part">
+                {allParts.filter((p) => p.id !== part.id).map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Type:&nbsp;
+              <select value={cPreset} onChange={(e) => setCPreset(e.target.value as ConstraintPreset)} aria-label="Constraint type">
+                {(Object.keys(PRESET_LABELS) as ConstraintPreset[]).map((k) => (
+                  <option key={k} value={k}>{PRESET_LABELS[k]}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Axis:&nbsp;
+              <select value={cAxis} onChange={(e) => setCAxis(e.target.value as 'x' | 'y' | 'z')} aria-label="Constraint axis">
+                <option value="x">X</option>
+                <option value="y">Y</option>
+                <option value="z">Z</option>
+              </select>
+            </label>
+            {cPreset === 'offset' && (
+              <label>
+                Distance:&nbsp;
+                <input
+                  type="number"
+                  value={cOffset}
+                  onChange={(e) => setCOffset(e.target.value)}
+                  aria-label="Offset distance"
+                  style={{ width: '4em' }}
+                />
+              </label>
+            )}
+            <div className="part-panel-constraint-form-actions">
+              <button
+                onClick={() => {
+                  if (!onAddConstraint || !cAnchorId) return
+                  const presetMap: Record<ConstraintPreset, { anchorFace: 'min' | 'center' | 'max'; constrainedFace: 'min' | 'center' | 'max'; offset: number }> = {
+                    'flush-min': { anchorFace: 'min', constrainedFace: 'min', offset: 0 },
+                    'flush-max': { anchorFace: 'max', constrainedFace: 'max', offset: 0 },
+                    'centered': { anchorFace: 'center', constrainedFace: 'center', offset: 0 },
+                    'offset': { anchorFace: 'max', constrainedFace: 'min', offset: parseFloat(cOffset) || 0 },
+                  }
+                  onAddConstraint({
+                    anchorPartId: cAnchorId,
+                    constrainedPartId: part.id,
+                    axis: cAxis,
+                    ...presetMap[cPreset],
+                  })
+                  setAddingConstraint(false)
+                }}
+              >
+                Apply
+              </button>
+              <button onClick={() => setAddingConstraint(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
