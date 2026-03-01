@@ -8,11 +8,13 @@ import { serializeProject, deserializeProject } from './models/Project'
 import type { CAMERA_PRESETS } from './utils/constants'
 
 export default function App() {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const selectedId = selectedIds[0] ?? null
   const [helpOpen, setHelpOpen] = useState(false)
   const [gridPaneOpen, setGridPaneOpen] = useState(false)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
+  const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
   const setGridSize = useProjectStore((s) => s.setGridSize)
   const loadProject = useProjectStore((s) => s.loadProject)
@@ -43,7 +45,7 @@ export default function App() {
       const text = event.target?.result
       if (typeof text !== 'string') return
       loadProject(deserializeProject(text))
-      setSelectedId(null)
+      setSelectedIds([])
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -107,13 +109,13 @@ export default function App() {
         part={selectedPart}
         onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
       />
-      <PartOutliner parts={parts} selectedId={selectedId} onSelectId={setSelectedId} onToggleVisibility={togglePartVisibility} />
+      <PartOutliner parts={parts} assemblies={assemblies} selectedIds={selectedIds} onSelectIds={setSelectedIds} onToggleVisibility={togglePartVisibility} />
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 100, position: [3, 2, 3] }}
         gl={{ antialias: true }}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       >
-        <Scene selectedId={selectedId} onSelectId={setSelectedId} cameraPresetRef={cameraPresetRef} />
+        <Scene selectedId={selectedId} onSelectId={(id) => setSelectedIds(id ? [id] : [])} cameraPresetRef={cameraPresetRef} />
       </Canvas>
     </>
   )

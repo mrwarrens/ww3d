@@ -140,22 +140,42 @@ tasks:
   # Phase 3 tasks
   - id: 23
     phase: 3
-    name: Assembly/group data model
-    description: Parts can belong to named sub-assemblies
+    name: Assembly data model and grouping
+    description: An Assembly is a named group with a position (a Three.js Group node). Parts belong to an assembly. Moving the assembly moves all its parts. The outliner shows assemblies with their parts nested inside. No single part is the parent — the assembly itself is the anchor.
     deps: []
-    status: planned
-  - id: 24
+    status: done
+  - id: 28
     phase: 3
-    name: Parent/child relationships between parts
-    description: Parts can be parented to other parts; moving a parent moves children
-    deps: [23]
+    name: Multi-select in outliner
+    description: Shift+click and Cmd+click on part rows in the outliner to select multiple parts. Selection is outliner-only for now — clicking in the 3D viewport still selects a single part.
+    deps: []
+    status: ready
+  - id: 29
+    phase: 3
+    name: Assembly UI — create, assign, remove
+    description: "New Assembly" button in the outliner creates an empty named assembly. Drag part rows onto an assembly row to add them. Cmd+G groups the current outliner multi-selection into a new assembly. Right-click a part row to remove it from its assembly.
+    deps: [23, 28]
+    status: pending
+
+  - id: 30
+    phase: 3
+    name: Assembly selection and movement
+    description: Clicking an assembly row in the outliner selects the assembly — panel shows the assembly position, dragging in the 3D viewport moves the whole group. Clicking a part row selects just that part. Single-click in the 3D viewport selects the part; double-click selects the assembly the part belongs to (if any).
+    deps: [29]
+    status: pending
+
+  - id: 31
+    phase: 3
+    name: Update help panel with all keyboard shortcuts and click behaviors
+    description: Rewrite the help panel so every shortcut and interaction is listed one rule per line. Must include all existing shortcuts (Left-drag to draw, Right-drag to orbit, Middle/Shift-drag to pan, Scroll to zoom, Delete to delete, Escape to deselect, Cmd+D to duplicate, Cmd+Z/Cmd+Shift+Z to undo/redo, Cmd+S to save, G to toggle snap, 1/2/3/4 for camera presets) plus new assembly interactions (Cmd+G to group, single-click to select part, double-click to select assembly, click assembly row in outliner to select group, click part row in outliner to select part).
+    deps: [30]
     status: pending
 
   - id: 25
     phase: 3
     name: Basic constraints
     description: Constraint types — flush, centered, offset by X — between pairs of parts
-    deps: [24]
+    deps: [30]
     status: pending
 
   - id: 26
@@ -170,4 +190,4 @@ tasks:
     name: Bug: drag-to-move does not update position inputs
     description: When a part is dragged to a new position, the Px/Py/Pz fields in the properties panel do not update to reflect the new position until the part is deselected and re-selected.
     deps: [21]
-    status: done
+    status: accepted

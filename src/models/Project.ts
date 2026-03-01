@@ -1,9 +1,11 @@
 import { type Part } from './Part'
+import { type Assembly } from './Assembly'
 
 export interface Project {
   id: string
   name: string
   parts: Part[]
+  assemblies: Assembly[]
   gridSize: number
 }
 
@@ -12,6 +14,7 @@ export function createProject(name = 'Untitled Project'): Project {
     id: crypto.randomUUID(),
     name,
     parts: [],
+    assemblies: [],
     gridSize: 10,
   }
 }
@@ -21,5 +24,9 @@ export function serializeProject(project: Project): string {
 }
 
 export function deserializeProject(json: string): Project {
-  return JSON.parse(json) as Project
+  const parsed = JSON.parse(json)
+  return {
+    ...parsed,
+    assemblies: parsed.assemblies ?? [],
+  } as Project
 }

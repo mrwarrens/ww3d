@@ -182,10 +182,10 @@ plan-feeder.sh → defined/ → approve-plan.sh → ready/ → claude-queue.sh �
 
 ### Scripts
 
-**`scripts/plan-feeder.sh`** — Generates plans for unblocked pending tasks.
+**`scripts/plan-feeder.sh [--auto-approve]`** — Generates plans for unblocked pending tasks.
 - Reads `pipeline.yaml` to find tasks where `status == pending` and all deps are `done` or `accepted`
-- Runs the `/plan-builder` skill via `claude -p` and saves the plan to `defined/`
-- Updates `pipeline.yaml` status to `planned`
+- Runs the `/plan-builder` skill via `claude -p` and saves the plan to `defined/`, status → `planned`
+- With `--auto-approve`: moves plan directly to `ready/` instead, status → `ready` (skips human review)
 - Polls every 10 seconds
 
 **`scripts/claude-queue.sh`** — Executes plans for tasks in `ready` status.
@@ -219,6 +219,9 @@ plan-feeder.sh → defined/ → approve-plan.sh → ready/ → claude-queue.sh �
 
 # In one terminal — generates plans into defined/ as tasks become unblocked
 ./scripts/plan-feeder.sh
+
+# Or skip human plan review entirely
+./scripts/plan-feeder.sh --auto-approve
 
 # In a second terminal — executes plans as they appear in ready/
 ./scripts/claude-queue.sh

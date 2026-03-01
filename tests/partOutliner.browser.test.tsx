@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render } from 'vitest-browser-react'
 import PartOutliner from '../src/components/PartOutliner'
 import { createPart } from '../src/models/Part'
+import { createAssembly } from '../src/models/Assembly'
 
 const partA = createPart({ name: 'Top Rail', length: 36, width: 4, position: { x: 0, y: 0.375, z: 0 } })
 const partB = createPart({ name: 'Bottom Rail', length: 36, width: 4, position: { x: 0, y: 0.375, z: 10 } })
@@ -9,7 +10,7 @@ const partB = createPart({ name: 'Bottom Rail', length: 36, width: 4, position: 
 describe('PartOutliner', () => {
   it('renders nothing (no crash) when parts is empty', async () => {
     const { container } = await render(
-      <PartOutliner parts={[]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const ul = container.querySelector('ul')
     expect(ul?.children.length).toBe(0)
@@ -17,7 +18,7 @@ describe('PartOutliner', () => {
 
   it('renders a row for each part by name', async () => {
     const screen = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     await expect.element(screen.getByText('Top Rail')).toBeVisible()
     await expect.element(screen.getByText('Bottom Rail')).toBeVisible()
@@ -25,7 +26,7 @@ describe('PartOutliner', () => {
 
   it('applies selected class to the selected part row', async () => {
     const { container } = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={partA.id} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[partA.id]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const items = container.querySelectorAll('li')
     expect(items[0].classList.contains('selected')).toBe(true)
@@ -34,24 +35,24 @@ describe('PartOutliner', () => {
 
   it('does not apply selected class when no part is selected', async () => {
     const { container } = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const items = container.querySelectorAll('li')
     items.forEach((li) => expect(li.classList.contains('selected')).toBe(false))
   })
 
-  it('calls onSelectId with the correct part id when a row is clicked', async () => {
-    const onSelectId = vi.fn()
+  it('calls onSelectIds with a single-item array when a row is clicked', async () => {
+    const onSelectIds = vi.fn()
     const screen = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={null} onSelectId={onSelectId} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={onSelectIds} onToggleVisibility={vi.fn()} />
     )
     await screen.getByText('Bottom Rail').click()
-    expect(onSelectId).toHaveBeenCalledWith(partB.id)
+    expect(onSelectIds).toHaveBeenCalledWith([partB.id])
   })
 
   it('each row contains a .visibility-btn button', async () => {
     const { container } = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const btns = container.querySelectorAll('.visibility-btn')
     expect(btns.length).toBe(2)
@@ -59,7 +60,7 @@ describe('PartOutliner', () => {
 
   it('visibility button shows ● for a visible part', async () => {
     const { container } = await render(
-      <PartOutliner parts={[partA]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const btn = container.querySelector('.visibility-btn')
     expect(btn?.textContent).toBe('●')
@@ -69,7 +70,7 @@ describe('PartOutliner', () => {
   it('visibility button shows ○ for a hidden part', async () => {
     const hiddenPart = { ...partA, visible: false }
     const { container } = await render(
-      <PartOutliner parts={[hiddenPart]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+      <PartOutliner parts={[hiddenPart]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
     )
     const btn = container.querySelector('.visibility-btn')
     expect(btn?.textContent).toBe('○')
@@ -79,23 +80,23 @@ describe('PartOutliner', () => {
   it('clicking visibility button calls onToggleVisibility with the correct part id', async () => {
     const onToggleVisibility = vi.fn()
     const screen = await render(
-      <PartOutliner parts={[partA, partB]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={onToggleVisibility} />
+      <PartOutliner parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={onToggleVisibility} />
     )
     const btns = screen.container.querySelectorAll('.visibility-btn')
     await (btns[1] as HTMLElement).click()
     expect(onToggleVisibility).toHaveBeenCalledWith(partB.id)
   })
 
-  it('clicking visibility button does not trigger onSelectId', async () => {
-    const onSelectId = vi.fn()
+  it('clicking visibility button does not trigger onSelectIds', async () => {
+    const onSelectIds = vi.fn()
     const onToggleVisibility = vi.fn()
     const screen = await render(
-      <PartOutliner parts={[partA]} selectedId={null} onSelectId={onSelectId} onToggleVisibility={onToggleVisibility} />
+      <PartOutliner parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={onSelectIds} onToggleVisibility={onToggleVisibility} />
     )
     const btn = screen.container.querySelector('.visibility-btn') as HTMLElement
     await btn.click()
     expect(onToggleVisibility).toHaveBeenCalled()
-    expect(onSelectId).not.toHaveBeenCalled()
+    expect(onSelectIds).not.toHaveBeenCalled()
   })
 
   describe('#part-outliner positioning', () => {
@@ -120,11 +121,47 @@ describe('PartOutliner', () => {
 
     it('#part-outliner is positioned on the left side (left: 10px)', async () => {
       const { container } = await render(
-        <PartOutliner parts={[partA]} selectedId={null} onSelectId={vi.fn()} onToggleVisibility={vi.fn()} />
+        <PartOutliner parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
       )
       const el = container.querySelector('#part-outliner') as HTMLElement
       const style = window.getComputedStyle(el)
       expect(style.left).toBe('10px')
+    })
+  })
+
+  describe('assembly hierarchy', () => {
+    it('renders an assembly row by name', async () => {
+      const assembly = createAssembly('Cabinet')
+      const screen = await render(
+        <PartOutliner parts={[]} assemblies={[assembly]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
+      )
+      await expect.element(screen.getByText('Cabinet')).toBeVisible()
+    })
+
+    it('renders member parts nested inside the assembly row', async () => {
+      const assembly = createAssembly('Cabinet')
+      const member = { ...partA, assemblyId: assembly.id }
+      const { container } = await render(
+        <PartOutliner parts={[member]} assemblies={[assembly]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
+      )
+      const assemblyLi = container.querySelector('li.assembly-row') as HTMLElement
+      expect(assemblyLi).not.toBeNull()
+      const nestedItems = assemblyLi.querySelectorAll('li')
+      expect(nestedItems.length).toBe(1)
+      expect(nestedItems[0].textContent).toContain(partA.name)
+    })
+
+    it('renders unassigned parts at root level alongside assembly rows', async () => {
+      const assembly = createAssembly('Cabinet')
+      const member = { ...partA, assemblyId: assembly.id }
+      const { container } = await render(
+        <PartOutliner parts={[member, partB]} assemblies={[assembly]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} />
+      )
+      // root <ul> should have 2 children: the assembly <li> and the unassigned part <li>
+      const rootUl = container.querySelector('#part-outliner > ul') as HTMLElement
+      expect(rootUl.children.length).toBe(2)
+      // The second child is the unassigned part
+      expect(rootUl.children[1].textContent).toContain(partB.name)
     })
   })
 })

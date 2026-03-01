@@ -5,10 +5,12 @@
 # runs the plan-builder skill and saves the plan to .claude/plans/defined/.
 # Updates pipeline.yaml status to "planned" on success.
 #
-# Plans are written to defined/ for human review. Use approve-plan.sh to move
-# them to ready/ for execution by claude-queue.sh.
+# With --auto-approve, plans are written directly to ready/ and status is set
+# to "ready", skipping human review. Without it, plans go to defined/ for review.
 #
-# Usage: ./scripts/plan-feeder.sh
+# Usage:
+#   ./scripts/plan-feeder.sh                # plans saved to defined/ for review
+#   ./scripts/plan-feeder.sh --auto-approve # plans saved directly to ready/
 
 set -euo pipefail
 
@@ -18,7 +20,16 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=scripts/lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
+AUTO_APPROVE=false
+for arg in "$@"; do
+  case "$arg" in
+    --auto-approve) AUTO_APPROVE=true ;;
+    *) echo "Unknown argument: $arg"; exit 1 ;;
+  esac
+done
+
 DEFINED_DIR="$PROJECT_ROOT/.claude/plans/defined"
+READY_DIR="$PROJECT_ROOT/.claude/plans/ready"
 SKILL_FILE="$PROJECT_ROOT/.claude/skills/plan-builder/SKILL.md"
 
 # Generate a plan for a task using the plan-builder skill.
@@ -28,7 +39,8 @@ generate_plan() {
   local name="$3"
   local slug="$4"
   local args="Phase ${phase} - ${id} - ${name}"
-  local expected_plan="$DEFINED_DIR/phase-${phase}-${id}-${slug}.md"
+  local plan_filename="phase-${phase}-${id}-${slug}.md"
+  local expected_plan="$DEFINED_DIR/$plan_filename"
 
   log "Running plan-builder for: $args"
 
@@ -47,9 +59,16 @@ print(content.replace('\$ARGUMENTS', os.environ['PLAN_ARGS']))
   case "$CLAUDE_STATUS" in
     success)
       if [[ -f "$expected_plan" ]]; then
-        log "Plan saved: phase-${phase}-${id}-${slug}.md"
-        update_yaml_status "$id" "planned"
-        log "Updated pipeline.yaml: task #${id} → planned"
+        if [[ "$AUTO_APPROVE" == "true" ]]; then
+          mv "$expected_plan" "$READY_DIR/$plan_filename"
+          update_yaml_status "$id" "ready"
+          log "Plan auto-approved: $plan_filename → ready/"
+          log "Updated pipeline.yaml: task #${id} → ready"
+        else
+          update_yaml_status "$id" "planned"
+          log "Plan saved: defined/$plan_filename"
+          log "Updated pipeline.yaml: task #${id} → planned"
+        fi
       else
         log "WARNING: plan-builder succeeded but $expected_plan was not created"
       fi
@@ -64,6 +83,7 @@ print(content.replace('\$ARGUMENTS', os.environ['PLAN_ARGS']))
 log "Plan feeder started"
 log "Project: $PROJECT_ROOT"
 log "Poll interval: ${POLL_INTERVAL}s"
+log "Auto-approve: $AUTO_APPROVE"
 
 while true; do
   log "Scanning pipeline.yaml for plannable tasks..."
@@ -72,16 +92,15 @@ while true; do
   while IFS=$'\t' read -r id phase name slug; do
     [[ -n "$id" ]] || continue
 
-    current_status
     current_status=$(read_yaml_status "$id")
 
-    # Skip if already beyond pending (e.g. planned/ready/done/accepted)
+    # Skip if already beyond pending
     if [[ "$current_status" != "pending" ]]; then
       log "Task #${id} (${name}) — status=${current_status}, skipping"
       continue
     fi
 
-    # Check if a plan file already exists in defined/ (idempotency guard)
+    # Idempotency guard: plan file already exists in defined/
     if find "$DEFINED_DIR" -maxdepth 1 -name "phase-${phase}-${id}-*.md" 2>/dev/null | grep -q .; then
       log "Task #${id} (${name}) — plan file exists in defined/, updating status to planned"
       update_yaml_status "$id" "planned"

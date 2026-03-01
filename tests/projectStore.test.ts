@@ -97,7 +97,7 @@ describe('projectStore', () => {
   it('loadProject replaces the current project', () => {
     useProjectStore.getState().addPart(baseInit)
     const { loadProject } = useProjectStore.getState()
-    const newProject = { id: 'new-id', name: 'Loaded', parts: [], gridSize: 10 }
+    const newProject = { id: 'new-id', name: 'Loaded', parts: [], assemblies: [], gridSize: 10 }
     loadProject(newProject)
     const { project } = useProjectStore.getState()
     expect(project.id).toBe('new-id')
@@ -123,7 +123,7 @@ describe('projectStore', () => {
 
   it('loadProject restores gridSize from the loaded project', () => {
     const { loadProject } = useProjectStore.getState()
-    loadProject({ id: 'p1', name: 'Big Project', parts: [], gridSize: 25 })
+    loadProject({ id: 'p1', name: 'Big Project', parts: [], assemblies: [], gridSize: 25 })
     expect(useProjectStore.getState().project.gridSize).toBe(25)
   })
 
@@ -278,7 +278,7 @@ describe('projectStore', () => {
     const { loadProject } = useProjectStore.getState()
     const part = { id: 'p1', name: 'Shelf', length: 12, width: 6, thickness: 0.75,
                    position: { x: 0, y: 0.375, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, color: '#fff', visible: true }
-    loadProject({ id: 'proj-1', name: 'Cabinet', parts: [part], gridSize: 10 })
+    loadProject({ id: 'proj-1', name: 'Cabinet', parts: [part], assemblies: [], gridSize: 10 })
     const { project } = useProjectStore.getState()
     expect(project.parts).toHaveLength(1)
     expect(project.parts[0].name).toBe('Shelf')
@@ -459,6 +459,99 @@ describe('projectStore', () => {
       useProjectStore.getState().loadProject(createProject())
       expect(useProjectStore.getState().history).toHaveLength(0)
       expect(useProjectStore.getState().future).toHaveLength(0)
+    })
+  })
+
+  describe('addAssembly', () => {
+    it('appends an assembly with the given name', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      const { assemblies } = useProjectStore.getState().project
+      expect(assemblies).toHaveLength(1)
+      expect(assemblies[0].name).toBe('Cabinet')
+      expect(assemblies[0].id).toBe(id)
+    })
+
+    it('returns the new assembly id', () => {
+      const id = useProjectStore.getState().addAssembly('Shelf')
+      expect(typeof id).toBe('string')
+      expect(id.length).toBeGreaterThan(0)
+    })
+
+    it('pushes to undo history; undo removes the assembly', () => {
+      useProjectStore.getState().addAssembly('Frame')
+      expect(useProjectStore.getState().project.assemblies).toHaveLength(1)
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.assemblies).toHaveLength(0)
+    })
+  })
+
+  describe('moveAssembly', () => {
+    it('updates assembly position', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().moveAssembly(id, { x: 5, y: 0, z: 3 })
+      const assembly = useProjectStore.getState().project.assemblies[0]
+      expect(assembly.position).toEqual({ x: 5, y: 0, z: 3 })
+    })
+
+    it('shifts all member parts by the delta', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 1, y: 0.375, z: 2 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+      // assign part to assembly via direct setState (no history push)
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: state.project.parts.map((p) =>
+            p.id === partId ? { ...p, assemblyId: id } : p
+          ),
+        },
+      }))
+      // assembly starts at {x:0,y:0,z:0}; move to {x:5,y:0,z:0} → delta x+5
+      useProjectStore.getState().moveAssembly(id, { x: 5, y: 0, z: 0 })
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.position.x).toBe(6)
+      expect(part.position.z).toBe(2)
+    })
+
+    it('does not move parts that belong to a different assembly', () => {
+      const id1 = useProjectStore.getState().addAssembly('A')
+      const id2 = useProjectStore.getState().addAssembly('B')
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 0, y: 0.375, z: 0 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: state.project.parts.map((p) =>
+            p.id === partId ? { ...p, assemblyId: id2 } : p
+          ),
+        },
+      }))
+      useProjectStore.getState().moveAssembly(id1, { x: 10, y: 0, z: 10 })
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.position).toEqual({ x: 0, y: 0.375, z: 0 })
+    })
+
+    it('pushes to undo history; undo restores previous positions', () => {
+      const id = useProjectStore.getState().addAssembly('Frame')
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 1, y: 0.375, z: 2 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: state.project.parts.map((p) =>
+            p.id === partId ? { ...p, assemblyId: id } : p
+          ),
+        },
+        history: [],
+        future: [],
+      }))
+      useProjectStore.getState().moveAssembly(id, { x: 5, y: 0, z: 5 })
+      useProjectStore.getState().undo()
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.position.x).toBe(1)
+      expect(part.position.z).toBe(2)
+      const assembly = useProjectStore.getState().project.assemblies[0]
+      expect(assembly.position).toEqual({ x: 0, y: 0, z: 0 })
     })
   })
 })

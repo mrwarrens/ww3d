@@ -8,6 +8,7 @@ export interface Part {
   rotation: { x: number; y: number; z: number }  // Euler angles, radians
   color: string       // hex string
   visible: boolean
+  assemblyId?: string
 }
 
 export type PartInit = {
