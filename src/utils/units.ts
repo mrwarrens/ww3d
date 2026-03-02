@@ -7,12 +7,15 @@ function gcd(a: number, b: number): number {
  * Examples: 3.5 → "3-1/2"", 0.75 → "3/4"", 24 → "24""
  */
 export function toFractionalInches(inches: number, precision: 16 | 32 = 16): string {
-  const totalUnits = Math.round(inches * precision)
+  const negative = inches < 0
+  const abs = Math.abs(inches)
+  const totalUnits = Math.round(abs * precision)
   const wholeUnits = Math.floor(totalUnits / precision)
   const remainderUnits = totalUnits % precision
+  const sign = negative ? '-' : ''
 
   if (remainderUnits === 0) {
-    return `${wholeUnits}"`
+    return `${sign}${wholeUnits}"`
   }
 
   const divisor = gcd(remainderUnits, precision)
@@ -20,10 +23,10 @@ export function toFractionalInches(inches: number, precision: 16 | 32 = 16): str
   const denominator = precision / divisor
 
   if (wholeUnits === 0) {
-    return `${numerator}/${denominator}"`
+    return `${sign}${numerator}/${denominator}"`
   }
 
-  return `${wholeUnits}-${numerator}/${denominator}"`
+  return `${sign}${wholeUnits}-${numerator}/${denominator}"`
 }
 
 /**
@@ -41,23 +44,25 @@ export function parseInches(input: string): number {
     return parseFloat(normalized)
   }
 
-  // Fraction only: "1/2"
-  const fractionOnly = /^(\d+)\/(\d+)$/.exec(normalized)
+  // Fraction only: "1/2" or "-1/2"
+  const fractionOnly = /^(-?)(\d+)\/(\d+)$/.exec(normalized)
   if (fractionOnly) {
-    const num = parseInt(fractionOnly[1], 10)
-    const den = parseInt(fractionOnly[2], 10)
+    const sign = fractionOnly[1] === '-' ? -1 : 1
+    const num = parseInt(fractionOnly[2], 10)
+    const den = parseInt(fractionOnly[3], 10)
     if (den === 0) throw new Error(`Invalid input: "${input}"`)
-    return num / den
+    return sign * (num / den)
   }
 
-  // Mixed number with hyphen or space: "3-1/2" or "3 1/2"
-  const mixed = /^(\d+)[-\s](\d+)\/(\d+)$/.exec(normalized)
+  // Mixed number with hyphen or space: "3-1/2", "3 1/2", "-3-1/2"
+  const mixed = /^(-?)(\d+)[-\s](\d+)\/(\d+)$/.exec(normalized)
   if (mixed) {
-    const whole = parseInt(mixed[1], 10)
-    const num = parseInt(mixed[2], 10)
-    const den = parseInt(mixed[3], 10)
+    const sign = mixed[1] === '-' ? -1 : 1
+    const whole = parseInt(mixed[2], 10)
+    const num = parseInt(mixed[3], 10)
+    const den = parseInt(mixed[4], 10)
     if (den === 0) throw new Error(`Invalid input: "${input}"`)
-    return whole + num / den
+    return sign * (whole + num / den)
   }
 
   throw new Error(`Invalid input: "${input}"`)

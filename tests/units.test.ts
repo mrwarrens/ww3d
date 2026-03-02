@@ -48,6 +48,22 @@ describe('toFractionalInches', () => {
   it('formats board thickness (3/4")', () => {
     expect(toFractionalInches(0.75)).toBe('3/4"')
   })
+
+  it('formats negative fractions less than 0', () => {
+    expect(toFractionalInches(-0.0625)).toBe('-1/16"')
+    expect(toFractionalInches(-0.5)).toBe('-1/2"')
+    expect(toFractionalInches(-0.75)).toBe('-3/4"')
+  })
+
+  it('formats negative mixed numbers', () => {
+    expect(toFractionalInches(-1.0625)).toBe('-1-1/16"')
+    expect(toFractionalInches(-3.5)).toBe('-3-1/2"')
+  })
+
+  it('formats negative whole numbers', () => {
+    expect(toFractionalInches(-1)).toBe('-1"')
+    expect(toFractionalInches(-24)).toBe('-24"')
+  })
 })
 
 describe('parseInches', () => {
@@ -88,6 +104,26 @@ describe('parseInches', () => {
     for (const v of values) {
       const displayed = toFractionalInches(v)
       // strip trailing " before parsing
+      const stripped = displayed.slice(0, -1)
+      expect(parseInches(stripped)).toBeCloseTo(v, 6)
+    }
+  })
+
+  it('parses negative fractions', () => {
+    expect(parseInches('-1/16')).toBe(-0.0625)
+    expect(parseInches('-1/2')).toBe(-0.5)
+    expect(parseInches('-3/4')).toBe(-0.75)
+  })
+
+  it('parses negative mixed numbers', () => {
+    expect(parseInches('-1-1/16')).toBeCloseTo(-1.0625, 6)
+    expect(parseInches('-3-1/2')).toBe(-3.5)
+  })
+
+  it('round-trips negative values with toFractionalInches', () => {
+    const values = [-0.0625, -0.5, -1.0625, -1.5625, -3.5]
+    for (const v of values) {
+      const displayed = toFractionalInches(v)
       const stripped = displayed.slice(0, -1)
       expect(parseInches(stripped)).toBeCloseTo(v, 6)
     }
