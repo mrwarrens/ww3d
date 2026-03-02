@@ -10,9 +10,11 @@ interface BoardProps extends Part {
   isSelected: boolean
   onSelect: () => void
   onDragStart?: (e: ThreeEvent<PointerEvent>) => void
+  onDoubleClick?: () => void
+  onEyedropperClick?: (color: string) => void
 }
 
-export default function Board({ length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart }: BoardProps) {
+export default function Board({ length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick }: BoardProps) {
   const edgesGeo = useMemo(() => {
     const box = new THREE.BoxGeometry(length, thickness, width)
     const edges = new THREE.EdgesGeometry(box)
@@ -22,17 +24,31 @@ export default function Board({ length, width, thickness, position, rotation, co
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
+    if (onEyedropperClick) {
+      onEyedropperClick(color)
+      return
+    }
     onSelect()
   }
 
+  const handleDoubleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation()
+    onDoubleClick?.()
+  }
+
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    if (e.button !== 0 || !isSelected) return
+    if (e.button !== 0) return
+    if (onEyedropperClick) {
+      e.stopPropagation()
+      return
+    }
+    if (!isSelected) return
     e.stopPropagation()
     onDragStart?.(e)
   }
 
   return (
-    <mesh position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} onClick={handleClick} onPointerDown={handlePointerDown}>
+    <mesh position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerDown={handlePointerDown}>
       <boxGeometry args={[length, thickness, width]} />
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} />
       <lineSegments geometry={edgesGeo} material={lineMat} />
