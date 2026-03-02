@@ -403,6 +403,16 @@ describe('PartPanel', () => {
     await expect.element(input).toHaveValue('3-1/2"')
   })
 
+  it('normalises decimal dimension input to fractional form on blur', async () => {
+    const onUpdate = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={onUpdate} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await input.fill('1.5')
+    await userEvent.keyboard('{Tab}')
+    expect(onUpdate).toHaveBeenCalledWith({ length: 1.5 })
+    await expect.element(input).toHaveValue('1-1/2"')
+  })
+
   it('dim inputs are wide enough to display long fractional values without scrolling', async () => {
     const longPart = createPart({
       name: 'Wide Board',

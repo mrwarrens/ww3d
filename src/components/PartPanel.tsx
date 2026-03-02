@@ -232,6 +232,7 @@ export default function PartPanel({
       const value = parseInches(draft)
       if (value > 0) {
         onUpdate({ [field]: value })
+        resetDim(toFractionalInches(value), field)
       } else {
         resetDim(resetValue, field)
       }
