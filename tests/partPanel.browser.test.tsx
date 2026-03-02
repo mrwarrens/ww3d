@@ -402,4 +402,20 @@ describe('PartPanel', () => {
     })
     await expect.element(input).toHaveValue('3-1/2"')
   })
+
+  it('dim inputs are wide enough to display long fractional values without scrolling', async () => {
+    const longPart = createPart({
+      name: 'Wide Board',
+      length: 23.9375, // displays as "23-15/16"" — 9 characters
+      width: 8,
+      thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+    })
+    const screen = await render(<PartPanel part={longPart} onUpdate={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /length/i })
+    await expect.element(input).toHaveValue('23-15/16"')
+    const el = input.element() as HTMLInputElement
+    const width = parseFloat(getComputedStyle(el).width)
+    expect(width).toBeGreaterThanOrEqual(90)
+  })
 })
