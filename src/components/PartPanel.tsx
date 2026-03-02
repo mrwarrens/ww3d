@@ -23,6 +23,7 @@ interface PartPanelProps {
   allParts?: Part[]
   onAddConstraint?: (c: Omit<Constraint, 'id'>) => void
   onRemoveConstraint?: (id: string) => void
+  onEyedropperActivate?: () => void
 }
 
 export default function PartPanel({
@@ -35,6 +36,7 @@ export default function PartPanel({
   allParts = [],
   onAddConstraint,
   onRemoveConstraint,
+  onEyedropperActivate,
 }: PartPanelProps) {
   const [draftName, setDraftName] = useState('')
   const [draftLength, setDraftLength] = useState('')
@@ -66,16 +68,16 @@ export default function PartPanel({
     setDraftRotX(radToDeg(part.rotation.x))
     setDraftRotY(radToDeg(part.rotation.y))
     setDraftRotZ(radToDeg(part.rotation.z))
-    setDraftPosX(part.position.x.toFixed(4))
-    setDraftPosY(part.position.y.toFixed(4))
-    setDraftPosZ(part.position.z.toFixed(4))
+    setDraftPosX(toFractionalInches(part.position.x))
+    setDraftPosY(toFractionalInches(part.position.y))
+    setDraftPosZ(toFractionalInches(part.position.z))
   }, [part?.id])
 
   useEffect(() => {
     if (!part) return
-    setDraftPosX(part.position.x.toFixed(4))
-    setDraftPosY(part.position.y.toFixed(4))
-    setDraftPosZ(part.position.z.toFixed(4))
+    setDraftPosX(toFractionalInches(part.position.x))
+    setDraftPosY(toFractionalInches(part.position.y))
+    setDraftPosZ(toFractionalInches(part.position.z))
   }, [part?.id, part?.position.x, part?.position.y, part?.position.z])
 
   // Assembly draft state
@@ -87,24 +89,27 @@ export default function PartPanel({
   useEffect(() => {
     if (!assembly) return
     setDraftAsmName(assembly.name)
-    setDraftAsmPosX(assembly.position.x.toFixed(4))
-    setDraftAsmPosY(assembly.position.y.toFixed(4))
-    setDraftAsmPosZ(assembly.position.z.toFixed(4))
+    setDraftAsmPosX(toFractionalInches(assembly.position.x))
+    setDraftAsmPosY(toFractionalInches(assembly.position.y))
+    setDraftAsmPosZ(toFractionalInches(assembly.position.z))
   }, [assembly?.id, assembly?.position.x, assembly?.position.y, assembly?.position.z])
 
   if (!part && !assembly) return null
 
   if (assembly && !part) {
-    const currentAsmPosX = assembly.position.x.toFixed(4)
-    const currentAsmPosY = assembly.position.y.toFixed(4)
-    const currentAsmPosZ = assembly.position.z.toFixed(4)
+    const currentAsmPosX = toFractionalInches(assembly.position.x)
+    const currentAsmPosY = toFractionalInches(assembly.position.y)
+    const currentAsmPosZ = toFractionalInches(assembly.position.z)
 
     function commitAsmPos(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
       if (skipBlurRef.current) { skipBlurRef.current = false; return }
-      const value = parseFloat(draft)
-      if (!isNaN(value)) {
+      try {
+        const value = parseInches(draft)
         onMoveAssembly({ ...assembly!.position, [axis]: value })
-      } else {
+        if (axis === 'x') setDraftAsmPosX(toFractionalInches(value))
+        else if (axis === 'y') setDraftAsmPosY(toFractionalInches(value))
+        else setDraftAsmPosZ(toFractionalInches(value))
+      } catch {
         if (axis === 'x') setDraftAsmPosX(resetValue)
         else if (axis === 'y') setDraftAsmPosY(resetValue)
         else setDraftAsmPosZ(resetValue)
@@ -114,11 +119,11 @@ export default function PartPanel({
     function handleAsmPosKeyDown(e: React.KeyboardEvent<HTMLInputElement>, draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault()
-        let current = parseFloat(draft)
-        if (isNaN(current)) current = parseFloat(resetValue) || 0
+        let current: number
+        try { current = parseInches(draft) } catch { try { current = parseInches(resetValue) } catch { current = 0 } }
         const rawValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
         const newValue = parseFloat(rawValue.toFixed(10))
-        const newStr = newValue.toFixed(4)
+        const newStr = toFractionalInches(newValue)
         if (axis === 'x') setDraftAsmPosX(newStr)
         else if (axis === 'y') setDraftAsmPosY(newStr)
         else setDraftAsmPosZ(newStr)
@@ -293,10 +298,11 @@ export default function PartPanel({
       skipBlurRef.current = false
       return
     }
-    const value = parseFloat(draft)
-    if (!isNaN(value)) {
+    try {
+      const value = parseInches(draft)
       onUpdate({ position: { ...part!.position, [axis]: value } })
-    } else {
+      resetPos(toFractionalInches(value), axis)
+    } catch {
       resetPos(resetValue, axis)
     }
   }
@@ -315,11 +321,11 @@ export default function PartPanel({
   ) {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault()
-      let current = parseFloat(draft)
-      if (isNaN(current)) current = parseFloat(resetValue) || 0
+      let current: number
+      try { current = parseInches(draft) } catch { try { current = parseInches(resetValue) } catch { current = 0 } }
       const rawValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
       const newValue = parseFloat(rawValue.toFixed(10))
-      const newStr = newValue.toFixed(4)
+      const newStr = toFractionalInches(newValue)
       if (axis === 'x') setDraftPosX(newStr)
       else if (axis === 'y') setDraftPosY(newStr)
       else setDraftPosZ(newStr)
@@ -378,9 +384,9 @@ export default function PartPanel({
   const currentRotX = radToDeg(part.rotation.x)
   const currentRotY = radToDeg(part.rotation.y)
   const currentRotZ = radToDeg(part.rotation.z)
-  const currentPosX = part.position.x.toFixed(4)
-  const currentPosY = part.position.y.toFixed(4)
-  const currentPosZ = part.position.z.toFixed(4)
+  const currentPosX = toFractionalInches(part.position.x)
+  const currentPosY = toFractionalInches(part.position.y)
+  const currentPosZ = toFractionalInches(part.position.z)
 
   return (
     <div id="part-panel">
@@ -519,6 +525,9 @@ export default function PartPanel({
             aria-label="Color"
           />
         </label>
+        {onEyedropperActivate && (
+          <button type="button" onClick={onEyedropperActivate} aria-label="Eyedropper">Pick</button>
+        )}
       </div>
       <div className="part-panel-constraints">
         <div className="part-panel-constraints-header">
