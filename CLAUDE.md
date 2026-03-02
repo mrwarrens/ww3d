@@ -8,8 +8,6 @@ ww3d is a web-based 3D woodworking design application. It lets users design furn
 
 The project has completed Phase 1 and Phase 2. Phase 1 delivered a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. Phase 2 added drag-to-move, snap-to-grid, adjustable grid, camera pan/presets, editable properties panel (name/dimensions/rotation/position/color), duplicate, parts outliner with hide/show, undo/redo, and several bug fixes. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
 
-**At the start of each session, read `roadmap.md` to find the current progress and pick up from the first unchecked item.**
-
 ## Setup
 
 Node.js is managed via [mise](https://mise.jdx.dev/). Install dependencies:
@@ -44,35 +42,44 @@ Browser-mode tests use `vitest-browser-react` to render R3F components inside a 
 index.html              # Entry HTML — loads src/main.tsx
 src/
   main.tsx              # React entry point (createRoot)
-  App.tsx               # Save/Load buttons, Cmd+S/Cmd+Z/Cmd+Shift+Z shortcuts, help pane, grid controls, camera preset buttons, selectedId state, PartPanel, PartOutliner, Canvas
+  App.tsx               # Save/Load buttons, Cmd+S/Cmd+Z/Cmd+Shift+Z/Cmd+D/Cmd+G shortcuts, help pane, grid controls (with axes toggle), camera preset buttons, selectedIds/selectedAssemblyId state, eyedropper state, PartPanel, PartsList, Canvas
   components/
-    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls; drag-to-move parts; Delete/Backspace/Escape/Cmd+D key handlers; camera preset wiring
-    Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler
+    Scene.tsx           # Scene setup: background, lights, grid, OrbitControls, axis lines; drag-to-move parts; Delete/Backspace/Escape/Cmd+D key handlers; camera preset wiring; eyedropper mode; double-click to select assembly
+    Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler; eyedropper click handler
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
-    PartPanel.tsx       # DOM overlay with editable inputs: name, length/width/thickness, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker
-    PartOutliner.tsx    # Sidebar listing all parts by name; click to select; visibility toggle button per row
+    PartPanel.tsx       # DOM overlay with editable inputs: name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper; assembly name and position when assembly selected; constraint add/remove UI
+    PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button
   models/
     Part.ts             # Part interface and createPart factory
+    Assembly.ts         # Assembly interface and createAssembly factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
     Constraint.ts       # Constraint interface and createConstraint factory
   utils/
     constants.ts        # BOARD_THICKNESS, SNAP_INCREMENT, snapToGrid, CAMERA_PRESETS
     units.ts            # Fractional inch display and parsing utilities
-    constraints.ts      # getPartFacePosition, computeConstrainedPosition
+    constraints.ts      # getPartFacePosition, computeConstrainedPosition, propagateConstraints
   hooks/
     useCameraPreset.ts  # Hook: animates camera to a named preset position
   stores/
-    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addConstraint, removeConstraint, setProjectName, setGridSize, loadProject, undo, redo
+    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addAssembly, removeAssembly, renameAssembly, moveAssembly, assignPartToAssembly, removePartFromAssembly, groupPartsIntoAssembly, duplicateAssembly, toggleAssemblyVisibility, addConstraint, removeConstraint, setProjectName, setGridSize, loadProject, undo, redo
 tests/
-  scene.browser.test.tsx           # Browser-mode R3F scene tests
-  partPanel.browser.test.tsx       # Browser-mode DOM tests for PartPanel
-  partOutliner.browser.test.tsx    # Browser-mode tests for PartOutliner
-  app.browser.test.tsx             # Browser-mode tests for App-level features (save)
-  help-panel.browser.test.tsx      # Browser-mode tests for help panel shortcut entries
-  camera-pan.browser.test.tsx      # Browser-mode tests for camera pan configuration
-  camera-presets.browser.test.tsx  # Browser-mode tests for camera preset views
-  move-part.browser.test.tsx       # Browser-mode tests for drag-to-move
-  duplicate-part.browser.test.tsx  # Browser-mode tests for Cmd+D duplicate
+  scene.browser.test.tsx                    # Browser-mode R3F scene tests
+  partPanel.browser.test.tsx                # Browser-mode DOM tests for PartPanel
+  partsList.browser.test.tsx                # Browser-mode tests for PartsList
+  app.browser.test.tsx                      # Browser-mode tests for App-level features (save)
+  help-panel.browser.test.tsx               # Browser-mode tests for help panel shortcut entries
+  camera-pan.browser.test.tsx               # Browser-mode tests for camera pan configuration
+  camera-presets.browser.test.tsx           # Browser-mode tests for camera preset views
+  move-part.browser.test.tsx                # Browser-mode tests for drag-to-move
+  duplicate-part.browser.test.tsx           # Browser-mode tests for Cmd+D duplicate part
+  assembly.test.ts                          # Unit tests for Assembly model and store actions
+  assembly-name.browser.test.tsx            # Browser-mode tests for editable assembly name
+  assembly-visibility.browser.test.tsx      # Browser-mode tests for assembly visibility toggle
+  multi-select-parts-list.browser.test.tsx  # Browser-mode tests for outliner multi-select
+  delete-assembly.browser.test.tsx          # Browser-mode tests for Delete key on assembly
+  duplicate-assembly.browser.test.tsx       # Browser-mode tests for Cmd+D duplicate assembly
+  eyedropper.browser.test.tsx               # Browser-mode tests for eyedropper color pick
+  axis-lines.browser.test.tsx               # Browser-mode tests for axis lines toggle
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
@@ -85,7 +92,7 @@ vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + brow
 
 ## Architecture
 
-**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state, Save/Load buttons (Cmd+S shortcut), undo/redo (Cmd+Z/Cmd+Shift+Z), help pane toggle, grid controls pane, camera preset buttons, and renders `<PartPanel>`, `<PartOutliner>`, and the `<Canvas>`. `Scene.tsx` sets up the 3D scene declaratively (background, lights, grid, OrbitControls) and handles keyboard events: Delete/Backspace to remove the selected part, Escape to deselect, Cmd+D to duplicate, and 1/2/3/4 for camera presets. Board creation via drag interaction is handled by `BoardCreator.tsx`; board movement via pointer-drag on the board mesh is handled in `Scene.tsx`. Individual boards are rendered by `Board.tsx` with selection highlighted via `<Outlines>`. `PartPanel.tsx` is a DOM overlay with editable inputs for name, dimensions (L/W/T), rotation (Rx/Ry/Rz), position (Px/Py/Pz), and a color picker. `PartOutliner.tsx` is a sidebar listing all parts by name with click-to-select and a per-row visibility toggle button. Camera preset logic is encapsulated in `hooks/useCameraPreset.ts`.
+**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state (`selectedIds: string[]` + `selectedAssemblyId: string | null`, mutually exclusive), eyedropper state, Save/Load buttons (Cmd+S), undo/redo (Cmd+Z/Cmd+Shift+Z), help pane toggle, grid controls pane with axis lines toggle, camera preset buttons, and renders `<PartPanel>`, `<PartsList>`, and the `<Canvas>`. App.tsx also handles assembly-level keyboard shortcuts: Delete to remove assembly, Cmd+D to duplicate assembly, and Cmd+G to group selected parts into a new assembly. `Scene.tsx` sets up the 3D scene (background, lights, grid, OrbitControls, optional axis lines) and handles part-level keyboard events: Delete/Backspace, Escape, Cmd+D (part), 1/2/3/4 for camera presets, and Escape to cancel eyedropper. Board creation via drag interaction is handled by `BoardCreator.tsx`; board movement via pointer-drag is handled in `Scene.tsx`. Individual boards are rendered by `Board.tsx` with selection via `<Outlines>`; double-click selects the board's assembly; eyedropper click intercepts to sample the board's stored color. `PartPanel.tsx` shows either an Assembly panel (editable name + Px/Py/Pz) or a Part panel (name, L/W/T, Rx/Ry/Rz, Px/Py/Pz, color picker with eyedropper, constraint add/remove UI). All numeric inputs display fractional inches and support arrow-key increment/decrement. `PartsList.tsx` is a sidebar listing assemblies (with nested member rows) and unassigned parts; supports Shift/Cmd+click multi-select, drag-to-assign parts to assemblies, right-click to remove from assembly, per-row visibility toggles, and a New Assembly button. Camera preset logic is in `hooks/useCameraPreset.ts`. Constraint math is in `utils/constraints.ts` (propagateConstraints, computeConstrainedPosition). All constraint propagation runs inside `movePart` and `updatePart` store actions.
 
 **Target architecture (from requirements.md):**
 - Three.js-based 3D engine with CSG/boolean operations for joinery
@@ -124,22 +131,12 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 ## Ground Rules
 
 ### Workflow
-- Read `roadmap.md` at session start, work from the first unchecked item
-- One task at a time — finish, test, commit, then move to the next
 - If a task has design decisions with multiple valid approaches, enter plan mode
 - If a task is straightforward, just implement it
 
 ### Quality Gates
-- `npm test -- --run` must pass before marking a task done
-- `npm run build` must succeed before marking a task done
-- Commit and push after each completed task
-
-### Commits
-- Commit directly to main after each completed task
-- Push to origin after each commit
-- Message format: `<type>: Phase <N> - <roadmap task name>`
-- Types: `feat` for new functionality, `fix` for bug fixes, `chore` for config/cleanup, `test` for test-only changes, `refactor` for restructuring
-- One commit per task — don't bundle multiple tasks
+- `npm test -- --run` must pass before a task is done
+- `npm run build` must succeed before a task is done
 
 ### Code Conventions
 - TypeScript (`.ts`/`.tsx`) with strict mode
@@ -160,7 +157,6 @@ A board with no rotation sits flat on the grid: length along world-x, width alon
 
 ### Documentation
 - Update `CLAUDE.md` project structure section when files are added/removed
-- Check off roadmap items when done
 - Don't create README or other docs unless asked
 
 ## Automated Planning & Execution Pipeline
@@ -171,7 +167,7 @@ Tasks are planned and executed through a pipeline of directories and two scripts
 plan-feeder.sh → defined/ → approve-plan.sh → ready/ → claude-queue.sh → done/ → accept-plan.sh → accepted/
 ```
 
-**`pipeline.yaml`** is the machine-readable task graph and source of truth for task status. `roadmap.md` remains a freeform human thinking doc. Scripts update `pipeline.yaml` as tasks progress.
+**`pipeline.yaml`** is the machine-readable task graph and source of truth for task status. Scripts update it as tasks progress.
 
 ### Directories
 

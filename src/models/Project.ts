@@ -1,11 +1,13 @@
 import { type Part } from './Part'
 import { type Assembly } from './Assembly'
+import { type Constraint } from './Constraint'
 
 export interface Project {
   id: string
   name: string
   parts: Part[]
   assemblies: Assembly[]
+  constraints: Constraint[]
   gridSize: number
 }
 
@@ -15,6 +17,7 @@ export function createProject(name = 'Untitled Project'): Project {
     name,
     parts: [],
     assemblies: [],
+    constraints: [],
     gridSize: 10,
   }
 }
@@ -28,5 +31,6 @@ export function deserializeProject(json: string): Project {
   return {
     ...parsed,
     assemblies: parsed.assemblies ?? [],
+    constraints: parsed.constraints ?? [],
   } as Project
 }

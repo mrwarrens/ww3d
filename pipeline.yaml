@@ -217,7 +217,7 @@ tasks:
     name: Cmd+D duplicates selected assembly and all its parts
     description: When an assembly is selected, Cmd+D should duplicate the assembly and all its parts with a slight position offset. The new assembly becomes the active selection. Should be undoable via Cmd+Z.
     deps: [30]
-    status: done
+    status: accepted
   - id: 37
     phase: 3
     name: Rename outliner to parts list
@@ -241,4 +241,103 @@ tasks:
     name: Bug: duplicating an assembly also duplicates a part into the original
     description: When duplicating an assembly, one part from the original assembly is incorrectly duplicated into the original instead of only into the copy. Example — Assembly 1 contains parts A and B; after Cmd+D the result is Assembly 1 with parts A, B, A and Assembly 2 with parts A, B. The duplicate store action is likely iterating parts and accidentally appending one back to the source assembly. The original assembly should be unchanged after duplication.
     deps: [36]
-    status: done
+    status: accepted
+
+  - id: 41
+    phase: 3
+    name: Eyedropper — sample color from a part in the viewport
+    description: Add an eyedropper button next to the color swatch in the properties panel. Clicking it enters eyedropper mode — the cursor changes and the next click on any part in the 3D viewport reads that part's stored hex color (via raycasting, not pixel sampling) and applies it to the currently selected part. Clicking anywhere else or pressing Escape cancels eyedropper mode.
+    deps: [8]
+    status: accepted
+  - id: 42
+    phase: 3
+    name: Assembly visibility toggle in parts list
+    description: Add a show/hide button to each assembly row in the parts list panel, following the same pattern as the per-part visibility toggle. Toggling an assembly's visibility shows or hides all parts belonging to it. The assembly's hidden state is stored in the project store and persists with save/load.
+    deps: [29, 11]
+    status: accepted
+
+  - id: 43
+    phase: 3
+    name: Bug: eyedropper click selects part instead of sampling color
+    description: After clicking the Pick button (cursor changes to crosshair), clicking a part in the 3D viewport selects that part instead of sampling its color. The eyedropperActive flag is not being checked before the onSelect handler fires in Board.tsx — the onEyedropperClick early-return path is not working. The click is falling through to the normal selection logic.
+    deps: [41]
+    status: accepted
+  - id: 44
+    phase: 3
+    name: Display position inputs in fractional inches; normalize decimal input on blur
+    description: Position fields (Px/Py/Pz) currently display raw decimal values. Update them to display in fractional inches using toFractionalInches() — the same format already used by dimension fields. On blur, both position and dimension inputs should normalize whatever the user typed (decimal like "1.5", fraction like "1-1/2", or mixed) into the canonical fractional display format (e.g. "1-1/2""). This ensures consistent display across all numeric inputs in the panel.
+    deps: [21, 39]
+    status: accepted
+  - id: 45
+    phase: 3
+    name: Bug: properties panel text inputs too narrow for fractional values
+    description: The numeric inputs in the properties panel are not wide enough to display longer fractional values without clipping. Example — "-22-11/16" is truncated visually. Widen all numeric inputs in the panel (dimensions, position, rotation) so that values up to at least 10 characters display without clipping.
+    deps: [44]
+    status: accepted
+  - id: 46
+    phase: 3
+    name: Bug: position arrow key decrement has incorrect floor of -1-1/16"
+    description: Pressing the down arrow in a position field (Px/Py/Pz) stops decrementing at -1-1/16". Position fields should have no floor — negative values of any magnitude must be allowed. The dimension minimum clamp (1/16") is incorrectly being applied to position fields. Fix the arrow key handler for position inputs to remove the clamp entirely.
+    deps: [33]
+    status: accepted
+  - id: 47
+    phase: 3
+    name: Dimension inputs reformat decimal input to fractional on blur
+    description: Dimension fields (L/W/T) should normalize decimal input to fractional display on blur, matching the behavior added to position fields in #44. Example — typing "1.5" and tabbing away should reformat to "1-1/2"". The existing parseInches utility already handles decimal input; the fix is to pass the parsed value through toFractionalInches() when committing on blur, rather than leaving the raw typed string in the input.
+    deps: [44]
+    status: accepted
+
+  - id: 48
+    phase: 3
+    name: Axis lines toggle in grid controls pane
+    description: Add a toggle button to the grid controls pane to show/hide X/Y/Z axis lines in the 3D viewport. Default off. When enabled, each axis renders a line extending in both the positive and negative directions from the origin. The line length scales with the current grid size (e.g. half the grid size in each direction). The positive end has an arrowhead and an axis label (X, Y, or Z). Colors follow the standard convention — X=red, Y=green, Z=blue. The toggle state lives in component state (does not need to persist with the project).
+    deps: [3]
+    status: accepted
+
+  # Phase 3 audit findings
+  - id: 49
+    phase: 3
+    name: "Bug: EdgesGeometry memory leak in Board"
+    description: "The edgesGeo created via useMemo in Board.tsx (new THREE.EdgesGeometry) is never disposed on unmount or when dims change. R3F does not automatically dispose useMemo-created Three.js objects. Every board deletion or L/W/T change leaks a geometry. Fix: add useEffect(() => () => edgesGeo.dispose(), [edgesGeo]) in Board.tsx."
+    deps: []
+    status: ready
+  - id: 50
+    phase: 3
+    name: "Bug: ArrowHelper memory leak in AxisLines"
+    description: "The six ArrowHelper instances created in useMemo inside AxisLines (Scene.tsx) are never disposed when the component unmounts (showAxes toggled off) or when the length dep changes. Each ArrowHelper allocates internal line and cone geometry plus two materials. Fix: add a useEffect cleanup that calls dispose() on each arrow and its internal line and cone children."
+    deps: [48]
+    status: ready
+  - id: 51
+    phase: 3
+    name: "Bug: Delete and Cmd+D only act on the first selected part when multi-selected"
+    description: "Scene.tsx derives selectedId = selectedIds[0] ?? null. With multiple parts selected, pressing Delete only removes the first; Cmd+D only duplicates the first. The multi-select feature was added without updating these handlers. Fix: Delete handler should iterate all selectedIds and call removePart for each; Cmd+D should duplicate all selected parts (or just the primary — decide on behavior) and select the new copies."
+    deps: [28]
+    status: pending
+
+  - id: 52
+    phase: 3
+    name: "Bug: PartsList onSelectAssembly called without null guard"
+    description: "In PartsList.tsx, onSelectAssembly is typed as an optional prop but is called directly as onSelectAssembly(assembly.id) without a nullish guard. TypeScript strict mode flags this; at runtime it throws if the prop is ever omitted. Fix: change to onSelectAssembly?.(assembly.id)."
+    deps: []
+    status: pending
+
+  - id: 53
+    phase: 3
+    name: "Bug: Shift+click range select uses array index instead of visual order"
+    description: "Shift+click in PartsList computes the range as allParts.slice(lo, hi + 1) using flat array indices. The visual order of rows (assemblies with nested members, then unassigned parts) does not match the flat allParts array order, so the range-selected set may include parts that are not visually adjacent. Fix: build a flat ordered list of rendered part rows in visual order and use that array for range selection."
+    deps: [28]
+    status: pending
+
+  - id: 54
+    phase: 3
+    name: Split PartPanel into AssemblyPanel and PartPanel components
+    description: "PartPanel.tsx is 634 lines and handles two distinct rendering modes — assembly (name + Px/Py/Pz) and part (name, L/W/T, Rx/Ry/Rz, Px/Py/Pz, color, constraints) — via an if (assembly && !part) branch. All draft state hooks for both modes co-exist in the same component scope. Split into two focused components: AssemblyPanel.tsx and PartPanel.tsx, rendered conditionally from App.tsx. Each component is smaller, easier to test, and has only the state it needs."
+    deps: []
+    status: pending
+
+  - id: 55
+    phase: 3
+    name: "Fix: toggleAssemblyVisibility uses redundant ternary instead of logical negation"
+    description: "In projectStore.ts, toggleAssemblyVisibility uses a.visible === false ? true : false. The intent is to toggle while treating undefined as visible. Simplify to visible: a.visible !== false ? false : true, or migrate Assembly.visible to always be a boolean (never undefined) in createAssembly and normalize on load, then use !a.visible."
+    deps: []
+    status: pending

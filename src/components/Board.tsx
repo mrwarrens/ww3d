@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { Outlines } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
@@ -21,6 +21,10 @@ export default function Board({ length, width, thickness, position, rotation, co
     box.dispose()
     return edges
   }, [length, width, thickness])
+
+  useEffect(() => {
+    return () => edgesGeo.dispose()
+  }, [edgesGeo])
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
