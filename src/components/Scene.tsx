@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { OrbitControls, Html } from '@react-three/drei'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -19,6 +19,35 @@ interface SceneProps {
   eyedropperActive?: boolean
   onColorSample?: (color: string) => void
   onEyedropperCancel?: () => void
+  showAxes?: boolean
+}
+
+function AxisLines({ length }: { length: number }) {
+  const arrows = useMemo(() => {
+    const origin = new THREE.Vector3(0, 0, 0)
+    return {
+      xPos: new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), origin, length, 0xff2020),
+      xNeg: new THREE.ArrowHelper(new THREE.Vector3(-1, 0, 0), origin, length, 0xff2020, 0, 0),
+      yPos: new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), origin, length, 0x20ff20),
+      yNeg: new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), origin, length, 0x20ff20, 0, 0),
+      zPos: new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), origin, length, 0x2020ff),
+      zNeg: new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), origin, length, 0x2020ff, 0, 0),
+    }
+  }, [length])
+
+  return (
+    <>
+      <primitive object={arrows.xPos} />
+      <primitive object={arrows.xNeg} />
+      <primitive object={arrows.yPos} />
+      <primitive object={arrows.yNeg} />
+      <primitive object={arrows.zPos} />
+      <primitive object={arrows.zNeg} />
+      <Html position={[length + 0.3, 0, 0]}><span style={{ color: '#ff4040', fontWeight: 'bold', fontSize: '12px' }}>X</span></Html>
+      <Html position={[0, length + 0.3, 0]}><span style={{ color: '#40ff40', fontWeight: 'bold', fontSize: '12px' }}>Y</span></Html>
+      <Html position={[0, 0, length + 0.3]}><span style={{ color: '#4040ff', fontWeight: 'bold', fontSize: '12px' }}>Z</span></Html>
+    </>
+  )
 }
 
 interface DragState {
@@ -51,7 +80,7 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel }: SceneProps) {
+export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes }: SceneProps) {
   const selectedId = selectedIds[0] ?? null
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
@@ -212,6 +241,8 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
       />
 
       <BoardCreator gridSize={gridSize} onClearSelection={() => { onSelectId(null); onEyedropperCancel?.() }} />
+
+      {showAxes && <AxisLines length={gridSize / 2} />}
 
       {parts.filter((p) => p.visible !== false && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
         <Board

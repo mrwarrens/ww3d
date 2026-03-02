@@ -13,6 +13,7 @@ export default function App() {
   const [selectedAssemblyId, setSelectedAssemblyId] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [gridPaneOpen, setGridPaneOpen] = useState(false)
+  const [showAxes, setShowAxes] = useState(false)
   const [eyedropperActive, setEyedropperActive] = useState(false)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
@@ -159,6 +160,7 @@ export default function App() {
           <div id="grid-pane">
             <button onClick={() => setGridSize(Math.max(5, gridSize - 5))}>Grid −</button>
             <button onClick={() => setGridSize(gridSize + 5)}>Grid +</button>
+            <button onClick={() => setShowAxes((o) => !o)}>Axes {showAxes ? 'On' : 'Off'}</button>
           </div>
         )}
       </div>
@@ -214,6 +216,7 @@ export default function App() {
           eyedropperActive={eyedropperActive}
           onColorSample={(color) => { if (selectedId) updatePart(selectedId, { color }); setEyedropperActive(false) }}
           onEyedropperCancel={() => setEyedropperActive(false)}
+          showAxes={showAxes}
         />
       </Canvas>
     </>
