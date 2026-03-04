@@ -344,3 +344,74 @@ tasks:
     description: "The Canvas camera in App.tsx is configured with far: 100. Increase to far: 200 so larger projects don't get clipped at the edges of the scene."
     deps: []
     status: accepted
+
+  # Phase 4 tasks — Joinery (child solid operations via Manifold CSG)
+  - id: 57
+    phase: 4
+    name: Replace Outlines with postprocessing selection highlight
+    description: "Install @react-three/postprocessing. Replace {isSelected && <Outlines />} in Board.tsx with a screen-space Outline effect via EffectComposer. Collect refs from all selected board meshes and pass them to the Outline effect. The edge-based <Outlines> has known issues with complex CSG geometry and curved shapes; the postprocessing approach is topology-independent. Remove the @react-three/drei Outlines import from Board.tsx."
+    deps: []
+    status: pending
+
+  - id: 58
+    phase: 4
+    name: Extend Part data model for child operations
+    description: "Add parentId?: string and operation?: 'add' | 'subtract' to the Part interface (default operation: 'subtract'). Update createPart to accept and default these fields. Update serializeProject/deserializeProject to handle them. Add store actions: addChildPart(parentId, partData) and removeChildPart(childId). Existing updatePart applies to children unchanged. Add a selector/helper getChildParts(partId) that returns all parts with a given parentId. Undo/redo should capture addChildPart and removeChildPart."
+    deps: []
+    status: pending
+
+  - id: 59
+    phase: 4
+    name: CSG rendering in Board
+    description: "When a Part has children in the store, compute the Manifold boolean result using getManifold() and manifoldMeshToThreeGeometry() from src/utils/manifold.ts. Start with the base box (length × thickness × width), subtract all operation:'subtract' children, union all operation:'add' children. Child positions are in parent-local space — apply child position/rotation as a transform before the boolean op. Recompute when any child's dimensions, position, or rotation changes (useEffect deps). Render plain <boxGeometry> when the part has no children (zero Manifold overhead). Dispose old geometry after each recompute."
+    deps: [57, 58]
+    status: pending
+
+  - id: 60
+    phase: 4
+    name: "Modify mode: enter and exit"
+    description: "Add modifyingPartId: string | null to App.tsx state (initially null). Add an 'Edit Cuts' button to PartPanel — visible only when the selected part has no parentId (top-level parts only). Clicking it sets modifyingPartId to the selected part's id. Pressing Escape or clicking the button again (now labeled 'Done') clears it. While modifyingPartId is set, pass it down to Scene.tsx and Board.tsx. All parts and assemblies whose id !== modifyingPartId render at reduced opacity (0.3) so focus is on the part being edited."
+    deps: [58]
+    status: pending
+
+  - id: 61
+    phase: 4
+    name: "Modify mode: draw child volumes"
+    description: "While modifyingPartId is set, drag-to-create on the grid plane calls addChildPart(modifyingPartId, ...) instead of addPart. The new child part has operation:'subtract' by default. Child position is stored in parent-local space (subtract parent's world position from the drag result). Default child dimensions: 3/4\" wide × 3/8\" thick × parent width (a sensible dado starting point). The newly created child becomes the active selection (set selectedIds to the new child's id)."
+    deps: [58, 60]
+    status: pending
+
+  - id: 62
+    phase: 4
+    name: "Modify mode: visualize children"
+    description: "While in modify mode for a parent part, render each child part as a ghost wireframe overlay on top of the CSG result — a <lineSegments> EdgesGeometry in a light color (e.g. rgba white at 50% opacity) with no fill mesh. operation:'add' children render as a semi-transparent solid (distinct tint, e.g. green at 20% opacity). Outside modify mode, children are invisible — only the CSG result is shown. The ghost wireframe is clickable (used in #63 to select the child)."
+    deps: [59, 60]
+    status: pending
+
+  - id: 63
+    phase: 4
+    name: "Modify mode: select and edit children"
+    description: "Clicking a child ghost wireframe in modify mode sets selectedIds to that child's id. PartPanel detects the selected part has a parentId and renders a child-specific view: L/W/T inputs, Rx/Ry/Rz inputs, Px/Py/Pz inputs (in parent-local space), and an add/subtract operation toggle. Constraints section is hidden for children. All existing fractional-inch inputs, blur/Enter commit, and arrow-key increment/decrement work unchanged."
+    deps: [61, 62]
+    status: pending
+
+  - id: 64
+    phase: 4
+    name: "Modify mode: delete children"
+    description: "While in modify mode, pressing Delete/Backspace with a child part selected calls removeChildPart(selectedId). The parent's CSG result recomputes. Selection clears. The action is captured in undo history so Cmd+Z restores the deleted child."
+    deps: [63]
+    status: pending
+
+  - id: 65
+    phase: 4
+    name: Undo/redo for child operations
+    description: "Verify that addChildPart, removeChildPart, and updatePart (when called on a child) are all captured as snapshots in the undo history stack in projectStore.ts — the same pattern used for top-level part mutations. Write unit tests covering: undo after addChildPart restores no children; undo after removeChildPart restores the child; undo after updatePart on a child restores previous dimensions."
+    deps: [61, 64]
+    status: pending
+
+  - id: 66
+    phase: 4
+    name: Cuts list in modify mode
+    description: "Create a CutsList component (src/components/CutsList.tsx) rendered by App.tsx only while modifyingPartId is set. It lists the active parent's children by name, one row per child. Clicking a row sets selectedIds to that child's id (same as clicking its ghost wireframe in the viewport). The selected child row is highlighted. Style consistently with PartsList. Children are not shown in PartsList outside of modify mode — only the parent row appears there, with a small indicator icon (e.g. a scissors symbol) when the part has one or more children."
+    deps: [60, 61]
+    status: pending

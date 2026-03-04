@@ -130,10 +130,10 @@ describe('Board component', () => {
     expect(board.children).toHaveLength(1) // only the LineSegments wireframe
   })
 
-  it('selected board has additional outline child', async () => {
+  it('selected board mesh still has only the wireframe child (outline is postprocessing)', async () => {
     const state = await renderInCanvas(<Board {...boardProps} isSelected={true} />)
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
-    expect(board.children.length).toBeGreaterThan(1) // wireframe + Outlines group
+    expect(board.children).toHaveLength(1) // wireframe only; outline handled by postprocessing
   })
 })
 
@@ -309,10 +309,10 @@ describe('multi-select and assembly highlight', () => {
       <Scene selectedIds={[id1, id2]} onSelectIds={() => {}} />
     )
     const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible)
-    // Both boards should have more than 1 child (wireframe + outline)
+    // Both boards have only the wireframe child; outline is handled by postprocessing
     expect(meshes).toHaveLength(2)
     meshes.forEach((mesh) => {
-      expect((mesh as THREE.Mesh).children.length).toBeGreaterThan(1)
+      expect((mesh as THREE.Mesh).children).toHaveLength(1)
     })
   })
 
@@ -343,8 +343,9 @@ describe('multi-select and assembly highlight', () => {
     const mesh2 = meshes.find((m) => m.position.x > 4)
     expect(mesh1).toBeDefined()
     expect(mesh2).toBeDefined()
-    expect(mesh1!.children.length).toBeGreaterThan(1) // has outline
-    expect(mesh2!.children).toHaveLength(1)           // wireframe only
+    // Outline is postprocessing (screen-space); neither mesh has extra children
+    expect(mesh1!.children).toHaveLength(1)
+    expect(mesh2!.children).toHaveLength(1)
   })
 
   it('assembly members all receive outline when their IDs are passed in selectedIds', async () => {
@@ -367,8 +368,9 @@ describe('multi-select and assembly highlight', () => {
     )
     const meshes = state.scene.children.filter((c) => (c as THREE.Mesh).isMesh && c.visible) as THREE.Mesh[]
     expect(meshes).toHaveLength(2)
+    // Outline is postprocessing; meshes only have the wireframe child
     meshes.forEach((mesh) => {
-      expect(mesh.children.length).toBeGreaterThan(1)
+      expect(mesh.children).toHaveLength(1)
     })
   })
 })

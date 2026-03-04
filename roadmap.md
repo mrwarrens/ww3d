@@ -60,14 +60,29 @@ Work items for building ww3d, ordered by priority. Check off items as they're co
 
 ## Phase 4: Joinery
 
-- [ ] CSG library integration (evaluate three-bvh-csg vs manifold WASM)
-- [ ] Dado joint — parametric channel cut across a board
-- [ ] Rabbet joint — parametric channel on an edge
-- [ ] Butt joint — face-to-face alignment
-- [ ] Half lap joint
-- [ ] Mortise & tenon joint
-- [ ] Dovetail joint
-- [ ] Joint as a first-class object linking two parts
+The approach is **child solid operations**: each Part can have child Parts that are boolean operations (add or subtract) applied to the parent's geometry via Manifold WASM. This handles every cut type (dado, rabbet, mortise, tenon, diagonal, any shape) from one general mechanism, with the same drag-to-create and properties panel UX already in place. Joint types are emergent — not predefined.
+
+Child positions are stored in parent-local space so cuts move with the board. Manifold (`manifold-3d`) is already installed and POC'd in `src/utils/manifold.ts`.
+
+- [x] **1. Replace `<Outlines>` with postprocessing selection highlight** — Install `@react-three/postprocessing`. Replace the `{isSelected && <Outlines />}` in `Board.tsx` with a screen-space `Outline` effect. The edge-based `<Outlines>` has known issues with complex CSG geometry and curved future shapes; the postprocessing approach is topology-independent and works on anything. _Blocks: #3._
+
+- [ ] **2. Extend Part data model for child operations** — Add `parentId?: string` and `operation?: 'add' | 'subtract'` to the Part interface (defaults: no parent, `'subtract'`). Update `createPart`, `serializeProject`/`deserializeProject`, and the Zustand store. Add store actions: `addChildPart(parentId, partData)` and `removeChildPart(childId)`. Existing `updatePart` applies to children unchanged. _Blocks: #3, #4, #5._
+
+- [ ] **3. CSG rendering in Board** — When a Part has children in the store, compute the Manifold boolean result: start with the base box, subtract all `operation: 'subtract'` children, union all `operation: 'add'` children. Recompute when any child's dimensions, position, or rotation changes. Render plain `<boxGeometry>` when no children (no Manifold overhead). Dispose old geometry on each update. _Depends on: #1, #2._
+
+- [ ] **4. Modify mode: enter and exit** — Add an "Edit Cuts" button to `PartPanel` (visible only for top-level parts — those without a `parentId`). Entering sets a `modifyingPartId: string | null` in `App.tsx`; exiting via Escape or the button clears it. While active, all other parts and assemblies render at reduced opacity so the focus is on the part being edited. _Depends on: #2._
+
+- [ ] **5. Modify mode: draw child volumes** — While in modify mode, drag-to-create on the grid adds a child Part (operation: `'subtract'`) to the active `modifyingPartId` instead of a top-level part. Child position is stored in parent-local space (offset from parent center). Default child dimensions: 3/4" × 3/8" × parent width (a sensible dado starting point). The newly created child becomes the selection. _Depends on: #2, #4._
+
+- [ ] **6. Modify mode: visualize children** — While in modify mode, subtract children render as ghost wireframes (no fill, white/gray edges) overlaid on the CSG result, so the user can see and click the cut volumes. Add children render as a semi-transparent solid. Outside of modify mode, only the CSG result is visible — no wireframe overlay. _Depends on: #3, #4._
+
+- [ ] **7. Modify mode: select and edit children** — Clicking a child wireframe in modify mode selects it. `PartPanel` shows the child's L/W/T, Rx/Ry/Rz, Px/Py/Pz (local offsets), and an add/subtract operation toggle. The Constraints section is hidden for children. All existing fractional-inch inputs and arrow-key increment work unchanged. _Depends on: #5, #6._
+
+- [ ] **8. Modify mode: delete children** — Delete/Backspace with a child selected removes it from the parent via `removeChildPart`. The parent's CSG result recomputes. Undo captures the operation. _Depends on: #7._
+
+- [ ] **9. Undo/redo for child operations** — Ensure `addChildPart`, `removeChildPart`, and `updatePart` (when called on children) are all captured in the undo history stack in the same way as top-level part mutations. _Depends on: #5, #8._
+
+- [ ] **10. Cuts list in modify mode** — While in modify mode, render a small `CutsList` panel (similar in style to `PartsList`) that lists the active parent's children by name. Clicking a row selects that child (same as clicking its ghost wireframe in the viewport). Selected child is highlighted in the list. Children are not shown in `PartsList` outside of modify mode — only the parent row is visible there, with a small indicator icon when it has cuts. _Depends on: #4, #5._
 
 ## Phase 5: Desktop UI Polish
 

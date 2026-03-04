@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['zustand'],
+    exclude: ['manifold-3d'],
   },
   test: {
     projects: [

@@ -1,6 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { forwardRef, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import { Outlines } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { Part } from '../models/Part'
 
@@ -14,7 +13,7 @@ interface BoardProps extends Part {
   onEyedropperClick?: (color: string) => void
 }
 
-export default function Board({ length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick }: BoardProps) {
+const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick }, ref) {
   const edgesGeo = useMemo(() => {
     const box = new THREE.BoxGeometry(length, thickness, width)
     const edges = new THREE.EdgesGeometry(box)
@@ -52,11 +51,12 @@ export default function Board({ length, width, thickness, position, rotation, co
   }
 
   return (
-    <mesh position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerDown={handlePointerDown}>
+    <mesh ref={ref} position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerDown={handlePointerDown}>
       <boxGeometry args={[length, thickness, width]} />
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} />
       <lineSegments geometry={edgesGeo} material={lineMat} />
-      {isSelected && <Outlines color="white" thickness={2} />}
     </mesh>
   )
-}
+})
+
+export default Board

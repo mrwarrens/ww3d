@@ -3,6 +3,7 @@ import { OrbitControls, Html } from '@react-three/drei'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { EffectComposer, Outline } from '@react-three/postprocessing'
 import Board from './Board'
 import BoardCreator from './BoardCreator'
 import { useProjectStore } from '../stores/projectStore'
@@ -113,6 +114,8 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     gl.domElement.style.cursor = eyedropperActive ? 'crosshair' : ''
     return () => { gl.domElement.style.cursor = '' }
   }, [eyedropperActive, gl.domElement])
+
+  const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map())
 
   // Only livePos is state — it drives re-renders during drag.
   // Everything else is in refs so handlers never go stale.
@@ -257,6 +260,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
       {parts.filter((p) => p.visible !== false && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
         <Board
           key={p.id}
+          ref={(mesh) => { if (mesh) meshRefs.current.set(p.id, mesh); else meshRefs.current.delete(p.id) }}
           {...p}
           position={draggingRef.current?.partId === p.id && livePos ? livePos : p.position}
           isSelected={selectedIds.includes(p.id)}
@@ -266,6 +270,10 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
           onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
         />
       ))}
+
+      <EffectComposer autoClear={false}>
+        <Outline selection={selectedIds.flatMap((id) => { const m = meshRefs.current.get(id); return m ? [m] : [] })} edgeStrength={5} />
+      </EffectComposer>
     </>
   )
 }
