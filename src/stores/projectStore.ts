@@ -26,6 +26,8 @@ interface ProjectStore {
   removeAssembly: (id: string) => void
   renameAssembly: (id: string, name: string) => void
   moveAssembly: (id: string, position: { x: number; y: number; z: number }) => void
+  addChildPart: (parentId: string, init: PartInit) => string
+  removeChildPart: (childId: string) => void
   addConstraint: (constraint: Omit<Constraint, 'id'>) => void
   removeConstraint: (id: string) => void
   setProjectName: (name: string) => void
@@ -63,7 +65,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       future: [],
       project: {
         ...state.project,
-        parts: state.project.parts.filter((p) => p.id !== id),
+        parts: state.project.parts.filter((p) => p.id !== id && p.parentId !== id),
       },
     }))
   },
@@ -75,7 +77,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       future: [],
       project: {
         ...state.project,
-        parts: state.project.parts.filter((p) => !idSet.has(p.id)),
+        parts: state.project.parts.filter((p) => !idSet.has(p.id) && (p.parentId === undefined || !idSet.has(p.parentId))),
       },
     }))
   },
@@ -143,6 +145,30 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
     return newAssembly.id
+  },
+  addChildPart: (parentId, init) => {
+    const child = createPart({ ...init, parentId, operation: init.operation ?? 'subtract' })
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: [...state.project.parts, child],
+      },
+    }))
+    return child.id
+  },
+  removeChildPart: (childId) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: state.project.parts.filter((p) => p.id !== childId),
+      },
+    }))
   },
   movePart: (id, position) => {
     const current = get().project

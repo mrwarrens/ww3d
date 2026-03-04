@@ -1111,4 +1111,124 @@ describe('projectStore', () => {
       expect(a2.visible).toBe(true)
     })
   })
+
+  describe('addChildPart', () => {
+    it('adds a part with the correct parentId and operation', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+
+      useProjectStore.getState().addChildPart(parentId, baseInit)
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts).toHaveLength(2)
+      const child = parts[1]
+      expect(child.parentId).toBe(parentId)
+      expect(child.operation).toBe('subtract')
+    })
+
+    it('respects an explicit operation when provided', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+
+      useProjectStore.getState().addChildPart(parentId, { ...baseInit, operation: 'add' })
+
+      const child = useProjectStore.getState().project.parts[1]
+      expect(child.operation).toBe('add')
+    })
+
+    it('returns the new child part id', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+
+      const childId = useProjectStore.getState().addChildPart(parentId, baseInit)
+
+      expect(typeof childId).toBe('string')
+      expect(childId.length).toBeGreaterThan(0)
+      const child = useProjectStore.getState().project.parts.find((p) => p.id === childId)
+      expect(child).toBeDefined()
+    })
+
+    it('pushes to undo history; undo removes the child part', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().addChildPart(parentId, baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+      expect(useProjectStore.getState().history).toHaveLength(1)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    })
+  })
+
+  describe('removeChildPart', () => {
+    it('removes the child part by id', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+      const childId = useProjectStore.getState().addChildPart(parentId, baseInit)
+
+      useProjectStore.getState().removeChildPart(childId)
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts).toHaveLength(1)
+      expect(parts[0].id).toBe(parentId)
+    })
+
+    it('pushes to undo history; undo restores the child part', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+      const childId = useProjectStore.getState().addChildPart(parentId, baseInit)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removeChildPart(childId)
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+      expect(useProjectStore.getState().history).toHaveLength(1)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+      expect(useProjectStore.getState().project.parts.find((p) => p.id === childId)).toBeDefined()
+    })
+  })
+
+  describe('cascade child removal', () => {
+    it('removePart on a parent also removes all its children', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const parentId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.getState().addChildPart(parentId, baseInit)
+      useProjectStore.getState().addChildPart(parentId, baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(3)
+
+      useProjectStore.getState().removePart(parentId)
+
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+    })
+
+    it('removeParts cascade-removes children of all deleted parents', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const [p0, p1] = useProjectStore.getState().project.parts
+      useProjectStore.getState().addChildPart(p0.id, baseInit)
+      useProjectStore.getState().addChildPart(p1.id, baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(4)
+
+      useProjectStore.getState().removeParts([p0.id, p1.id])
+
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+    })
+
+    it('removePart does not remove children of a different parent', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.getState().addPart(baseInit)
+      const [p0, p1] = useProjectStore.getState().project.parts
+      useProjectStore.getState().addChildPart(p1.id, baseInit)
+      expect(useProjectStore.getState().project.parts).toHaveLength(3)
+
+      useProjectStore.getState().removePart(p0.id)
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts).toHaveLength(2)
+      expect(parts.some((p) => p.parentId === p1.id)).toBe(true)
+    })
+  })
 })

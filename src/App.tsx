@@ -16,6 +16,7 @@ export default function App() {
   const [gridPaneOpen, setGridPaneOpen] = useState(false)
   const [showAxes, setShowAxes] = useState(false)
   const [eyedropperActive, setEyedropperActive] = useState(false)
+  const [modifyingPartId, setModifyingPartId] = useState<string | null>(null)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
@@ -45,11 +46,13 @@ export default function App() {
   const handleSelectIds = useCallback((ids: string[]) => {
     setSelectedIds(ids)
     setSelectedAssemblyId(null)
+    setModifyingPartId((prev) => (prev && ids.includes(prev) ? prev : null))
   }, [])
 
   const handleSelectAssembly = useCallback((id: string | null) => {
     setSelectedAssemblyId(id)
     setSelectedIds([])
+    setModifyingPartId(null)
   }, [])
 
   const saveProject = useCallback(() => {
@@ -188,6 +191,9 @@ export default function App() {
           onAddConstraint={(c) => addConstraint(c)}
           onRemoveConstraint={(id) => removeConstraint(id)}
           onEyedropperActivate={() => setEyedropperActive(true)}
+          isModifying={modifyingPartId === selectedId}
+          onEnterModifyMode={() => selectedId && setModifyingPartId(selectedId)}
+          onExitModifyMode={() => setModifyingPartId(null)}
         />
       )}
       <PartsList
@@ -224,6 +230,8 @@ export default function App() {
           onColorSample={(color) => { if (selectedId) updatePart(selectedId, { color }); setEyedropperActive(false) }}
           onEyedropperCancel={() => setEyedropperActive(false)}
           showAxes={showAxes}
+          modifyingPartId={modifyingPartId}
+          onExitModifyMode={() => setModifyingPartId(null)}
         />
       </Canvas>
     </>

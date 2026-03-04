@@ -21,6 +21,8 @@ interface SceneProps {
   onColorSample?: (color: string) => void
   onEyedropperCancel?: () => void
   showAxes?: boolean
+  modifyingPartId?: string | null
+  onExitModifyMode?: () => void
 }
 
 function AxisLines({ length }: { length: number }) {
@@ -92,7 +94,7 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes }: SceneProps) {
+export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes, modifyingPartId, onExitModifyMode }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
@@ -140,6 +142,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
       if (e.key === 'Escape') {
         onSelectIds([])
         onEyedropperCancel?.()
+        onExitModifyMode?.()
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedIds.length > 0 && !isAssemblySelected) {
         e.preventDefault()
@@ -154,7 +157,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedIds, isAssemblySelected, removeParts, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel])
+  }, [selectedIds, isAssemblySelected, removeParts, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
@@ -253,11 +256,16 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
         }}
       />
 
-      <BoardCreator gridSize={gridSize} onClearSelection={() => { onSelectIds([]); onEyedropperCancel?.() }} />
+      <BoardCreator
+        gridSize={gridSize}
+        onClearSelection={() => { onSelectIds([]); onEyedropperCancel?.() }}
+        modifyingPart={modifyingPartId ? parts.find((p) => p.id === modifyingPartId) ?? null : null}
+        onChildPartCreated={(childId) => onSelectIds([childId])}
+      />
 
       {showAxes && <AxisLines length={gridSize / 2} />}
 
-      {parts.filter((p) => p.visible !== false && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
+      {parts.filter((p) => p.visible !== false && p.parentId == null && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
         <Board
           key={p.id}
           ref={(mesh) => { if (mesh) meshRefs.current.set(p.id, mesh); else meshRefs.current.delete(p.id) }}
@@ -268,6 +276,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
           onDragStart={(e) => handleDragStart(e, p)}
           onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
           onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
+          dimmed={modifyingPartId != null && p.id !== modifyingPartId}
         />
       ))}
 

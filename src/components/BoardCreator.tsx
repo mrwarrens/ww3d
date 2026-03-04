@@ -3,6 +3,7 @@ import { useThree, ThreeEvent } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { BOARD_THICKNESS, snapToGrid } from '../utils/constants'
 import { useProjectStore } from '../stores/projectStore'
+import type { Part } from '../models/Part'
 
 function hslToHex(h: number, s: number, l: number): string {
   const a = s * Math.min(l, 1 - l)
@@ -29,10 +30,14 @@ interface Preview {
 interface BoardCreatorProps {
   gridSize: number
   onClearSelection: () => void
+  modifyingPart?: Part | null
+  onChildPartCreated?: (childId: string) => void
 }
 
-export default function BoardCreator({ gridSize, onClearSelection }: BoardCreatorProps) {
+export default function BoardCreator({ gridSize, onClearSelection, modifyingPart, onChildPartCreated }: BoardCreatorProps) {
   const addPart = useProjectStore((s) => s.addPart)
+  const addChildPart = useProjectStore((s) => s.addChildPart)
+  const parts = useProjectStore((s) => s.project.parts)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
   const dragStart = useRef<DragPoint | null>(null)
@@ -42,7 +47,7 @@ export default function BoardCreator({ gridSize, onClearSelection }: BoardCreato
   const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0) return
     e.stopPropagation()
-    onClearSelection()
+    if (!modifyingPart) onClearSelection()
     const point = e.point
     const start = { x: snapToGrid(point.x), z: snapToGrid(point.z) }
     dragStart.current = start
@@ -50,7 +55,7 @@ export default function BoardCreator({ gridSize, onClearSelection }: BoardCreato
     setPreview({ x: start.x, z: start.z, length: 0.01, width: 0.01 })
     if (controls) controls.enabled = false
     gl.domElement.setPointerCapture(e.pointerId)
-  }, [controls, gl])
+  }, [controls, gl, modifyingPart, onClearSelection])
 
   const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
     if (!dragging || !dragStart.current) return
@@ -81,20 +86,36 @@ export default function BoardCreator({ gridSize, onClearSelection }: BoardCreato
       if (length > 0.1 || width > 0.1) {
         const cx = (dragStart.current.x + hitX) / 2
         const cz = (dragStart.current.z + hitZ) / 2
-        const hue = Math.random()
-        const color = hslToHex(hue * 360, 0.7, 0.6)
-        addPart({
-          length,
-          width,
-          position: { x: cx, y: BOARD_THICKNESS / 2, z: cz },
-          color,
-        })
+        if (modifyingPart) {
+          const childCount = parts.filter((p) => p.parentId === modifyingPart.id).length
+          const childId = addChildPart(modifyingPart.id, {
+            name: `Cut ${childCount + 1}`,
+            length: Math.max(length, 0.1),
+            width: modifyingPart.width,
+            thickness: 0.375,
+            position: {
+              x: cx - modifyingPart.position.x,
+              y: modifyingPart.thickness / 2 - 0.375 / 2,
+              z: 0,
+            },
+          })
+          onChildPartCreated?.(childId)
+        } else {
+          const hue = Math.random()
+          const color = hslToHex(hue * 360, 0.7, 0.6)
+          addPart({
+            length,
+            width,
+            position: { x: cx, y: BOARD_THICKNESS / 2, z: cz },
+            color,
+          })
+        }
       }
     }
 
     dragStart.current = null
     setPreview(null)
-  }, [dragging, controls, addPart])
+  }, [dragging, controls, addPart, addChildPart, modifyingPart, parts, onChildPartCreated])
 
   return (
     <>

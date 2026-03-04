@@ -9,6 +9,8 @@ export interface Part {
   color: string       // hex string
   visible: boolean
   assemblyId?: string
+  parentId?: string
+  operation?: 'add' | 'subtract'
 }
 
 export type PartInit = {
@@ -20,6 +22,8 @@ export type PartInit = {
   rotation?: { x: number; y: number; z: number }
   color?: string
   visible?: boolean
+  parentId?: string
+  operation?: 'add' | 'subtract'
 }
 
 export function createPart(init: PartInit): Part {
@@ -33,5 +37,7 @@ export function createPart(init: PartInit): Part {
     rotation: init.rotation ?? { x: 0, y: 0, z: 0 },
     color: init.color ?? '#8B6914',
     visible: init.visible ?? true,
+    ...(init.parentId !== undefined && { parentId: init.parentId }),
+    operation: init.operation ?? 'subtract',
   }
 }

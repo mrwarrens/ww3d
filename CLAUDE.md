@@ -81,6 +81,7 @@ tests/
   duplicate-assembly.browser.test.tsx       # Browser-mode tests for Cmd+D duplicate assembly
   eyedropper.browser.test.tsx               # Browser-mode tests for eyedropper color pick
   axis-lines.browser.test.tsx               # Browser-mode tests for axis lines toggle
+  csg-board.browser.test.tsx                # Browser-mode tests for CSG rendering (plain-box vs computed geometry)
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store

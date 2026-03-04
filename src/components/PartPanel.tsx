@@ -20,6 +20,9 @@ interface PartPanelProps {
   onAddConstraint?: (c: Omit<Constraint, 'id'>) => void
   onRemoveConstraint?: (id: string) => void
   onEyedropperActivate?: () => void
+  isModifying?: boolean
+  onEnterModifyMode?: () => void
+  onExitModifyMode?: () => void
 }
 
 export default function PartPanel({
@@ -30,6 +33,9 @@ export default function PartPanel({
   onAddConstraint,
   onRemoveConstraint,
   onEyedropperActivate,
+  isModifying,
+  onEnterModifyMode,
+  onExitModifyMode,
 }: PartPanelProps) {
   const [draftName, setDraftName] = useState('')
   const [draftLength, setDraftLength] = useState('')
@@ -395,6 +401,14 @@ export default function PartPanel({
           <button type="button" onClick={onEyedropperActivate} aria-label="Eyedropper">Pick</button>
         )}
       </div>
+      {!part.parentId && (
+        <div className="part-panel-edit-cuts">
+          {isModifying
+            ? <button type="button" onClick={onExitModifyMode}>Done Editing</button>
+            : <button type="button" onClick={onEnterModifyMode}>Edit Cuts</button>
+          }
+        </div>
+      )}
       <div className="part-panel-constraints">
         <div className="part-panel-constraints-header">
           <strong>Constraints</strong>

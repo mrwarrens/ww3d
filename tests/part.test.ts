@@ -85,4 +85,20 @@ describe('createPart', () => {
     const part = createPart({ ...baseInit, color: '#ff0000' })
     expect(part.color).toBe('#ff0000')
   })
+
+  it('defaults operation to "subtract" and leaves parentId undefined', () => {
+    const part = createPart(baseInit)
+    expect(part.operation).toBe('subtract')
+    expect(part.parentId).toBeUndefined()
+  })
+
+  it('preserves parentId when provided', () => {
+    const part = createPart({ ...baseInit, parentId: 'abc-123' })
+    expect(part.parentId).toBe('abc-123')
+  })
+
+  it('preserves operation when provided', () => {
+    const part = createPart({ ...baseInit, operation: 'add' })
+    expect(part.operation).toBe('add')
+  })
 })
