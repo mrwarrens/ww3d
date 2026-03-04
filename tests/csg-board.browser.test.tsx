@@ -131,3 +131,76 @@ describe('CSG rendering in Board', () => {
     expect(wireframes).toHaveLength(0)
   })
 })
+
+describe('ghost overlays in modify mode', () => {
+  it('renders no ghost when isModifying is false', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 0.5, width: 4, thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} isModifying={false} />
+    )
+
+    await new Promise(r => setTimeout(r, 100))
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    const ghosts = mesh.children.filter(c => c.name === 'child-ghost')
+    expect(ghosts).toHaveLength(0)
+  })
+
+  it('renders ghost LineSegments for subtract child when isModifying is true', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 0.5, width: 4, thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} isModifying={true} />
+    )
+
+    await new Promise(r => setTimeout(r, 100))
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    const ghost = mesh.children.find(c => c.name === 'child-ghost')
+    expect(ghost).toBeDefined()
+    expect((ghost as THREE.LineSegments).isLineSegments).toBe(true)
+  })
+
+  it('renders ghost Mesh for add child when isModifying is true', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 2, width: 4, thickness: 0.375,
+      position: { x: 2, y: 0, z: 0 },
+      operation: 'add',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} isModifying={true} />
+    )
+
+    await new Promise(r => setTimeout(r, 100))
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    const ghost = mesh.children.find(c => c.name === 'child-ghost')
+    expect(ghost).toBeDefined()
+    expect((ghost as THREE.Mesh).isMesh).toBe(true)
+  })
+})

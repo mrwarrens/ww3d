@@ -6,6 +6,49 @@ import { useProjectStore } from '../stores/projectStore'
 import { getManifold, manifoldMeshToThreeGeometry } from '../utils/manifold'
 
 const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })
+const ghostLineMat = new THREE.LineBasicMaterial({ color: 0xcccccc, transparent: true, opacity: 0.8 })
+const ghostSolidMat = new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide })
+
+function ChildGhost({ child, onSelect }: { child: Part; onSelect: () => void }) {
+  const geo = useMemo(() => {
+    const box = new THREE.BoxGeometry(child.length, child.thickness, child.width)
+    const edges = new THREE.EdgesGeometry(box)
+    box.dispose()
+    return edges
+  }, [child.length, child.thickness, child.width])
+
+  useEffect(() => () => geo.dispose(), [geo])
+
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation()
+    onSelect()
+  }
+
+  if ((child.operation ?? 'subtract') === 'add') {
+    return (
+      <mesh
+        name="child-ghost"
+        position={[child.position.x, child.position.y, child.position.z]}
+        rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
+        onClick={handleClick}
+      >
+        <boxGeometry args={[child.length, child.thickness, child.width]} />
+        <primitive object={ghostSolidMat} attach="material" />
+      </mesh>
+    )
+  }
+
+  return (
+    <lineSegments
+      name="child-ghost"
+      geometry={geo}
+      material={ghostLineMat}
+      position={[child.position.x, child.position.y, child.position.z]}
+      rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
+      onClick={handleClick}
+    />
+  )
+}
 
 interface BoardProps extends Part {
   isSelected: boolean
@@ -14,9 +57,11 @@ interface BoardProps extends Part {
   onDoubleClick?: () => void
   onEyedropperClick?: (color: string) => void
   dimmed?: boolean
+  isModifying?: boolean
+  onChildSelect?: (childId: string) => void
 }
 
-const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick, dimmed }, ref) {
+const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick, dimmed, isModifying, onChildSelect }, ref) {
   const allParts = useProjectStore(s => s.project.parts)
   const children = useMemo(() => allParts.filter(p => p.parentId === id), [allParts, id])
 
@@ -137,6 +182,9 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       }
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       {!csgGeo && <lineSegments geometry={edgesGeo} material={lineMat} />}
+      {isModifying && children.map(child => (
+        <ChildGhost key={child.id} child={child} onSelect={() => onChildSelect?.(child.id)} />
+      ))}
     </mesh>
   )
 })

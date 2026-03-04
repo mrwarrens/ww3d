@@ -74,7 +74,7 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 
 - [x] **5. Modify mode: draw child volumes** — While in modify mode, drag-to-create on the grid adds a child Part (operation: `'subtract'`) to the active `modifyingPartId` instead of a top-level part. Child position is stored in parent-local space (offset from parent center). Default child dimensions: 3/4" × 3/8" × parent width (a sensible dado starting point). The newly created child becomes the selection. _Depends on: #2, #4._
 
-- [ ] **6. Modify mode: visualize children** — While in modify mode, subtract children render as ghost wireframes (no fill, white/gray edges) overlaid on the CSG result, so the user can see and click the cut volumes. Add children render as a semi-transparent solid. Outside of modify mode, only the CSG result is visible — no wireframe overlay. _Depends on: #3, #4._
+- [x] **6. Modify mode: visualize children** — While in modify mode, subtract children render as ghost wireframes (no fill, white/gray edges) overlaid on the CSG result, so the user can see and click the cut volumes. Add children render as a semi-transparent solid. Outside of modify mode, only the CSG result is visible — no wireframe overlay. _Depends on: #3, #4._
 
 - [ ] **7. Modify mode: select and edit children** — Clicking a child wireframe in modify mode selects it. `PartPanel` shows the child's L/W/T, Rx/Ry/Rz, Px/Py/Pz (local offsets), and an add/subtract operation toggle. The Constraints section is hidden for children. All existing fractional-inch inputs and arrow-key increment work unchanged. _Depends on: #5, #6._
 

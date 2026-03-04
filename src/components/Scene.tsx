@@ -277,6 +277,8 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
           onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
           onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
           dimmed={modifyingPartId != null && p.id !== modifyingPartId}
+          isModifying={modifyingPartId === p.id}
+          onChildSelect={(childId) => onSelectIds([childId])}
         />
       ))}
 
