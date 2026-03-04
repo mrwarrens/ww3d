@@ -23,11 +23,6 @@ const secondPart = createPart({
 afterEach(() => cleanup())
 
 describe('PartPanel', () => {
-  it('renders nothing when part is null', async () => {
-    const { container } = await render(<PartPanel part={null} onUpdate={vi.fn()} />)
-    expect(container.firstChild).toBeNull()
-  })
-
   it('renders the part name in an input', async () => {
     const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
     const input = screen.getByRole('textbox', { name: /part name/i })

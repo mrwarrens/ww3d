@@ -877,6 +877,146 @@ describe('projectStore', () => {
     })
   })
 
+  describe('removeParts', () => {
+    it('removes all parts with the given ids in one operation', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      useProjectStore.getState().removeParts([ids[0], ids[1]])
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts).toHaveLength(1)
+      expect(parts[0].id).toBe(ids[2])
+    })
+
+    it('with a single id is equivalent to removePart', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+
+      useProjectStore.getState().removeParts([id])
+
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+    })
+
+    it('with an empty array leaves parts unchanged and still pushes one history entry', () => {
+      useProjectStore.getState().addPart(baseInit)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removeParts([])
+
+      expect(useProjectStore.getState().project.parts).toHaveLength(1)
+      expect(useProjectStore.getState().history).toHaveLength(1)
+    })
+
+    it('pushes exactly one history entry for a multi-part remove', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removeParts(ids)
+
+      expect(useProjectStore.getState().history).toHaveLength(1)
+    })
+
+    it('undo after removeParts restores all removed parts', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().removeParts(ids)
+      expect(useProjectStore.getState().project.parts).toHaveLength(0)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+    })
+  })
+
+  describe('duplicateParts', () => {
+    it('creates one new part per id', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      useProjectStore.getState().duplicateParts(ids)
+
+      expect(useProjectStore.getState().project.parts).toHaveLength(4)
+    })
+
+    it('returns the new ids in the same order as input ids', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      const newIds = useProjectStore.getState().duplicateParts(ids)
+
+      expect(newIds).toHaveLength(2)
+      const { parts } = useProjectStore.getState().project
+      expect(parts.find((p) => p.id === newIds[0])).toBeDefined()
+      expect(parts.find((p) => p.id === newIds[1])).toBeDefined()
+      expect(newIds[0]).not.toBe(ids[0])
+      expect(newIds[1]).not.toBe(ids[1])
+    })
+
+    it('offsets each duplicate position by x+1 and z+1', () => {
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 3 } })
+      const original = useProjectStore.getState().project.parts[0]
+
+      const [newId] = useProjectStore.getState().duplicateParts([original.id])
+
+      const copy = useProjectStore.getState().project.parts.find((p) => p.id === newId)!
+      expect(copy.position.x).toBe(original.position.x + 1)
+      expect(copy.position.z).toBe(original.position.z + 1)
+      expect(copy.position.y).toBe(original.position.y)
+    })
+
+    it('skips unknown ids and returns only ids for valid parts', () => {
+      useProjectStore.getState().addPart(baseInit)
+      const id = useProjectStore.getState().project.parts[0].id
+
+      const newIds = useProjectStore.getState().duplicateParts([id, 'nonexistent-id'])
+
+      expect(newIds).toHaveLength(1)
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+    })
+
+    it('pushes exactly one history entry for a multi-part duplicate', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().duplicateParts(ids)
+
+      expect(useProjectStore.getState().history).toHaveLength(1)
+    })
+
+    it('undo after duplicateParts removes all duplicated parts', () => {
+      const { addPart } = useProjectStore.getState()
+      addPart(baseInit)
+      addPart(baseInit)
+      const ids = useProjectStore.getState().project.parts.map((p) => p.id)
+      useProjectStore.setState({ history: [], future: [] })
+
+      useProjectStore.getState().duplicateParts(ids)
+      expect(useProjectStore.getState().project.parts).toHaveLength(4)
+
+      useProjectStore.getState().undo()
+      expect(useProjectStore.getState().project.parts).toHaveLength(2)
+    })
+  })
+
   describe('moveAssembly', () => {
     it('updates assembly position', () => {
       const id = useProjectStore.getState().addAssembly('Cabinet')
@@ -944,6 +1084,31 @@ describe('projectStore', () => {
       expect(part.position.z).toBe(2)
       const assembly = useProjectStore.getState().project.assemblies[0]
       expect(assembly.position).toEqual({ x: 0, y: 0, z: 0 })
+    })
+  })
+
+  describe('toggleAssemblyVisibility', () => {
+    it('hides a visible assembly', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().toggleAssemblyVisibility(id)
+      const assembly = useProjectStore.getState().project.assemblies.find((a) => a.id === id)!
+      expect(assembly.visible).toBe(false)
+    })
+
+    it('shows a hidden assembly', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().toggleAssemblyVisibility(id)
+      useProjectStore.getState().toggleAssemblyVisibility(id)
+      const assembly = useProjectStore.getState().project.assemblies.find((a) => a.id === id)!
+      expect(assembly.visible).toBe(true)
+    })
+
+    it('only affects the targeted assembly', () => {
+      const id1 = useProjectStore.getState().addAssembly('A')
+      const id2 = useProjectStore.getState().addAssembly('B')
+      useProjectStore.getState().toggleAssemblyVisibility(id1)
+      const a2 = useProjectStore.getState().project.assemblies.find((a) => a.id === id2)!
+      expect(a2.visible).toBe(true)
     })
   })
 })

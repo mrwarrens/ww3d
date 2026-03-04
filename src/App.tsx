@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import Scene from './components/Scene'
+import AssemblyPanel from './components/AssemblyPanel'
 import PartPanel from './components/PartPanel'
 import PartsList from './components/PartsList'
 import { useProjectStore } from './stores/projectStore'
@@ -171,18 +172,24 @@ export default function App() {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      <PartPanel
-        part={selectedPart}
-        onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
-        assembly={selectedAssembly}
-        onMoveAssembly={(position) => selectedAssemblyId && moveAssembly(selectedAssemblyId, position)}
-        onRenameAssembly={(name) => selectedAssemblyId && renameAssembly(selectedAssemblyId, name)}
-        constraints={project.constraints.filter((c) => c.constrainedPartId === selectedId)}
-        allParts={parts}
-        onAddConstraint={(c) => addConstraint(c)}
-        onRemoveConstraint={(id) => removeConstraint(id)}
-        onEyedropperActivate={selectedPart ? () => setEyedropperActive(true) : undefined}
-      />
+      {selectedAssembly && !selectedPart && (
+        <AssemblyPanel
+          assembly={selectedAssembly}
+          onMoveAssembly={(position) => selectedAssemblyId && moveAssembly(selectedAssemblyId, position)}
+          onRenameAssembly={(name) => selectedAssemblyId && renameAssembly(selectedAssemblyId, name)}
+        />
+      )}
+      {selectedPart && (
+        <PartPanel
+          part={selectedPart}
+          onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
+          constraints={project.constraints.filter((c) => c.constrainedPartId === selectedId)}
+          allParts={parts}
+          onAddConstraint={(c) => addConstraint(c)}
+          onRemoveConstraint={(id) => removeConstraint(id)}
+          onEyedropperActivate={() => setEyedropperActive(true)}
+        />
+      )}
       <PartsList
         parts={parts}
         assemblies={assemblies}
@@ -197,7 +204,7 @@ export default function App() {
         onRemoveFromAssembly={removePartFromAssembly}
       />
       <Canvas
-        camera={{ fov: 60, near: 0.1, far: 100, position: [3, 2, 3] }}
+        camera={{ fov: 60, near: 0.1, far: 200, position: [3, 2, 3] }}
         gl={{ antialias: true }}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       >
@@ -209,7 +216,7 @@ export default function App() {
                 ? parts.filter((p) => p.assemblyId === selectedAssemblyId).map((p) => p.id)
                 : []
           }
-          onSelectId={(id) => handleSelectIds(id ? [id] : [])}
+          onSelectIds={handleSelectIds}
           onSelectAssembly={handleSelectAssembly}
           cameraPresetRef={cameraPresetRef}
           isAssemblySelected={!!selectedAssemblyId}

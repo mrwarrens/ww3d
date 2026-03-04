@@ -12,7 +12,7 @@ import { useCameraPreset } from '../hooks/useCameraPreset'
 
 interface SceneProps {
   selectedIds: string[]
-  onSelectId: (id: string | null) => void
+  onSelectIds: (ids: string[]) => void
   onSelectAssembly?: (assemblyId: string) => void
   cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
   isAssemblySelected?: boolean
@@ -34,6 +34,17 @@ function AxisLines({ length }: { length: number }) {
       zNeg: new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), origin, length, 0x2020ff, 0, 0),
     }
   }, [length])
+
+  useEffect(() => {
+    return () => {
+      for (const arrow of Object.values(arrows)) {
+        arrow.line.geometry.dispose();
+        (arrow.line.material as THREE.Material).dispose()
+        arrow.cone.geometry.dispose();
+        (arrow.cone.material as THREE.Material).dispose()
+      }
+    }
+  }, [arrows])
 
   return (
     <>
@@ -80,13 +91,12 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectId, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes }: SceneProps) {
-  const selectedId = selectedIds[0] ?? null
+export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
-  const removePart = useProjectStore((s) => s.removePart)
-  const duplicatePart = useProjectStore((s) => s.duplicatePart)
+  const removeParts = useProjectStore((s) => s.removeParts)
+  const duplicateParts = useProjectStore((s) => s.duplicateParts)
   const movePart = useProjectStore((s) => s.movePart)
   const gl = useThree((s) => s.gl)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
@@ -120,18 +130,18 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isTyping = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !isTyping) {
-        removePart(selectedId)
-        onSelectId(null)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length > 0 && !isTyping) {
+        removeParts(selectedIds)
+        onSelectIds([])
       }
       if (e.key === 'Escape') {
-        onSelectId(null)
+        onSelectIds([])
         onEyedropperCancel?.()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedId && !isAssemblySelected) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedIds.length > 0 && !isAssemblySelected) {
         e.preventDefault()
-        const newId = duplicatePart(selectedId)
-        if (newId) onSelectId(newId)
+        const newIds = duplicateParts(selectedIds)
+        if (newIds.length > 0) onSelectIds(newIds)
       }
       if (isTyping) return
       if (e.key === '1') goToPreset('front')
@@ -141,7 +151,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, isAssemblySelected, removePart, duplicatePart, onSelectId, goToPreset, onEyedropperCancel])
+  }, [selectedIds, isAssemblySelected, removeParts, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
@@ -240,7 +250,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
         }}
       />
 
-      <BoardCreator gridSize={gridSize} onClearSelection={() => { onSelectId(null); onEyedropperCancel?.() }} />
+      <BoardCreator gridSize={gridSize} onClearSelection={() => { onSelectIds([]); onEyedropperCancel?.() }} />
 
       {showAxes && <AxisLines length={gridSize / 2} />}
 
@@ -250,7 +260,7 @@ export default function Scene({ selectedIds, onSelectId, onSelectAssembly, camer
           {...p}
           position={draggingRef.current?.partId === p.id && livePos ? livePos : p.position}
           isSelected={selectedIds.includes(p.id)}
-          onSelect={() => onSelectId(p.id)}
+          onSelect={() => onSelectIds([p.id])}
           onDragStart={(e) => handleDragStart(e, p)}
           onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
           onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}

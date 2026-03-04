@@ -78,6 +78,10 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
 export default function PartsList({ parts, assemblies, selectedIds, onSelectIds, selectedAssemblyId, onSelectAssembly, onToggleVisibility, onToggleAssemblyVisibility, onAddAssembly, onAssignPart, onRemoveFromAssembly }: PartsListProps) {
   const lastClickedIdxRef = useRef<number>(-1)
   const unassignedParts = parts.filter((p) => !p.assemblyId)
+  const visualOrder: Part[] = [
+    ...assemblies.flatMap((a) => parts.filter((p) => p.assemblyId === a.id)),
+    ...unassignedParts,
+  ]
 
   return (
     <div id="parts-list" style={{ zIndex: 1 }}>
@@ -89,7 +93,7 @@ export default function PartsList({ parts, assemblies, selectedIds, onSelectIds,
             <li
               key={assembly.id}
               className={`assembly-row${selectedAssemblyId === assembly.id ? ' selected' : ''}`}
-              onClick={() => onSelectAssembly(assembly.id)}
+              onClick={() => onSelectAssembly?.(assembly.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.stopPropagation()
@@ -106,42 +110,36 @@ export default function PartsList({ parts, assemblies, selectedIds, onSelectIds,
                 {assembly.visible !== false ? '●' : '○'}
               </button>
               <ul>
-                {members.map((part) => {
-                  const index = parts.indexOf(part)
-                  return (
-                    <PartRow
-                      key={part.id}
-                      part={part}
-                      index={index}
-                      allParts={parts}
-                      selectedIds={selectedIds}
-                      onSelectIds={onSelectIds}
-                      lastClickedIdxRef={lastClickedIdxRef}
-                      onToggleVisibility={onToggleVisibility}
-                      onRemoveFromAssembly={onRemoveFromAssembly}
-                    />
-                  )
-                })}
+                {members.map((part) => (
+                  <PartRow
+                    key={part.id}
+                    part={part}
+                    index={visualOrder.indexOf(part)}
+                    allParts={visualOrder}
+                    selectedIds={selectedIds}
+                    onSelectIds={onSelectIds}
+                    lastClickedIdxRef={lastClickedIdxRef}
+                    onToggleVisibility={onToggleVisibility}
+                    onRemoveFromAssembly={onRemoveFromAssembly}
+                  />
+                ))}
               </ul>
             </li>
           )
         })}
-        {unassignedParts.map((part) => {
-          const index = parts.indexOf(part)
-          return (
-            <PartRow
-              key={part.id}
-              part={part}
-              index={index}
-              allParts={parts}
-              selectedIds={selectedIds}
-              onSelectIds={onSelectIds}
-              lastClickedIdxRef={lastClickedIdxRef}
-              onToggleVisibility={onToggleVisibility}
-              onRemoveFromAssembly={onRemoveFromAssembly}
-            />
-          )
-        })}
+        {unassignedParts.map((part) => (
+          <PartRow
+            key={part.id}
+            part={part}
+            index={visualOrder.indexOf(part)}
+            allParts={visualOrder}
+            selectedIds={selectedIds}
+            onSelectIds={onSelectIds}
+            lastClickedIdxRef={lastClickedIdxRef}
+            onToggleVisibility={onToggleVisibility}
+            onRemoveFromAssembly={onRemoveFromAssembly}
+          />
+        ))}
       </ul>
     </div>
   )

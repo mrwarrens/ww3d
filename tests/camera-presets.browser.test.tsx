@@ -16,11 +16,11 @@ async function renderSceneInCanvas(
   const statePromise = new Promise<RootState>((resolve) => { resolveState = resolve })
   await render(
     <Canvas
-      camera={{ fov: 60, near: 0.1, far: 100, position: [3, 2, 3] }}
+      camera={{ fov: 60, near: 0.1, far: 200, position: [3, 2, 3] }}
       gl={{ antialias: true }}
       onCreated={(s) => resolveState(s)}
     >
-      <Scene selectedIds={[]} onSelectId={() => {}} cameraPresetRef={cameraPresetRef} />
+      <Scene selectedIds={[]} onSelectIds={() => {}} cameraPresetRef={cameraPresetRef} />
     </Canvas>
   )
   return statePromise
@@ -133,5 +133,13 @@ describe('Camera preset keyboard shortcuts', () => {
 
     // Camera should still be at iso Z, not front Z
     expect(state.camera.position.z).toBeCloseTo(isoPosZ, 0)
+  })
+})
+
+describe('Camera far clip distance', () => {
+  it('camera far clip is 200', async () => {
+    const state = await renderSceneInCanvas()
+    const cam = state.camera as THREE.PerspectiveCamera
+    expect(cam.far).toBe(200)
   })
 })

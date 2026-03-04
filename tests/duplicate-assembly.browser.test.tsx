@@ -51,7 +51,7 @@ describe('Duplicate an Assembly (Cmd+D)', () => {
     await renderInCanvas(
       <Scene
         selectedIds={memberIds}
-        onSelectId={() => {}}
+        onSelectIds={() => {}}
         isAssemblySelected={true}
       />
     )
@@ -75,7 +75,7 @@ describe('Duplicate an Assembly (Cmd+D)', () => {
     await renderInCanvas(
       <Scene
         selectedIds={[id]}
-        onSelectId={() => {}}
+        onSelectIds={() => {}}
         isAssemblySelected={false}
       />
     )

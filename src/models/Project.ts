@@ -30,7 +30,7 @@ export function deserializeProject(json: string): Project {
   const parsed = JSON.parse(json)
   return {
     ...parsed,
-    assemblies: parsed.assemblies ?? [],
+    assemblies: (parsed.assemblies ?? []).map((a: any) => ({ ...a, visible: a.visible ?? true })),
     constraints: parsed.constraints ?? [],
   } as Project
 }

@@ -300,44 +300,47 @@ tasks:
     name: "Bug: EdgesGeometry memory leak in Board"
     description: "The edgesGeo created via useMemo in Board.tsx (new THREE.EdgesGeometry) is never disposed on unmount or when dims change. R3F does not automatically dispose useMemo-created Three.js objects. Every board deletion or L/W/T change leaks a geometry. Fix: add useEffect(() => () => edgesGeo.dispose(), [edgesGeo]) in Board.tsx."
     deps: []
-    status: ready
+    status: accepted
   - id: 50
     phase: 3
     name: "Bug: ArrowHelper memory leak in AxisLines"
     description: "The six ArrowHelper instances created in useMemo inside AxisLines (Scene.tsx) are never disposed when the component unmounts (showAxes toggled off) or when the length dep changes. Each ArrowHelper allocates internal line and cone geometry plus two materials. Fix: add a useEffect cleanup that calls dispose() on each arrow and its internal line and cone children."
     deps: [48]
-    status: ready
+    status: accepted
   - id: 51
     phase: 3
     name: "Bug: Delete and Cmd+D only act on the first selected part when multi-selected"
     description: "Scene.tsx derives selectedId = selectedIds[0] ?? null. With multiple parts selected, pressing Delete only removes the first; Cmd+D only duplicates the first. The multi-select feature was added without updating these handlers. Fix: Delete handler should iterate all selectedIds and call removePart for each; Cmd+D should duplicate all selected parts (or just the primary — decide on behavior) and select the new copies."
     deps: [28]
-    status: pending
-
+    status: accepted
   - id: 52
     phase: 3
     name: "Bug: PartsList onSelectAssembly called without null guard"
     description: "In PartsList.tsx, onSelectAssembly is typed as an optional prop but is called directly as onSelectAssembly(assembly.id) without a nullish guard. TypeScript strict mode flags this; at runtime it throws if the prop is ever omitted. Fix: change to onSelectAssembly?.(assembly.id)."
     deps: []
-    status: pending
-
+    status: accepted
   - id: 53
     phase: 3
     name: "Bug: Shift+click range select uses array index instead of visual order"
     description: "Shift+click in PartsList computes the range as allParts.slice(lo, hi + 1) using flat array indices. The visual order of rows (assemblies with nested members, then unassigned parts) does not match the flat allParts array order, so the range-selected set may include parts that are not visually adjacent. Fix: build a flat ordered list of rendered part rows in visual order and use that array for range selection."
     deps: [28]
-    status: pending
-
+    status: accepted
   - id: 54
     phase: 3
     name: Split PartPanel into AssemblyPanel and PartPanel components
     description: "PartPanel.tsx is 634 lines and handles two distinct rendering modes — assembly (name + Px/Py/Pz) and part (name, L/W/T, Rx/Ry/Rz, Px/Py/Pz, color, constraints) — via an if (assembly && !part) branch. All draft state hooks for both modes co-exist in the same component scope. Split into two focused components: AssemblyPanel.tsx and PartPanel.tsx, rendered conditionally from App.tsx. Each component is smaller, easier to test, and has only the state it needs."
     deps: []
-    status: pending
-
+    status: accepted
   - id: 55
     phase: 3
     name: "Fix: toggleAssemblyVisibility uses redundant ternary instead of logical negation"
     description: "In projectStore.ts, toggleAssemblyVisibility uses a.visible === false ? true : false. The intent is to toggle while treating undefined as visible. Simplify to visible: a.visible !== false ? false : true, or migrate Assembly.visible to always be a boolean (never undefined) in createAssembly and normalize on load, then use !a.visible."
     deps: []
-    status: pending
+    status: accepted
+
+  - id: 56
+    phase: 3
+    name: Increase camera far clip distance to 200
+    description: "The Canvas camera in App.tsx is configured with far: 100. Increase to far: 200 so larger projects don't get clipped at the edges of the scene."
+    deps: []
+    status: accepted

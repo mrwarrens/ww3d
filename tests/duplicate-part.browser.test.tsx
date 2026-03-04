@@ -35,7 +35,7 @@ describe('Duplicate a Part (Cmd+D)', () => {
     })
     const id = useProjectStore.getState().project.parts[0].id
 
-    await renderInCanvas(<Scene selectedIds={[id]} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[id]} onSelectIds={() => {}} />)
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
@@ -51,7 +51,7 @@ describe('Duplicate a Part (Cmd+D)', () => {
     })
     const original = useProjectStore.getState().project.parts[0]
 
-    await renderInCanvas(<Scene selectedIds={[original.id]} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[original.id]} onSelectIds={() => {}} />)
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
@@ -70,7 +70,7 @@ describe('Duplicate a Part (Cmd+D)', () => {
       color: '#ff0000',
     })
 
-    await renderInCanvas(<Scene selectedIds={[]} onSelectId={() => {}} />)
+    await renderInCanvas(<Scene selectedIds={[]} onSelectIds={() => {}} />)
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))

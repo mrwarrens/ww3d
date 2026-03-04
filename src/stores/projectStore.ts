@@ -11,7 +11,9 @@ interface ProjectStore {
   future: Project[]
   addPart: (init: PartInit) => void
   removePart: (id: string) => void
+  removeParts: (ids: string[]) => void
   duplicatePart: (id: string) => string | null
+  duplicateParts: (ids: string[]) => string[]
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
   updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
   togglePartVisibility: (id: string) => void
@@ -65,6 +67,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
   },
+  removeParts: (ids) => {
+    const current = get().project
+    const idSet = new Set(ids)
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: state.project.parts.filter((p) => !idSet.has(p.id)),
+      },
+    }))
+  },
   duplicatePart: (id) => {
     const source = get().project.parts.find((p) => p.id === id)
     if (!source) return null
@@ -84,6 +98,28 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       },
     }))
     return newId
+  },
+  duplicateParts: (ids) => {
+    const current = get().project
+    const newParts: Part[] = ids.flatMap((id) => {
+      const source = current.parts.find((p) => p.id === id)
+      if (!source) return []
+      return [{
+        ...source,
+        id: crypto.randomUUID(),
+        position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
+      }]
+    })
+    const newIds = newParts.map((p) => p.id)
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: {
+        ...state.project,
+        parts: [...state.project.parts, ...newParts],
+      },
+    }))
+    return newIds
   },
   duplicateAssembly: (id) => {
     const source = get().project.assemblies.find((a) => a.id === id)
@@ -153,7 +189,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       project: {
         ...state.project,
         assemblies: state.project.assemblies.map((a) =>
-          a.id === id ? { ...a, visible: a.visible === false ? true : false } : a
+          a.id === id ? { ...a, visible: !a.visible } : a
         ),
       },
     }))

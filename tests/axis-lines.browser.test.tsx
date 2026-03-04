@@ -34,4 +34,23 @@ describe('Axes toggle button', () => {
     await act(async () => { btn.click() })
     expect(btn.textContent).toBe('Axes Off')
   })
+
+  it('unmounts AxisLines without error when toggling off', async () => {
+    const pane = await openGridPane()
+    const btn = Array.from(pane.querySelectorAll('button')).find((b) => b.textContent?.includes('Axes'))!
+    await act(async () => { btn.click() })
+    expect(btn.textContent).toBe('Axes On')
+    await act(async () => { btn.click() })
+    expect(btn.textContent).toBe('Axes Off')
+  })
+
+  it('re-renders AxisLines without error when grid size changes while axes are on', async () => {
+    const pane = await openGridPane()
+    const axesBtn = Array.from(pane.querySelectorAll('button')).find((b) => b.textContent?.includes('Axes'))!
+    await act(async () => { axesBtn.click() })
+    expect(axesBtn.textContent).toBe('Axes On')
+    const gridPlusBtn = Array.from(pane.querySelectorAll('button')).find((b) => b.textContent?.includes('Grid +'))!
+    await act(async () => { gridPlusBtn.click() })
+    expect(axesBtn.textContent).toBe('Axes On')
+  })
 })

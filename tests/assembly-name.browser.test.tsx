@@ -1,19 +1,17 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup } from 'vitest-browser-react'
 import { userEvent } from '@vitest/browser/context'
-import PartPanel from '../src/components/PartPanel'
+import AssemblyPanel from '../src/components/AssemblyPanel'
 import { createAssembly } from '../src/models/Assembly'
 
 const testAssembly = createAssembly('Leg Assembly')
 
 afterEach(() => cleanup())
 
-describe('Editable assembly name in PartPanel', () => {
+describe('Editable assembly name in AssemblyPanel', () => {
   it('renders assembly name as an input', async () => {
     const screen = await render(
-      <PartPanel
-        part={null}
-        onUpdate={vi.fn()}
+      <AssemblyPanel
         assembly={testAssembly}
         onMoveAssembly={vi.fn()}
       />
@@ -25,9 +23,7 @@ describe('Editable assembly name in PartPanel', () => {
   it('calls onRenameAssembly with trimmed value on Enter', async () => {
     const onRenameAssembly = vi.fn()
     const screen = await render(
-      <PartPanel
-        part={null}
-        onUpdate={vi.fn()}
+      <AssemblyPanel
         assembly={testAssembly}
         onMoveAssembly={vi.fn()}
         onRenameAssembly={onRenameAssembly}
@@ -42,9 +38,7 @@ describe('Editable assembly name in PartPanel', () => {
   it('resets input on Escape without calling onRenameAssembly', async () => {
     const onRenameAssembly = vi.fn()
     const screen = await render(
-      <PartPanel
-        part={null}
-        onUpdate={vi.fn()}
+      <AssemblyPanel
         assembly={testAssembly}
         onMoveAssembly={vi.fn()}
         onRenameAssembly={onRenameAssembly}
@@ -60,9 +54,7 @@ describe('Editable assembly name in PartPanel', () => {
   it('resets input on blur when value is empty without calling onRenameAssembly', async () => {
     const onRenameAssembly = vi.fn()
     const screen = await render(
-      <PartPanel
-        part={null}
-        onUpdate={vi.fn()}
+      <AssemblyPanel
         assembly={testAssembly}
         onMoveAssembly={vi.fn()}
         onRenameAssembly={onRenameAssembly}

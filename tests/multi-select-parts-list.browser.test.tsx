@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import PartsList from '../src/components/PartsList'
 import { createPart } from '../src/models/Part'
+import { createAssembly } from '../src/models/Assembly'
 
 const partA = createPart({ name: 'Part A', length: 12, width: 4, position: { x: 0, y: 0.375, z: 0 } })
 const partB = createPart({ name: 'Part B', length: 12, width: 4, position: { x: 0, y: 0.375, z: 10 } })
@@ -76,5 +77,52 @@ describe('PartsList multi-select', () => {
     )
     await screen.getByText('Part C').click()
     expect(onSelectIds).toHaveBeenCalledWith([partC.id])
+  })
+
+  it('Shift+click range select uses visual order, not raw store order', async () => {
+    // Store order: [partA (unassigned), partB (in assembly), partC (in assembly)]
+    // Visual order: [partB, partC, partA] — assembly members first, unassigned last
+    const assembly = createAssembly('Cabinet')
+    const partBAssigned = { ...partB, assemblyId: assembly.id }
+    const partCAssigned = { ...partC, assemblyId: assembly.id }
+    const onSelectIds = vi.fn()
+    const screen = await render(
+      <PartsList
+        parts={[partA, partBAssigned, partCAssigned]}
+        assemblies={[assembly]}
+        selectedIds={[]}
+        onSelectIds={onSelectIds}
+        onToggleVisibility={vi.fn()}
+        onToggleAssemblyVisibility={vi.fn()}
+        onAddAssembly={vi.fn()}
+        onAssignPart={vi.fn()}
+        onRemoveFromAssembly={vi.fn()}
+      />
+    )
+    // Plain click Part B (visual index 0) to set anchor
+    await screen.getByText('Part B').click()
+    onSelectIds.mockClear()
+    // Shift+click Part A (visual index 2) — should select all three in visual order
+    await screen.getByText('Part A').click({ modifiers: ['Shift'] })
+    expect(onSelectIds).toHaveBeenCalledWith([partBAssigned.id, partCAssigned.id, partA.id])
+  })
+
+  it('clicking an assembly row does not throw when onSelectAssembly is omitted', async () => {
+    const assembly = createAssembly('Cabinet')
+    const screen = await render(
+      <PartsList
+        parts={[]}
+        assemblies={[assembly]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onToggleAssemblyVisibility={vi.fn()}
+        onAddAssembly={vi.fn()}
+        onAssignPart={vi.fn()}
+        onRemoveFromAssembly={vi.fn()}
+      />
+    )
+    // Should not throw even though onSelectAssembly is not provided
+    await expect(screen.getByText('Cabinet').click()).resolves.not.toThrow()
   })
 })

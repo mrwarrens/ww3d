@@ -7,13 +7,37 @@ Questions to resolve before and during implementation.
 ## 3D Engine & Rendering
 
 - ~~Three.js or Babylon.js for the 3D engine?~~ **Decided: Three.js.** Larger ecosystem, already in use.
-- Which CSG (Constructive Solid Geometry) library for boolean operations? Options include three-bvh-csg, manifold (WASM), or custom implementation.
+- Which CSG (Constructive Solid Geometry) library for boolean operations?
+
+  **Research (March 2026):** Evaluated all viable CSG libraries for web-based Three.js/R3F integration. Woodworking joints (mortise, tenon, dado, rabbet, dovetail) map to simple box-subtraction CSG operations on planar geometry. Key requirement is coplanar face robustness since boards frequently meet flush.
+
+  **Tier 1 candidates:**
+
+  | Library | Type | Coplanar Robustness | Bundle | Three.js Integration |
+  |---|---|---|---|---|
+  | **@react-three/csg** (wraps three-bvh-csg) | Pure JS | Improved, not perfect | Small (~0.6 MB) | Native R3F/JSX declarative API |
+  | **manifold-3d** v3.3 | WASM (C++) | Guaranteed manifold output | ~2-3 MB WASM | Conversion layer needed |
+  | **three-bvh-csg** v0.0.17 | Pure JS | Improved, not perfect | Small (~0.6 MB) | Native Three.js (Brush extends Mesh) |
+
+  **Tier 2 (viable but tradeoffs):**
+  - **Trueform** (@polydera/trueform) — real-time 500K+ poly booleans, Three.js native. Requires commercial license.
+  - **opencascade.js / replicad** — full BREP kernel (FreeCAD uses it). Excellent robustness but 2.4-45 MB WASM bundle. Overkill for planar woodworking geometry.
+  - **@jscad/modeling** — pure JS, own geometry format. Awkward Three.js integration.
+
+  **Not viable:**
+  - **three-csg-ts / csg.js** — BSP-based, poor coplanar robustness, slow. Woodworking flush faces would break constantly.
+  - **CGAL.js** — gold-standard math but WASM rounding bug causes boolean ops to hang in browsers.
+  - **libigl-wasm** — experimental, inherits CGAL issues.
+  - **Cork** — C++ only, no JS/WASM port.
+  - **CADmium** — Rust+WASM, interesting but still early prototype.
+
+  **Assessment:** For planar woodworking geometry, mesh-based booleans are sufficient (no need for BREP). The practical choice is between @react-three/csg (easiest R3F integration, small bundle, coplanar issues workable with epsilon offsets) and manifold-3d (guaranteed correctness, used by Blender/OpenSCAD, but needs conversion layer and manual WASM memory management via `.delete()` calls). The three-bvh-csg README itself recommends Manifold for production CAD.
 - How to handle rendering performance for complex assemblies with many parts? Level-of-detail, instanced rendering, or occlusion culling?
 - What format to use for wood grain textures? Procedural shaders vs pre-built texture images?
 
 ## Parametric Engine & Constraint Solving
 
-- Build a custom parametric engine or integrate something like OpenCascade compiled to WASM?
+- Build a custom parametric engine or integrate something like OpenCascade compiled to WASM? *(Note: CSG research above found opencascade.js bundle is 2.4-45 MB — likely too heavy. Manifold-3d or three-bvh-csg are better fits for the geometry complexity needed.)*
 - How to represent parametric constraints between parts (e.g., "this shelf fits inside this dado")?
 - How to handle constraint propagation when a dimension changes — what updates and in what order?
 - Should parts store absolute positions or relative relationships to other parts?
@@ -121,7 +145,7 @@ Questions to resolve before and during implementation.
 - Where to host the static app — GitHub Pages, Vercel, Netlify, Cloudflare Pages?
 - How to handle the OAuth proxy if needed — serverless function or a minimal backend?
 - ~~What build tool — Vite, webpack, or other?~~ **Decided: Vite.** Fast dev server with HMR, native ESM, Vitest integration.
-- How to handle WASM dependencies (if using OpenCascade or manifold)?
+- How to handle WASM dependencies (if using OpenCascade or manifold)? *(Note: manifold-3d WASM is ~2-3 MB, compresses well with brotli. Requires async init at startup. Objects need manual `.delete()` calls — no JS garbage collection for WASM memory.)*
 - What is the target bundle size budget for initial load?
 
 ## Accessibility
