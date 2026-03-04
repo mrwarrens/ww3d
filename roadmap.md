@@ -80,7 +80,7 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 
 - [ ] **8. Modify mode: delete children** — Delete/Backspace with a child selected removes it from the parent via `removeChildPart`. The parent's CSG result recomputes. Undo captures the operation. _Depends on: #7._
 
-- [ ] **9. Undo/redo for child operations** — Ensure `addChildPart`, `removeChildPart`, and `updatePart` (when called on children) are all captured in the undo history stack in the same way as top-level part mutations. _Depends on: #5, #8._
+- [x] **9. Undo/redo for child operations** — Ensure `addChildPart`, `removeChildPart`, and `updatePart` (when called on children) are all captured in the undo history stack in the same way as top-level part mutations. _Depends on: #5, #8._
 
 - [ ] **10. Cuts list in modify mode** — While in modify mode, render a small `CutsList` panel (similar in style to `PartsList`) that lists the active parent's children by name. Clicking a row selects that child (same as clicking its ghost wireframe in the viewport). Selected child is highlighted in the list. Children are not shown in `PartsList` outside of modify mode — only the parent row is visible there, with a small indicator icon when it has cuts. _Depends on: #4, #5._
 
