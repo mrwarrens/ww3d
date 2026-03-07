@@ -14,7 +14,7 @@ const PRESET_LABELS: Record<ConstraintPreset, string> = {
 
 interface PartPanelProps {
   part: Part
-  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
+  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation'>>) => void
   constraints?: Constraint[]
   allParts?: Part[]
   onAddConstraint?: (c: Omit<Constraint, 'id'>) => void
@@ -401,6 +401,22 @@ export default function PartPanel({
           <button type="button" onClick={onEyedropperActivate} aria-label="Eyedropper">Pick</button>
         )}
       </div>
+      {part.parentId && (
+        <div className="part-panel-operation" aria-label="Operation">
+          <button
+            type="button"
+            className={part.operation === 'add' ? 'active' : ''}
+            onClick={() => onUpdate({ operation: 'add' })}
+            aria-label="Add operation"
+          >Add</button>
+          <button
+            type="button"
+            className={part.operation !== 'add' ? 'active' : ''}
+            onClick={() => onUpdate({ operation: 'subtract' })}
+            aria-label="Subtract operation"
+          >Subtract</button>
+        </div>
+      )}
       {!part.parentId && (
         <div className="part-panel-edit-cuts">
           {isModifying
@@ -409,7 +425,8 @@ export default function PartPanel({
           }
         </div>
       )}
-      <div className="part-panel-constraints">
+      {!part.parentId && (
+        <div className="part-panel-constraints">
         <div className="part-panel-constraints-header">
           <strong>Constraints</strong>
           {onAddConstraint && !addingConstraint && (
@@ -507,6 +524,7 @@ export default function PartPanel({
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

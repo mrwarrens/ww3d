@@ -244,6 +244,56 @@
     .visibility-btn:hover {
       opacity: 1;
     }
+    #cuts-list {
+      position: absolute;
+      top: 320px;
+      left: 10px;
+      width: 200px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 1;
+    }
+    #cuts-list ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #cuts-list li {
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #cuts-list li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    #cuts-list li.selected {
+      background: rgba(255,255,255,0.2);
+    }
+    #cuts-list li.cuts-empty {
+      opacity: 0.4;
+      cursor: default;
+    }
+    #cuts-list li.cuts-empty:hover {
+      background: transparent;
+    }
+    #cuts-list .cuts-heading {
+      font-weight: bold;
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 10px 2px;
+    }
+    .cuts-indicator {
+      opacity: 0.5;
+      font-size: 11px;
+      margin-left: 4px;
+    }
     #camera-presets {
       position: absolute;
       top: 50px;
@@ -266,6 +316,34 @@
     }
     #camera-presets button:hover {
       background: rgba(255,255,255,0.15);
+    }
+    .part-panel-operation {
+      display: flex;
+      flex-direction: row;
+      margin-top: 6px;
+    }
+    .part-panel-operation button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      border-radius: 0;
+      cursor: pointer;
+    }
+    .part-panel-operation button:first-child {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+    .part-panel-operation button:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+    .part-panel-operation button.active {
+      background: rgba(255,255,255,0.25);
+    }
+    .part-panel-operation button:not(.active):hover {
+      background: rgba(255,255,255,0.1);
     }
   </style>
 </head>

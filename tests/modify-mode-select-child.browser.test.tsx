@@ -73,6 +73,12 @@ describe('PartPanel with child part', () => {
     expect(onUpdate).toHaveBeenCalledWith({ operation: 'subtract' })
   })
 
+  it('operation container div has aria-label="Operation"', async () => {
+    const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
+    const opDiv = container.querySelector('.part-panel-operation')
+    expect(opDiv?.getAttribute('aria-label')).toBe('Operation')
+  })
+
   it('hides Constraints section for a child part', async () => {
     const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
     const constraintsDiv = container.querySelector('.part-panel-constraints')
