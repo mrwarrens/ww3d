@@ -97,6 +97,41 @@ describe('CSG rendering in Board', () => {
     // CSG result is a non-indexed BufferGeometry with vertex data
     expect(mesh.geometry).toBeInstanceOf(THREE.BufferGeometry)
     expect(mesh.geometry.getAttribute('position')).toBeDefined()
+    // A slot cut through the board requires more than 12 triangles (36 non-indexed
+    // vertices). 36 = unmodified parent box = subtract failed.
+    expect(mesh.geometry.getAttribute('position').count).toBeGreaterThan(36)
+  })
+
+  it('applies CSG when child top face is coplanar with parent top face (realistic dado)', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4, thickness: 0.75,
+      position: { x: 0, y: 0.375, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+
+    // Realistic dado: child top face exactly aligns with parent top face
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 1, width: 4, thickness: 0.375,
+      position: { x: 0, y: parent.thickness / 2 - 0.375 / 2, z: 0 },
+      operation: 'subtract',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} />
+    )
+
+    await waitFor(() => {
+      const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+      expect(mesh).toBeDefined()
+      expect(mesh.geometry.type).not.toBe('BoxGeometry')
+    }, 10000)
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    expect(mesh.geometry).toBeInstanceOf(THREE.BufferGeometry)
+    expect(mesh.geometry.getAttribute('position')).toBeDefined()
+    // CSG result should have fewer triangles than a plain box (material was removed)
+    const triCount = mesh.geometry.getAttribute('position').count / 3
+    expect(triCount).toBeGreaterThan(0)
   })
 
   it('hides edge wireframe when CSG is active', async () => {

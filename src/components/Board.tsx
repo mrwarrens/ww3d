@@ -121,21 +121,25 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       let result = Manifold.cube([length, thickness, width], true)
 
       for (const child of currentChildren) {
-        let childMf = Manifold.cube([child.length, child.thickness, child.width], true)
+        const op = child.operation ?? 'subtract'
+        // For subtract ops, extend child slightly beyond parent in Z (width) and Y
+        // (thickness) to avoid coplanar face issues. child.width always equals
+        // parent.width (dado spans full board depth) and the child top often lands
+        // exactly on the parent top face, both causing coplanar faces that Manifold
+        // can't cleanly subtract. A small extension avoids this.
+        const cWid = op === 'subtract' ? child.width + 0.01 : child.width
+        const cThk = op === 'subtract' ? child.thickness + 0.01 : child.thickness
+        let childMf = Manifold.cube([child.length, cThk, cWid], true)
 
-        const euler = new THREE.Euler(child.rotation.x, child.rotation.y, child.rotation.z)
-        const mat4 = new THREE.Matrix4().makeRotationFromEuler(euler)
-        mat4.setPosition(child.position.x, child.position.y, child.position.z)
-        const e = mat4.elements
-        const mat4x3: [number, number, number, number, number, number, number, number, number, number, number, number] = [
-          e[0], e[1], e[2],
-          e[4], e[5], e[6],
-          e[8], e[9], e[10],
-          e[12], e[13], e[14],
-        ]
-        childMf = childMf.transform(mat4x3)
+        // Manifold v3 transform() takes a full 4×4 column-major Mat4 (16 elements),
+        // same layout as THREE.Matrix4.elements — do NOT use the old 12-element mat4x3.
+        const mat4 = new THREE.Matrix4()
+          .makeRotationFromEuler(new THREE.Euler(child.rotation.x, child.rotation.y, child.rotation.z))
+          .setPosition(child.position.x, child.position.y, child.position.z)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        childMf = childMf.transform(mat4.elements as any)
 
-        if ((child.operation ?? 'subtract') === 'subtract') {
+        if (op === 'subtract') {
           result = result.subtract(childMf)
         } else {
           result = result.add(childMf)

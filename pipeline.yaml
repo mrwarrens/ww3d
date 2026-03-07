@@ -375,38 +375,65 @@ tasks:
     name: "Modify mode: draw child volumes"
     description: "While modifyingPartId is set, drag-to-create on the grid plane calls addChildPart(modifyingPartId, ...) instead of addPart. The new child part has operation:'subtract' by default. Child position is stored in parent-local space (subtract parent's world position from the drag result). Default child dimensions: 3/4\" wide × 3/8\" thick × parent width (a sensible dado starting point). The newly created child becomes the active selection (set selectedIds to the new child's id)."
     deps: [58, 60]
-    status: ready
+    status: done
   - id: 62
     phase: 4
     name: "Modify mode: visualize children"
     description: "While in modify mode for a parent part, render each child part as a ghost wireframe overlay on top of the CSG result — a <lineSegments> EdgesGeometry in a light color (e.g. rgba white at 50% opacity) with no fill mesh. operation:'add' children render as a semi-transparent solid (distinct tint, e.g. green at 20% opacity). Outside modify mode, children are invisible — only the CSG result is shown. The ghost wireframe is clickable (used in #63 to select the child)."
     deps: [59, 60]
-    status: pending
-
+    status: done
   - id: 63
     phase: 4
     name: "Modify mode: select and edit children"
     description: "Clicking a child ghost wireframe in modify mode sets selectedIds to that child's id. PartPanel detects the selected part has a parentId and renders a child-specific view: L/W/T inputs, Rx/Ry/Rz inputs, Px/Py/Pz inputs (in parent-local space), and an add/subtract operation toggle. Constraints section is hidden for children. All existing fractional-inch inputs, blur/Enter commit, and arrow-key increment/decrement work unchanged."
     deps: [61, 62]
-    status: pending
-
+    status: done
   - id: 64
     phase: 4
     name: "Modify mode: delete children"
     description: "While in modify mode, pressing Delete/Backspace with a child part selected calls removeChildPart(selectedId). The parent's CSG result recomputes. Selection clears. The action is captured in undo history so Cmd+Z restores the deleted child."
     deps: [63]
-    status: pending
-
+    status: done
   - id: 65
     phase: 4
     name: Undo/redo for child operations
     description: "Verify that addChildPart, removeChildPart, and updatePart (when called on a child) are all captured as snapshots in the undo history stack in projectStore.ts — the same pattern used for top-level part mutations. Write unit tests covering: undo after addChildPart restores no children; undo after removeChildPart restores the child; undo after updatePart on a child restores previous dimensions."
     deps: [61, 64]
-    status: pending
-
+    status: done
   - id: 66
     phase: 4
     name: Cuts list in modify mode
     description: "Create a CutsList component (src/components/CutsList.tsx) rendered by App.tsx only while modifyingPartId is set. It lists the active parent's children by name, one row per child. Clicking a row sets selectedIds to that child's id (same as clicking its ghost wireframe in the viewport). The selected child row is highlighted. Style consistently with PartsList. Children are not shown in PartsList outside of modify mode — only the parent row appears there, with a small indicator icon (e.g. a scissors symbol) when the part has one or more children."
     deps: [60, 61]
-    status: pending
+    status: done
+
+  - id: 67
+    phase: 4
+    name: "Bug: selecting a child cut does not highlight it in the 3D viewport"
+    description: "When a child cut is selected (via CutsList row click or clicking its ghost wireframe), the selection is not visually highlighted in the 3D viewport. The selected child's ghost wireframe should render with a distinct highlight — e.g. a brighter/thicker edge color or a different material — to confirm which cut is active. The ChildGhost component in Board.tsx needs to accept an isSelected prop and change its visual treatment accordingly."
+    deps: [63, 66]
+    status: accepted
+  - id: 68
+    phase: 4
+    name: "Bug: exiting cut editing mode does not apply cuts to the part"
+    description: "After drawing cut volumes in modify mode and exiting (Escape or Done button), the parent part renders as a plain unmodified box — the subtraction/addition CSG operations are not reflected. The Board CSG computation may not be triggering correctly when children exist, or the geometry is being reset on mode exit. Investigate the useEffect deps in Board.tsx that drive CSG recomputation and verify that child parts written by addChildPart are present in the store and visible to the Board's children selector when modify mode exits."
+    deps: [59, 61]
+    status: done
+  - id: 69
+    phase: 4
+    name: Operation toggle — segmented control in PartPanel
+    description: "Replace the Add/Subtract operation buttons in PartPanel (shown when a child cut is selected) with a segmented control: two buttons side by side where the active option has a filled/highlighted background and the inactive one is outlined. Style consistently with the camera preset buttons (1 Front / 2 Right / 3 Top / 4 Iso). The control reads the selected child's operation value from the store and calls updatePart to toggle it. Should only be visible when the selected part has a parentId."
+    deps: [63]
+    status: accepted
+  - id: 71
+    phase: 3
+    name: "Bug: duplicate part offsets X/Z position"
+    description: "When duplicating a part (Cmd+D), the duplicate should appear in the same X/Z position as the original — only offset in Y (up) so it is distinguishable but sits in place. Currently the duplicate is offset in X and Z, which moves it away from the original unexpectedly. Change duplicatePart in projectStore.ts to apply zero X/Z offset and a small Y offset (e.g. 1\") only."
+    deps: [9]
+    status: accepted
+  - id: 70
+    phase: 3
+    name: Collapsible assembly groups in parts list
+    description: "Add expand/collapse toggle to each assembly row in PartsList. Clicking the toggle (a ▶/▼ chevron) shows or hides the nested part rows for that assembly. Default state is expanded. Collapsed state is local UI state (does not persist to the project store or save file). When collapsed, only the assembly header row is visible — its part rows are hidden. The toggle should not interfere with assembly selection (clicking the row name still selects the assembly). This addresses the parts list growing too long to fit on screen when projects have many parts."
+    deps: [29]
+    status: accepted
