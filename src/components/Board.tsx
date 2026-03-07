@@ -9,7 +9,7 @@ const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true
 const ghostLineMat = new THREE.LineBasicMaterial({ color: 0xcccccc, transparent: true, opacity: 0.8 })
 const ghostSolidMat = new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide })
 
-function ChildGhost({ child, onSelect }: { child: Part; onSelect: () => void }) {
+function ChildGhost({ child, onSelect, onMeshRef }: { child: Part; onSelect: () => void; onMeshRef?: (mesh: THREE.Mesh | null) => void }) {
   const geo = useMemo(() => {
     const box = new THREE.BoxGeometry(child.length, child.thickness, child.width)
     const edges = new THREE.EdgesGeometry(box)
@@ -27,6 +27,7 @@ function ChildGhost({ child, onSelect }: { child: Part; onSelect: () => void }) 
   if ((child.operation ?? 'subtract') === 'add') {
     return (
       <mesh
+        ref={(m) => onMeshRef?.(m)}
         name="child-ghost"
         position={[child.position.x, child.position.y, child.position.z]}
         rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
@@ -38,15 +39,28 @@ function ChildGhost({ child, onSelect }: { child: Part; onSelect: () => void }) 
     )
   }
 
+  // subtract case: lineSegments can't be used by Outline, so render an invisible
+  // sibling mesh purely for the selection highlight effect
   return (
-    <lineSegments
-      name="child-ghost"
-      geometry={geo}
-      material={ghostLineMat}
-      position={[child.position.x, child.position.y, child.position.z]}
-      rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
-      onClick={handleClick}
-    />
+    <>
+      <lineSegments
+        name="child-ghost"
+        geometry={geo}
+        material={ghostLineMat}
+        position={[child.position.x, child.position.y, child.position.z]}
+        rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
+        onClick={handleClick}
+      />
+      <mesh
+        ref={(m) => onMeshRef?.(m)}
+        position={[child.position.x, child.position.y, child.position.z]}
+        rotation={[child.rotation.x, child.rotation.y, child.rotation.z]}
+        raycast={() => null}
+      >
+        <boxGeometry args={[child.length, child.thickness, child.width]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+    </>
   )
 }
 
@@ -59,9 +73,10 @@ interface BoardProps extends Part {
   dimmed?: boolean
   isModifying?: boolean
   onChildSelect?: (childId: string) => void
+  onChildMeshRef?: (childId: string, mesh: THREE.Mesh | null) => void
 }
 
-const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick, dimmed, isModifying, onChildSelect }, ref) {
+const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, width, thickness, position, rotation, color, isSelected, onSelect, onDragStart, onDoubleClick, onEyedropperClick, dimmed, isModifying, onChildSelect, onChildMeshRef }, ref) {
   const allParts = useProjectStore(s => s.project.parts)
   const children = useMemo(() => allParts.filter(p => p.parentId === id), [allParts, id])
 
@@ -183,7 +198,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       {!csgGeo && <lineSegments geometry={edgesGeo} material={lineMat} />}
       {isModifying && children.map(child => (
-        <ChildGhost key={child.id} child={child} onSelect={() => onChildSelect?.(child.id)} />
+        <ChildGhost key={child.id} child={child} onSelect={() => onChildSelect?.(child.id)} onMeshRef={(mesh) => onChildMeshRef?.(child.id, mesh)} />
       ))}
     </mesh>
   )

@@ -99,6 +99,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
   const removeParts = useProjectStore((s) => s.removeParts)
+  const removeChildPart = useProjectStore((s) => s.removeChildPart)
   const duplicateParts = useProjectStore((s) => s.duplicateParts)
   const movePart = useProjectStore((s) => s.movePart)
   const gl = useThree((s) => s.gl)
@@ -118,6 +119,20 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   }, [eyedropperActive, gl.domElement])
 
   const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map())
+  const childMeshRefs = useRef<Map<string, THREE.Mesh>>(new Map())
+
+  const handleChildMeshRef = useCallback((childId: string, mesh: THREE.Mesh | null) => {
+    if (mesh) childMeshRefs.current.set(childId, mesh)
+    else childMeshRefs.current.delete(childId)
+  }, [])
+
+  // Refs for values used in the keydown handler so it never reads stale closures.
+  // The handler is registered once (or when stable deps change), but always reads
+  // current selectedIds/parts via these refs.
+  const selectedIdsRef = useRef(selectedIds)
+  selectedIdsRef.current = selectedIds
+  const partsRef = useRef(parts)
+  partsRef.current = parts
 
   // Only livePos is state — it drives re-renders during drag.
   // Everything else is in refs so handlers never go stale.
@@ -134,9 +149,16 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Read current values from refs to avoid stale closure issues
+      const selectedIds = selectedIdsRef.current
+      const parts = partsRef.current
       const isTyping = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length > 0 && !isTyping) {
-        removeParts(selectedIds)
+        if (selectedIds.length === 1 && parts.find((p) => p.id === selectedIds[0])?.parentId) {
+          removeChildPart(selectedIds[0])
+        } else {
+          removeParts(selectedIds)
+        }
         onSelectIds([])
       }
       if (e.key === 'Escape') {
@@ -157,7 +179,9 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedIds, isAssemblySelected, removeParts, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode])
+    // selectedIds and parts are read via refs — excluded from deps intentionally
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAssemblySelected, removeParts, removeChildPart, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
@@ -279,11 +303,12 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
           dimmed={modifyingPartId != null && p.id !== modifyingPartId}
           isModifying={modifyingPartId === p.id}
           onChildSelect={(childId) => onSelectIds([childId])}
+          onChildMeshRef={handleChildMeshRef}
         />
       ))}
 
       <EffectComposer autoClear={false}>
-        <Outline selection={selectedIds.flatMap((id) => { const m = meshRefs.current.get(id); return m ? [m] : [] })} edgeStrength={5} />
+        <Outline selection={selectedIds.flatMap((id) => { const m = meshRefs.current.get(id) ?? childMeshRefs.current.get(id); return m ? [m] : [] })} edgeStrength={5} />
       </EffectComposer>
     </>
   )
