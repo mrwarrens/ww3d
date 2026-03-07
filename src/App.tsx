@@ -4,6 +4,7 @@ import Scene from './components/Scene'
 import AssemblyPanel from './components/AssemblyPanel'
 import PartPanel from './components/PartPanel'
 import PartsList from './components/PartsList'
+import CutsList from './components/CutsList'
 import { useProjectStore } from './stores/projectStore'
 import { serializeProject, deserializeProject } from './models/Project'
 import type { CAMERA_PRESETS } from './utils/constants'
@@ -40,13 +41,26 @@ export default function App() {
   const redo = useProjectStore((s) => s.redo)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
   const selectedAssembly = assemblies.find((a) => a.id === selectedAssemblyId) ?? null
+  const topLevelParts = parts.filter((p) => !p.parentId)
+  const childParts = modifyingPartId ? parts.filter((p) => p.parentId === modifyingPartId) : []
+  const partsWithCuts = new Set(parts.filter((p) => p.parentId).map((p) => p.parentId as string))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraPresetRef = useRef<((name: keyof typeof CAMERA_PRESETS) => void) | null>(null)
 
   const handleSelectIds = useCallback((ids: string[]) => {
     setSelectedIds(ids)
     setSelectedAssemblyId(null)
-    setModifyingPartId((prev) => (prev && ids.includes(prev) ? prev : null))
+    setModifyingPartId((prev) => {
+      if (!prev) return null
+      if (ids.length === 0) return prev
+      if (ids.includes(prev)) return prev
+      // Keep modify mode if selecting a single child of the modifying part.
+      // Read directly from the store (not the closure) so we always see the latest state,
+      // even if a child was just added and React hasn't re-rendered yet.
+      const latestParts = useProjectStore.getState().project.parts
+      if (ids.length === 1 && latestParts.find((p) => p.id === ids[0])?.parentId === prev) return prev
+      return null
+    })
   }, [])
 
   const handleSelectAssembly = useCallback((id: string | null) => {
@@ -196,9 +210,17 @@ export default function App() {
           onExitModifyMode={() => setModifyingPartId(null)}
         />
       )}
+      {modifyingPartId && (
+        <CutsList
+          children={childParts}
+          selectedIds={selectedIds}
+          onSelectIds={handleSelectIds}
+        />
+      )}
       <PartsList
-        parts={parts}
+        parts={topLevelParts}
         assemblies={assemblies}
+        partsWithCuts={partsWithCuts}
         selectedIds={selectedIds}
         onSelectIds={handleSelectIds}
         selectedAssemblyId={selectedAssemblyId}
