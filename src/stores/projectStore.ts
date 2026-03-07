@@ -15,7 +15,7 @@ interface ProjectStore {
   duplicatePart: (id: string) => string | null
   duplicateParts: (ids: string[]) => string[]
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
-  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position'>>) => void
+  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation'>>) => void
   togglePartVisibility: (id: string) => void
   toggleAssemblyVisibility: (id: string) => void
   duplicateAssembly: (id: string) => string | null
@@ -88,7 +88,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const newPart: Part = {
       ...source,
       id: newId,
-      position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
+      position: { ...source.position, y: source.position.y + 1 },
     }
     const current = get().project
     set((state) => ({
@@ -109,7 +109,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       return [{
         ...source,
         id: crypto.randomUUID(),
-        position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
+        position: { ...source.position, y: source.position.y + 1 },
       }]
     })
     const newIds = newParts.map((p) => p.id)

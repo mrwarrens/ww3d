@@ -253,16 +253,16 @@ describe('projectStore', () => {
     expect(copy.name).toBe(original.name)
   })
 
-  it('duplicatePart offsets position by x+1 and z+1', () => {
+  it('duplicatePart offsets position by y+1, preserving x and z', () => {
     useProjectStore.getState().addPart(baseInit)
     const original = useProjectStore.getState().project.parts[0]
 
     useProjectStore.getState().duplicatePart(original.id)
 
     const copy = useProjectStore.getState().project.parts[1]
-    expect(copy.position.x).toBe(original.position.x + 1)
-    expect(copy.position.z).toBe(original.position.z + 1)
-    expect(copy.position.y).toBe(original.position.y)
+    expect(copy.position.x).toBe(original.position.x)
+    expect(copy.position.z).toBe(original.position.z)
+    expect(copy.position.y).toBe(original.position.y + 1)
   })
 
   it('duplicatePart with unknown id returns null and leaves parts unchanged', () => {
@@ -968,16 +968,16 @@ describe('projectStore', () => {
       expect(newIds[1]).not.toBe(ids[1])
     })
 
-    it('offsets each duplicate position by x+1 and z+1', () => {
+    it('offsets each duplicate position by y+1, preserving x and z', () => {
       useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 3 } })
       const original = useProjectStore.getState().project.parts[0]
 
       const [newId] = useProjectStore.getState().duplicateParts([original.id])
 
       const copy = useProjectStore.getState().project.parts.find((p) => p.id === newId)!
-      expect(copy.position.x).toBe(original.position.x + 1)
-      expect(copy.position.z).toBe(original.position.z + 1)
-      expect(copy.position.y).toBe(original.position.y)
+      expect(copy.position.x).toBe(original.position.x)
+      expect(copy.position.z).toBe(original.position.z)
+      expect(copy.position.y).toBe(original.position.y + 1)
     })
 
     it('skips unknown ids and returns only ids for valid parts', () => {
