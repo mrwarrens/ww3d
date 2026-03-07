@@ -88,7 +88,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const newPart: Part = {
       ...source,
       id: newId,
-      position: { ...source.position, y: source.position.y + 1 },
+      position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
     }
     const current = get().project
     set((state) => ({
@@ -109,7 +109,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       return [{
         ...source,
         id: crypto.randomUUID(),
-        position: { ...source.position, y: source.position.y + 1 },
+        position: { ...source.position, x: source.position.x + 1, z: source.position.z + 1 },
       }]
     })
     const newIds = newParts.map((p) => p.id)

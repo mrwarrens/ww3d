@@ -188,7 +188,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       e.stopPropagation()
       return
     }
-    if (!isSelected) return
+    if (!isSelected || isModifying) return
     e.stopPropagation()
     onDragStart?.(e)
   }
