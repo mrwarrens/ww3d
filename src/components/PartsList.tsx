@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Part } from '../models/Part'
 import { Assembly } from '../models/Assembly'
 
@@ -14,9 +14,10 @@ interface PartsListProps {
   onAddAssembly: () => void
   onAssignPart: (partId: string, assemblyId: string) => void
   onRemoveFromAssembly: (partId: string) => void
+  partsWithCuts?: Set<string>
 }
 
-function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedIdxRef, onToggleVisibility, onRemoveFromAssembly }: {
+function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedIdxRef, onToggleVisibility, onRemoveFromAssembly, partsWithCuts }: {
   part: Part
   index: number
   allParts: Part[]
@@ -25,6 +26,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
   lastClickedIdxRef: React.MutableRefObject<number>
   onToggleVisibility: (id: string) => void
   onRemoveFromAssembly: (partId: string) => void
+  partsWithCuts?: Set<string>
 }) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -64,6 +66,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
       onDragStart={(e) => e.dataTransfer.setData('text/plain', part.id)}
     >
       {part.name}
+      {partsWithCuts?.has(part.id) && <span className="cuts-indicator">✂</span>}
       <button
         className="visibility-btn"
         onClick={(e) => { e.stopPropagation(); onToggleVisibility(part.id) }}
@@ -75,8 +78,18 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
   )
 }
 
-export default function PartsList({ parts, assemblies, selectedIds, onSelectIds, selectedAssemblyId, onSelectAssembly, onToggleVisibility, onToggleAssemblyVisibility, onAddAssembly, onAssignPart, onRemoveFromAssembly }: PartsListProps) {
+export default function PartsList({ parts, assemblies, selectedIds, onSelectIds, selectedAssemblyId, onSelectAssembly, onToggleVisibility, onToggleAssemblyVisibility, onAddAssembly, onAssignPart, onRemoveFromAssembly, partsWithCuts }: PartsListProps) {
   const lastClickedIdxRef = useRef<number>(-1)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  function toggleCollapsed(assemblyId: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(assemblyId)) next.delete(assemblyId)
+      else next.add(assemblyId)
+      return next
+    })
+  }
   const unassignedParts = parts.filter((p) => !p.assemblyId)
   const visualOrder: Part[] = [
     ...assemblies.flatMap((a) => parts.filter((p) => p.assemblyId === a.id)),
@@ -101,6 +114,13 @@ export default function PartsList({ parts, assemblies, selectedIds, onSelectIds,
                 if (draggedPartId) onAssignPart(draggedPartId, assembly.id)
               }}
             >
+              <button
+                className="collapse-btn"
+                onClick={(e) => { e.stopPropagation(); toggleCollapsed(assembly.id) }}
+                aria-label={collapsed.has(assembly.id) ? 'Expand' : 'Collapse'}
+              >
+                {collapsed.has(assembly.id) ? '▶' : '▼'}
+              </button>
               {assembly.name}
               <button
                 className="visibility-btn"
@@ -109,21 +129,24 @@ export default function PartsList({ parts, assemblies, selectedIds, onSelectIds,
               >
                 {assembly.visible !== false ? '●' : '○'}
               </button>
-              <ul>
-                {members.map((part) => (
-                  <PartRow
-                    key={part.id}
-                    part={part}
-                    index={visualOrder.indexOf(part)}
-                    allParts={visualOrder}
-                    selectedIds={selectedIds}
-                    onSelectIds={onSelectIds}
-                    lastClickedIdxRef={lastClickedIdxRef}
-                    onToggleVisibility={onToggleVisibility}
-                    onRemoveFromAssembly={onRemoveFromAssembly}
-                  />
-                ))}
-              </ul>
+              {!collapsed.has(assembly.id) && (
+                <ul>
+                  {members.map((part) => (
+                    <PartRow
+                      key={part.id}
+                      part={part}
+                      index={visualOrder.indexOf(part)}
+                      allParts={visualOrder}
+                      selectedIds={selectedIds}
+                      onSelectIds={onSelectIds}
+                      lastClickedIdxRef={lastClickedIdxRef}
+                      onToggleVisibility={onToggleVisibility}
+                      onRemoveFromAssembly={onRemoveFromAssembly}
+                      partsWithCuts={partsWithCuts}
+                    />
+                  ))}
+                </ul>
+              )}
             </li>
           )
         })}
@@ -138,6 +161,7 @@ export default function PartsList({ parts, assemblies, selectedIds, onSelectIds,
             lastClickedIdxRef={lastClickedIdxRef}
             onToggleVisibility={onToggleVisibility}
             onRemoveFromAssembly={onRemoveFromAssembly}
+            partsWithCuts={partsWithCuts}
           />
         ))}
       </ul>

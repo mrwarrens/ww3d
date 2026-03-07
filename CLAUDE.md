@@ -49,7 +49,8 @@ src/
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
     AssemblyPanel.tsx   # DOM overlay for assembly selection: editable assembly name and position (Px/Py/Pz)
     PartPanel.tsx       # DOM overlay for part selection: editable name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper, constraint add/remove UI
-    PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button
+    PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned top-level parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button; ✂ indicator on parts with cuts
+    CutsList.tsx        # Panel shown in modify mode listing child cuts by name; click-to-select; selected highlight
   models/
     Part.ts             # Part interface and createPart factory
     Assembly.ts         # Assembly interface and createAssembly factory
@@ -82,6 +83,8 @@ tests/
   eyedropper.browser.test.tsx               # Browser-mode tests for eyedropper color pick
   axis-lines.browser.test.tsx               # Browser-mode tests for axis lines toggle
   csg-board.browser.test.tsx                # Browser-mode tests for CSG rendering (plain-box vs computed geometry)
+  cuts-list.browser.test.tsx                # Browser-mode tests for CutsList component and PartsList cuts indicator
+  collapsible-assembly.browser.test.tsx     # Browser-mode tests for collapsible assembly groups in PartsList
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   projectStore.test.ts    # Unit tests for Zustand store
