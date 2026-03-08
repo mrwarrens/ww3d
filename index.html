@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ww3d</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+    #help-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 1;
+      cursor: pointer;
+    }
+    #help-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #help-pane {
+      position: absolute;
+      top: 46px;
+      left: 10px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(20,20,20,1);
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 10;
+      max-width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .help-section {
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .help-section:first-child {
+      margin-top: 0;
+    }
+    .help-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 2px 0;
+    }
+    .help-row span:last-child {
+      color: rgba(255,255,255,0.55);
+      text-align: right;
+    }
+    #part-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px 14px;
+      border-radius: 4px;
+      z-index: 1;
+    }
+    .part-panel-name {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .part-panel-dims {
+      display: flex;
+      gap: 14px;
+      opacity: 0.85;
+    }
+    .part-panel-dims label {
+      display: flex;
+      align-items: center;
+    }
+    .part-panel-input {
+      background: transparent;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      padding: 1px 3px;
+      outline: none;
+    }
+    .part-panel-input:focus {
+      border-color: rgba(255,255,255,0.4);
+    }
+    .part-panel-dim-input {
+      width: 7em;
+    }
+    .part-panel-color {
+      margin-top: 6px;
+      opacity: 0.85;
+    }
+    .part-panel-color label {
+      display: flex;
+      align-items: center;
+    }
+    .part-panel-color input[type="color"] {
+      width: 28px;
+      height: 20px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 2px;
+      background: transparent;
+      cursor: pointer;
+    }
+    #save-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 1;
+      cursor: pointer;
+    }
+    #save-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #load-btn {
+      position: absolute;
+      top: 10px;
+      right: 74px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 1;
+      cursor: pointer;
+    }
+    #load-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #grid-controls {
+      position: absolute;
+      top: 10px;
+      right: 148px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 1;
+    }
+    #grid-controls button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #grid-controls button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #grid-pane {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      padding: 4px;
+      z-index: 1;
+    }
+    #parts-list {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+      width: 200px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 1;
+    }
+    #parts-list ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #parts-list li {
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #parts-list li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    #parts-list li.selected {
+      background: rgba(255,255,255,0.2);
+    }
+    #parts-list .assembly-row {
+      display: block;
+    }
+    #parts-list .assembly-row > ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 12px;
+    }
+    .visibility-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: monospace;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      width: 16px;
+      line-height: 1;
+      opacity: 0.7;
+    }
+    .visibility-btn:hover {
+      opacity: 1;
+    }
+    #cuts-list {
+      position: absolute;
+      top: 320px;
+      left: 10px;
+      width: 200px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 1;
+    }
+    #cuts-list ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #cuts-list li {
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #cuts-list li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    #cuts-list li.selected {
+      background: rgba(255,255,255,0.2);
+    }
+    #cuts-list li.cuts-empty {
+      opacity: 0.4;
+      cursor: default;
+    }
+    #cuts-list li.cuts-empty:hover {
+      background: transparent;
+    }
+    #cuts-list .cuts-heading {
+      font-weight: bold;
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 10px 2px;
+    }
+    .cuts-indicator {
+      opacity: 0.5;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    #camera-presets {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 1;
+    }
+    #camera-presets button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+    }
+    #camera-presets button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .part-panel-operation {
+      display: flex;
+      flex-direction: row;
+      margin-top: 6px;
+    }
+    .part-panel-operation button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      border-radius: 0;
+      cursor: pointer;
+    }
+    .part-panel-operation button:first-child {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+    .part-panel-operation button:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+    .part-panel-operation button.active {
+      background: rgba(255,255,255,0.25);
+    }
+    .part-panel-operation button:not(.active):hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
+  <script type="module" crossorigin src="/ww3d/assets/index-DyGTRb00.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+</body>
+</html>
