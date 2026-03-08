@@ -11,6 +11,7 @@ export interface Part {
   assemblyId?: string
   parentId?: string
   operation?: 'add' | 'subtract'
+  shape?: 'box' | 'ellipse'
 }
 
 export type PartInit = {
@@ -24,6 +25,7 @@ export type PartInit = {
   visible?: boolean
   parentId?: string
   operation?: 'add' | 'subtract'
+  shape?: 'box' | 'ellipse'
 }
 
 export function createPart(init: PartInit): Part {
@@ -39,5 +41,6 @@ export function createPart(init: PartInit): Part {
     visible: init.visible ?? true,
     ...(init.parentId !== undefined && { parentId: init.parentId }),
     operation: init.operation ?? 'subtract',
+    shape: init.shape ?? 'box',
   }
 }
