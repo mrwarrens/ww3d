@@ -3,6 +3,7 @@
 #
 # Usage:
 #   ./scripts/accept-plan.sh          # List tasks in "done" status
+#   ./scripts/accept-plan.sh all      # Accept all done tasks
 #   ./scripts/accept-plan.sh <id>     # Accept by task ID
 #   ./scripts/accept-plan.sh <name>   # Accept by partial name match
 
@@ -99,8 +100,22 @@ if [[ $# -eq 0 ]]; then
   exit 0
 fi
 
-# Match argument to a task
+# "all" — accept every done task
 ARG="$1"
+if [[ "$ARG" == "all" ]]; then
+  tasks_found=false
+  while IFS=$'\t' read -r id phase name slug; do
+    [[ -n "$id" ]] || continue
+    tasks_found=true
+    accept_task "$id" "$phase" "$name" "$slug"
+  done < <(get_done_tasks)
+  if [[ "$tasks_found" == "false" ]]; then
+    echo "No tasks in 'done' status."
+  fi
+  exit 0
+fi
+
+# Match argument to a single task
 matched_id="" matched_phase="" matched_name="" matched_slug=""
 
 while IFS=$'\t' read -r id phase name slug; do

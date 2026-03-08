@@ -3,6 +3,7 @@ import { playwright } from '@vitest/browser-playwright'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  base: '/ww3d/',
   plugins: [react()],
   optimizeDeps: {
     include: ['zustand'],
