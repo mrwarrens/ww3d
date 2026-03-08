@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Part } from '../models/Part'
 import { toFractionalInches, parseInches } from '../utils/units'
+import { useEditableInput } from '../hooks/useEditableInput'
 
 interface PartPanelProps {
   part: Part
@@ -11,6 +12,10 @@ interface PartPanelProps {
   onExitModifyMode?: () => void
 }
 
+const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
+const parseRot = (s: string) => { const d = parseFloat(s); if (isNaN(d)) throw new Error(); return d }
+const formatRot = (v: number) => v.toFixed(1)
+
 export default function PartPanel({
   part,
   onUpdate,
@@ -19,38 +24,67 @@ export default function PartPanel({
   onEnterModifyMode,
   onExitModifyMode,
 }: PartPanelProps) {
-  const [draftName, setDraftName] = useState('')
-  const [draftLength, setDraftLength] = useState('')
-  const [draftWidth, setDraftWidth] = useState('')
-  const [draftThickness, setDraftThickness] = useState('')
-  const [draftRotX, setDraftRotX] = useState('')
-  const [draftRotY, setDraftRotY] = useState('')
-  const [draftRotZ, setDraftRotZ] = useState('')
-  const [draftPosX, setDraftPosX] = useState('')
-  const [draftPosY, setDraftPosY] = useState('')
-  const [draftPosZ, setDraftPosZ] = useState('')
+  const [draftName, setDraftName] = useState(part.name)
   const skipBlurRef = useRef(false)
-
-  const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
 
   useEffect(() => {
     setDraftName(part.name)
-    setDraftLength(toFractionalInches(part.length))
-    setDraftWidth(toFractionalInches(part.width))
-    setDraftThickness(toFractionalInches(part.thickness))
-    setDraftRotX(radToDeg(part.rotation.x))
-    setDraftRotY(radToDeg(part.rotation.y))
-    setDraftRotZ(radToDeg(part.rotation.z))
-    setDraftPosX(toFractionalInches(part.position.x))
-    setDraftPosY(toFractionalInches(part.position.y))
-    setDraftPosZ(toFractionalInches(part.position.z))
-  }, [part.id])
+  }, [part.id, part.name])
 
-  useEffect(() => {
-    setDraftPosX(toFractionalInches(part.position.x))
-    setDraftPosY(toFractionalInches(part.position.y))
-    setDraftPosZ(toFractionalInches(part.position.z))
-  }, [part.id, part.position.x, part.position.y, part.position.z])
+  const lenInput = useEditableInput({
+    externalValue: toFractionalInches(part.length),
+    parse: parseInches, format: toFractionalInches,
+    validate: v => v > 0, onCommit: v => onUpdate({ length: v }),
+    step: 0.0625, minValue: 0.0625, skipBlurRef,
+  })
+  const widInput = useEditableInput({
+    externalValue: toFractionalInches(part.width),
+    parse: parseInches, format: toFractionalInches,
+    validate: v => v > 0, onCommit: v => onUpdate({ width: v }),
+    step: 0.0625, minValue: 0.0625, skipBlurRef,
+  })
+  const thkInput = useEditableInput({
+    externalValue: toFractionalInches(part.thickness),
+    parse: parseInches, format: toFractionalInches,
+    validate: v => v > 0, onCommit: v => onUpdate({ thickness: v }),
+    step: 0.0625, minValue: 0.0625, skipBlurRef,
+  })
+  const rotXInput = useEditableInput({
+    externalValue: radToDeg(part.rotation.x),
+    parse: parseRot, format: formatRot,
+    onCommit: v => onUpdate({ rotation: { ...part.rotation, x: v * Math.PI / 180 } }),
+    step: 1, skipBlurRef,
+  })
+  const rotYInput = useEditableInput({
+    externalValue: radToDeg(part.rotation.y),
+    parse: parseRot, format: formatRot,
+    onCommit: v => onUpdate({ rotation: { ...part.rotation, y: v * Math.PI / 180 } }),
+    step: 1, skipBlurRef,
+  })
+  const rotZInput = useEditableInput({
+    externalValue: radToDeg(part.rotation.z),
+    parse: parseRot, format: formatRot,
+    onCommit: v => onUpdate({ rotation: { ...part.rotation, z: v * Math.PI / 180 } }),
+    step: 1, skipBlurRef,
+  })
+  const posXInput = useEditableInput({
+    externalValue: toFractionalInches(part.position.x),
+    parse: parseInches, format: toFractionalInches,
+    onCommit: v => onUpdate({ position: { ...part.position, x: v } }),
+    step: 0.0625, skipBlurRef,
+  })
+  const posYInput = useEditableInput({
+    externalValue: toFractionalInches(part.position.y),
+    parse: parseInches, format: toFractionalInches,
+    onCommit: v => onUpdate({ position: { ...part.position, y: v } }),
+    step: 0.0625, skipBlurRef,
+  })
+  const posZInput = useEditableInput({
+    externalValue: toFractionalInches(part.position.z),
+    parse: parseInches, format: toFractionalInches,
+    onCommit: v => onUpdate({ position: { ...part.position, z: v } }),
+    step: 0.0625, skipBlurRef,
+  })
 
   function commitName() {
     if (skipBlurRef.current) {
@@ -61,130 +95,7 @@ export default function PartPanel({
     if (trimmed) {
       onUpdate({ name: trimmed })
     } else {
-      setDraftName(part!.name)
-    }
-  }
-
-  function commitDim(
-    draft: string,
-    field: 'length' | 'width' | 'thickness',
-    resetValue: string
-  ) {
-    if (skipBlurRef.current) {
-      skipBlurRef.current = false
-      return
-    }
-    try {
-      const value = parseInches(draft)
-      if (value > 0) {
-        onUpdate({ [field]: value })
-        resetDim(toFractionalInches(value), field)
-      } else {
-        resetDim(resetValue, field)
-      }
-    } catch {
-      resetDim(resetValue, field)
-    }
-  }
-
-  function resetDim(resetValue: string, field: 'length' | 'width' | 'thickness') {
-    if (field === 'length') setDraftLength(resetValue)
-    else if (field === 'width') setDraftWidth(resetValue)
-    else setDraftThickness(resetValue)
-  }
-
-  function commitRot(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
-    if (skipBlurRef.current) {
-      skipBlurRef.current = false
-      return
-    }
-    const deg = parseFloat(draft)
-    if (!isNaN(deg)) {
-      const radians = deg * Math.PI / 180
-      onUpdate({ rotation: { ...part!.rotation, [axis]: radians } })
-    } else {
-      resetRot(resetValue, axis)
-    }
-  }
-
-  function resetRot(resetValue: string, axis: 'x' | 'y' | 'z') {
-    if (axis === 'x') setDraftRotX(resetValue)
-    else if (axis === 'y') setDraftRotY(resetValue)
-    else setDraftRotZ(resetValue)
-  }
-
-  function handleRotKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>,
-    draft: string,
-    axis: 'x' | 'y' | 'z',
-    resetValue: string
-  ) {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      let currentDeg = parseFloat(draft)
-      if (isNaN(currentDeg)) currentDeg = parseFloat(resetValue) || 0
-      const newDeg = currentDeg + (e.key === 'ArrowUp' ? 1 : -1)
-      const newStr = newDeg.toFixed(1)
-      if (axis === 'x') setDraftRotX(newStr)
-      else if (axis === 'y') setDraftRotY(newStr)
-      else setDraftRotZ(newStr)
-      onUpdate({ rotation: { ...part!.rotation, [axis]: newDeg * Math.PI / 180 } })
-    } else if (e.key === 'Enter') {
-      commitRot(draft, axis, resetValue)
-      skipBlurRef.current = true
-      e.currentTarget.blur()
-    } else if (e.key === 'Escape') {
-      skipBlurRef.current = true
-      resetRot(resetValue, axis)
-      e.currentTarget.blur()
-    }
-  }
-
-  function commitPos(draft: string, axis: 'x' | 'y' | 'z', resetValue: string) {
-    if (skipBlurRef.current) {
-      skipBlurRef.current = false
-      return
-    }
-    try {
-      const value = parseInches(draft)
-      onUpdate({ position: { ...part!.position, [axis]: value } })
-      resetPos(toFractionalInches(value), axis)
-    } catch {
-      resetPos(resetValue, axis)
-    }
-  }
-
-  function resetPos(resetValue: string, axis: 'x' | 'y' | 'z') {
-    if (axis === 'x') setDraftPosX(resetValue)
-    else if (axis === 'y') setDraftPosY(resetValue)
-    else setDraftPosZ(resetValue)
-  }
-
-  function handlePosKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>,
-    draft: string,
-    axis: 'x' | 'y' | 'z',
-    resetValue: string
-  ) {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      let current: number
-      try { current = parseInches(draft) } catch { try { current = parseInches(resetValue) } catch { current = 0 } }
-      const rawValue = current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625)
-      const newValue = parseFloat(rawValue.toFixed(10))
-      const newStr = toFractionalInches(newValue)
-      if (axis === 'x') setDraftPosX(newStr)
-      else if (axis === 'y') setDraftPosY(newStr)
-      else setDraftPosZ(newStr)
-      onUpdate({ position: { ...part!.position, [axis]: newValue } })
-    } else if (e.key === 'Enter') {
-      commitPos(draft, axis, resetValue)
-      skipBlurRef.current = true
-      e.currentTarget.blur()
-    } else if (e.key === 'Escape') {
-      skipBlurRef.current = true
-      resetPos(resetValue, axis)
-      e.currentTarget.blur()
+      setDraftName(part.name)
     }
   }
 
@@ -193,48 +104,12 @@ export default function PartPanel({
       e.currentTarget.blur()
     } else if (e.key === 'Escape') {
       skipBlurRef.current = true
-      setDraftName(part!.name)
-      e.currentTarget.blur()
-    }
-  }
-
-  function handleDimKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>,
-    draft: string,
-    field: 'length' | 'width' | 'thickness',
-    resetValue: string
-  ) {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      let current: number
-      try { current = parseInches(draft) } catch { try { current = parseInches(resetValue) } catch { current = 0.0625 } }
-      const newValue = Math.max(0.0625, current + (e.key === 'ArrowUp' ? 0.0625 : -0.0625))
-      const newStr = toFractionalInches(newValue)
-      if (field === 'length') setDraftLength(newStr)
-      else if (field === 'width') setDraftWidth(newStr)
-      else setDraftThickness(newStr)
-      onUpdate({ [field]: newValue })
-    } else if (e.key === 'Enter') {
-      commitDim(draft, field, resetValue)
-      skipBlurRef.current = true
-      e.currentTarget.blur()
-    } else if (e.key === 'Escape') {
-      skipBlurRef.current = true
-      resetDim(resetValue, field)
+      setDraftName(part.name)
       e.currentTarget.blur()
     }
   }
 
   const isEllipse = part.shape === 'ellipse'
-  const currentLength = toFractionalInches(part.length)
-  const currentWidth = toFractionalInches(part.width)
-  const currentThickness = toFractionalInches(part.thickness)
-  const currentRotX = radToDeg(part.rotation.x)
-  const currentRotY = radToDeg(part.rotation.y)
-  const currentRotZ = radToDeg(part.rotation.z)
-  const currentPosX = toFractionalInches(part.position.x)
-  const currentPosY = toFractionalInches(part.position.y)
-  const currentPosZ = toFractionalInches(part.position.z)
 
   return (
     <div id="part-panel">
@@ -255,10 +130,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftLength}
-            onChange={(e) => setDraftLength(e.target.value)}
-            onBlur={() => commitDim(draftLength, 'length', currentLength)}
-            onKeyDown={(e) => handleDimKeyDown(e, draftLength, 'length', currentLength)}
+            value={lenInput.draft}
+            onChange={(e) => lenInput.setDraft(e.target.value)}
+            onBlur={lenInput.onBlur}
+            onKeyDown={lenInput.onKeyDown}
             aria-label="Length"
           />
         </label>
@@ -267,10 +142,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftWidth}
-            onChange={(e) => setDraftWidth(e.target.value)}
-            onBlur={() => commitDim(draftWidth, 'width', currentWidth)}
-            onKeyDown={(e) => handleDimKeyDown(e, draftWidth, 'width', currentWidth)}
+            value={widInput.draft}
+            onChange={(e) => widInput.setDraft(e.target.value)}
+            onBlur={widInput.onBlur}
+            onKeyDown={widInput.onKeyDown}
             aria-label="Width"
           />
         </label>
@@ -279,10 +154,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftThickness}
-            onChange={(e) => setDraftThickness(e.target.value)}
-            onBlur={() => commitDim(draftThickness, 'thickness', currentThickness)}
-            onKeyDown={(e) => handleDimKeyDown(e, draftThickness, 'thickness', currentThickness)}
+            value={thkInput.draft}
+            onChange={(e) => thkInput.setDraft(e.target.value)}
+            onBlur={thkInput.onBlur}
+            onKeyDown={thkInput.onKeyDown}
             aria-label="Thickness"
           />
         </label>
@@ -293,10 +168,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftRotX}
-            onChange={(e) => setDraftRotX(e.target.value)}
-            onBlur={() => commitRot(draftRotX, 'x', currentRotX)}
-            onKeyDown={(e) => handleRotKeyDown(e, draftRotX, 'x', currentRotX)}
+            value={rotXInput.draft}
+            onChange={(e) => rotXInput.setDraft(e.target.value)}
+            onBlur={rotXInput.onBlur}
+            onKeyDown={rotXInput.onKeyDown}
             aria-label="Rotation X"
           />
         </label>
@@ -305,10 +180,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftRotY}
-            onChange={(e) => setDraftRotY(e.target.value)}
-            onBlur={() => commitRot(draftRotY, 'y', currentRotY)}
-            onKeyDown={(e) => handleRotKeyDown(e, draftRotY, 'y', currentRotY)}
+            value={rotYInput.draft}
+            onChange={(e) => rotYInput.setDraft(e.target.value)}
+            onBlur={rotYInput.onBlur}
+            onKeyDown={rotYInput.onKeyDown}
             aria-label="Rotation Y"
           />
         </label>
@@ -317,10 +192,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftRotZ}
-            onChange={(e) => setDraftRotZ(e.target.value)}
-            onBlur={() => commitRot(draftRotZ, 'z', currentRotZ)}
-            onKeyDown={(e) => handleRotKeyDown(e, draftRotZ, 'z', currentRotZ)}
+            value={rotZInput.draft}
+            onChange={(e) => rotZInput.setDraft(e.target.value)}
+            onBlur={rotZInput.onBlur}
+            onKeyDown={rotZInput.onKeyDown}
             aria-label="Rotation Z"
           />
         </label>
@@ -331,10 +206,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftPosX}
-            onChange={(e) => setDraftPosX(e.target.value)}
-            onBlur={() => commitPos(draftPosX, 'x', currentPosX)}
-            onKeyDown={(e) => handlePosKeyDown(e, draftPosX, 'x', currentPosX)}
+            value={posXInput.draft}
+            onChange={(e) => posXInput.setDraft(e.target.value)}
+            onBlur={posXInput.onBlur}
+            onKeyDown={posXInput.onKeyDown}
             aria-label="Position X"
           />
         </label>
@@ -343,10 +218,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftPosY}
-            onChange={(e) => setDraftPosY(e.target.value)}
-            onBlur={() => commitPos(draftPosY, 'y', currentPosY)}
-            onKeyDown={(e) => handlePosKeyDown(e, draftPosY, 'y', currentPosY)}
+            value={posYInput.draft}
+            onChange={(e) => posYInput.setDraft(e.target.value)}
+            onBlur={posYInput.onBlur}
+            onKeyDown={posYInput.onKeyDown}
             aria-label="Position Y"
           />
         </label>
@@ -355,10 +230,10 @@ export default function PartPanel({
           <input
             type="text"
             className="part-panel-input part-panel-dim-input"
-            value={draftPosZ}
-            onChange={(e) => setDraftPosZ(e.target.value)}
-            onBlur={() => commitPos(draftPosZ, 'z', currentPosZ)}
-            onKeyDown={(e) => handlePosKeyDown(e, draftPosZ, 'z', currentPosZ)}
+            value={posZInput.draft}
+            onChange={(e) => posZInput.setDraft(e.target.value)}
+            onBlur={posZInput.onBlur}
+            onKeyDown={posZInput.onKeyDown}
             aria-label="Position Z"
           />
         </label>

@@ -35,8 +35,6 @@ export default function App() {
   const duplicateAssembly = useProjectStore((s) => s.duplicateAssembly)
   const renameAssembly = useProjectStore((s) => s.renameAssembly)
   const moveAssembly = useProjectStore((s) => s.moveAssembly)
-  const addConstraint = useProjectStore((s) => s.addConstraint)
-  const removeConstraint = useProjectStore((s) => s.removeConstraint)
   const undo = useProjectStore((s) => s.undo)
   const redo = useProjectStore((s) => s.redo)
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
@@ -200,10 +198,6 @@ export default function App() {
         <PartPanel
           part={selectedPart}
           onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
-          constraints={project.constraints.filter((c) => c.constrainedPartId === selectedId)}
-          allParts={parts}
-          onAddConstraint={(c) => addConstraint(c)}
-          onRemoveConstraint={(id) => removeConstraint(id)}
           onEyedropperActivate={() => setEyedropperActive(true)}
           isModifying={modifyingPartId === selectedId}
           onEnterModifyMode={() => selectedId && setModifyingPartId(selectedId)}

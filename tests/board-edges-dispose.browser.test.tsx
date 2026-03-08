@@ -39,9 +39,9 @@ async function waitFor(fn: () => void, timeout = 2000) {
   fn()
 }
 
-describe('Board EdgesGeometry disposal', () => {
+describe('Board geometry disposal', () => {
   it('calls dispose on unmount', async () => {
-    // dispose is on BufferGeometry.prototype (EdgesGeometry inherits it)
+    // dispose is on BufferGeometry.prototype (BoxGeometry inherits it)
     const disposeSpy = vi.spyOn(THREE.BufferGeometry.prototype, 'dispose')
 
     const { unmount } = await render(<BoardCanvas {...defaultProps} />)
@@ -61,20 +61,20 @@ describe('Board EdgesGeometry disposal', () => {
     disposeSpy.mockRestore()
   })
 
-  it('calls dispose on dimension change and continues rendering', async () => {
+  it('disposes ellipse geometry when dimensions change and continues rendering', async () => {
     const disposeSpy = vi.spyOn(THREE.BufferGeometry.prototype, 'dispose')
 
-    const { rerender } = await render(<BoardCanvas {...defaultProps} />)
+    const { rerender } = await render(<BoardCanvas {...defaultProps} shape="ellipse" />)
 
     // Wait for initial render
     await new Promise((r) => setTimeout(r, 100))
 
     disposeSpy.mockClear()
 
-    // Change length — triggers useMemo recompute → new edgesGeo → useEffect cleanup
-    await rerender(<BoardCanvas {...defaultProps} length={8} />)
+    // Change length — triggers ellipseGeo useMemo recompute → useEffect cleanup disposes old geo
+    await rerender(<BoardCanvas {...defaultProps} shape="ellipse" length={8} />)
 
-    // Poll until old geometry dispose has run
+    // Poll until old ellipse geometry dispose has run
     await waitFor(() => {
       expect(disposeSpy).toHaveBeenCalled()
     })

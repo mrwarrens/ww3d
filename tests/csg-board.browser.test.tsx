@@ -165,6 +165,66 @@ describe('CSG rendering in Board', () => {
     const wireframes = mesh.children.filter(c => (c as THREE.LineSegments).isLineSegments)
     expect(wireframes).toHaveLength(0)
   })
+
+  it('applies CSG when parent is box and child is ellipse subtract', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 2, width: 2, thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+      shape: 'ellipse',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} />
+    )
+
+    await waitFor(() => {
+      const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+      expect(mesh).toBeDefined()
+      expect(mesh.geometry.type).not.toBe('BoxGeometry')
+    }, 10000)
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    expect(mesh.geometry).toBeInstanceOf(THREE.BufferGeometry)
+    expect(mesh.geometry.getAttribute('position')).toBeDefined()
+    // An ellipse boolean cut results in more vertices than a plain box (36 non-indexed)
+    expect(mesh.geometry.getAttribute('position').count).toBeGreaterThan(36)
+  })
+
+  it('applies CSG when parent is box and child is ellipse add', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 2, width: 2, thickness: 0.375,
+      position: { x: 2, y: 0, z: 0 },
+      operation: 'add',
+      shape: 'ellipse',
+    })
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} />
+    )
+
+    await waitFor(() => {
+      const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+      expect(mesh).toBeDefined()
+      expect(mesh.geometry.type).not.toBe('BoxGeometry')
+    }, 10000)
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    expect(mesh.geometry).toBeInstanceOf(THREE.BufferGeometry)
+    expect(mesh.geometry.getAttribute('position')).toBeDefined()
+  })
 })
 
 describe('ghost overlays in modify mode', () => {

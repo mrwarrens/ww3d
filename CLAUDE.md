@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ww3d is a web-based 3D woodworking design application. It lets users design furniture and woodworking projects in 3D, then reference those designs while building (iPad "shop mode") or buying lumber (phone "lumber yard mode").
 
-The project has completed Phase 1 and Phase 2. Phase 1 delivered a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. Phase 2 added drag-to-move, snap-to-grid, adjustable grid, camera pan/presets, editable properties panel (name/dimensions/rotation/position/color), duplicate, parts outliner with hide/show, undo/redo, and several bug fixes. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
+The project has completed Phases 1–5. Phase 1 delivered a TypeScript + React + R3F app where users can drag-to-create boards on a grid, select and delete them, view properties in a panel, and save/load projects as JSON files. Phase 2 added drag-to-move, snap-to-grid, adjustable grid, camera pan/presets, editable properties panel (name/dimensions/rotation/position/color), duplicate, parts outliner with hide/show, undo/redo, and several bug fixes. Phases 3–5 added assemblies (grouping, collapsible outliner, multi-select, visibility), CSG boolean operations via Manifold (child cuts with Add/Subtract operations), ellipse shape support, modify mode (Edit Cuts button, CutsList panel), and shape toggle in PartPanel. The full vision is described in `requirements.md` and open technical decisions are tracked in `technical-questions.md`.
 
 ## Setup
 
@@ -48,22 +48,22 @@ src/
     Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler; eyedropper click handler
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
     AssemblyPanel.tsx   # DOM overlay for assembly selection: editable assembly name and position (Px/Py/Pz)
-    PartPanel.tsx       # DOM overlay for part selection: editable name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper, constraint add/remove UI
+    PartPanel.tsx       # DOM overlay for part selection: editable name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper, shape toggle (Box/Ellipse), operation buttons (Add/Subtract) for child parts, Edit Cuts button for top-level parts
     PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned top-level parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button; ✂ indicator on parts with cuts
     CutsList.tsx        # Panel shown in modify mode listing child cuts by name; click-to-select; selected highlight
   models/
     Part.ts             # Part interface and createPart factory
     Assembly.ts         # Assembly interface and createAssembly factory
     Project.ts          # Project interface, createProject, serializeProject, deserializeProject
-    Constraint.ts       # Constraint interface and createConstraint factory
   utils/
     constants.ts        # BOARD_THICKNESS, SNAP_INCREMENT, snapToGrid, CAMERA_PRESETS
     units.ts            # Fractional inch display and parsing utilities
-    constraints.ts      # getPartFacePosition, computeConstrainedPosition, propagateConstraints
+    manifold.ts         # Manifold-3d CSG utilities: getManifold, manifoldEllipse, manifoldMeshToThreeGeometry
   hooks/
     useCameraPreset.ts  # Hook: animates camera to a named preset position
+    useEditableInput.ts # Hook: draft state, commit, reset, and keydown logic for numeric editable inputs
   stores/
-    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addAssembly, removeAssembly, renameAssembly, moveAssembly, assignPartToAssembly, removePartFromAssembly, groupPartsIntoAssembly, duplicateAssembly, toggleAssemblyVisibility, addConstraint, removeConstraint, setProjectName, setGridSize, loadProject, undo, redo
+    projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addAssembly, removeAssembly, renameAssembly, moveAssembly, assignPartToAssembly, removePartFromAssembly, groupPartsIntoAssembly, duplicateAssembly, toggleAssemblyVisibility, setProjectName, setGridSize, loadProject, undo, redo
 tests/
   scene.browser.test.tsx                    # Browser-mode R3F scene tests
   partPanel.browser.test.tsx                # Browser-mode DOM tests for PartPanel
@@ -85,19 +85,27 @@ tests/
   csg-board.browser.test.tsx                # Browser-mode tests for CSG rendering (plain-box vs computed geometry)
   cuts-list.browser.test.tsx                # Browser-mode tests for CutsList component and PartsList cuts indicator
   collapsible-assembly.browser.test.tsx     # Browser-mode tests for collapsible assembly groups in PartsList
+  modify-mode.browser.test.tsx              # Browser-mode tests for entering/exiting modify mode (Edit Cuts)
+  modify-mode-select-child.browser.test.tsx # Browser-mode tests for selecting child cuts in modify mode
+  modify-mode-delete-child.browser.test.tsx # Browser-mode tests for deleting child cuts in modify mode
+  ellipse-board.browser.test.tsx            # Browser-mode tests for ellipse shape rendering
+  shape-toggle.browser.test.tsx             # Browser-mode tests for shape toggle (Box/Ellipse) in PartPanel
+  board-edges-dispose.browser.test.tsx      # Browser-mode tests for edge wireframe cleanup on dispose
+  use-editable-input.browser.test.tsx       # Browser-mode tests for useEditableInput hook
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
+  part-shape.test.ts      # Unit tests for Part shape field and serialization
   projectStore.test.ts    # Unit tests for Zustand store
+  undo-redo-child-ops.test.ts               # Unit tests for undo/redo with child part operations
   units.test.ts           # Unit tests for inch display and parsing utilities
   constants.test.ts       # Unit tests for snapToGrid and constants
-  constraints.test.ts     # Unit tests for constraint math and store actions
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
 
 ## Architecture
 
-**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state (`selectedIds: string[]` + `selectedAssemblyId: string | null`, mutually exclusive), eyedropper state, Save/Load buttons (Cmd+S), undo/redo (Cmd+Z/Cmd+Shift+Z), help pane toggle, grid controls pane with axis lines toggle, camera preset buttons, and conditionally renders `<AssemblyPanel>` or `<PartPanel>`, plus `<PartsList>` and the `<Canvas>`. App.tsx also handles assembly-level keyboard shortcuts: Delete to remove assembly, Cmd+D to duplicate assembly, and Cmd+G to group selected parts into a new assembly. `Scene.tsx` sets up the 3D scene (background, lights, grid, OrbitControls, optional axis lines) and handles part-level keyboard events: Delete/Backspace, Escape, Cmd+D (part), 1/2/3/4 for camera presets, and Escape to cancel eyedropper. Board creation via drag interaction is handled by `BoardCreator.tsx`; board movement via pointer-drag is handled in `Scene.tsx`. Individual boards are rendered by `Board.tsx` with selection via `<Outlines>`; double-click selects the board's assembly; eyedropper click intercepts to sample the board's stored color. `AssemblyPanel.tsx` shows an editable assembly name and Px/Py/Pz position inputs when an assembly is selected. `PartPanel.tsx` shows editable name, L/W/T, Rx/Ry/Rz, Px/Py/Pz, color picker with eyedropper, and constraint add/remove UI when a part is selected. All numeric inputs display fractional inches and support arrow-key increment/decrement. `PartsList.tsx` is a sidebar listing assemblies (with nested member rows) and unassigned parts; supports Shift/Cmd+click multi-select, drag-to-assign parts to assemblies, right-click to remove from assembly, per-row visibility toggles, and a New Assembly button. Camera preset logic is in `hooks/useCameraPreset.ts`. Constraint math is in `utils/constraints.ts` (propagateConstraints, computeConstrainedPosition). All constraint propagation runs inside `movePart` and `updatePart` store actions.
+**Current state:** TypeScript + React + react-three-fiber (R3F) app. `index.html` loads `src/main.tsx` which renders the React tree. `App.tsx` owns selection state (`selectedIds: string[]` + `selectedAssemblyId: string | null`, mutually exclusive), eyedropper state, Save/Load buttons (Cmd+S), undo/redo (Cmd+Z/Cmd+Shift+Z), help pane toggle, grid controls pane with axis lines toggle, camera preset buttons, and conditionally renders `<AssemblyPanel>` or `<PartPanel>`, plus `<PartsList>` and the `<Canvas>`. App.tsx also handles assembly-level keyboard shortcuts: Delete to remove assembly, Cmd+D to duplicate assembly, and Cmd+G to group selected parts into a new assembly. `Scene.tsx` sets up the 3D scene (background, lights, grid, OrbitControls, optional axis lines) and handles part-level keyboard events: Delete/Backspace, Escape, Cmd+D (part), 1/2/3/4 for camera presets, and Escape to cancel eyedropper. Board creation via drag interaction is handled by `BoardCreator.tsx`; board movement via pointer-drag is handled in `Scene.tsx`. Individual boards are rendered by `Board.tsx` with selection via `<Outlines>`; double-click selects the board's assembly; eyedropper click intercepts to sample the board's stored color. `AssemblyPanel.tsx` shows an editable assembly name and Px/Py/Pz position inputs when an assembly is selected. `PartPanel.tsx` shows editable name, L/W/T, Rx/Ry/Rz, Px/Py/Pz, color picker with eyedropper, and shape toggle (Box/Ellipse) when a part is selected; for child parts it also shows operation buttons (Add/Subtract); for top-level parts it shows an "Edit Cuts" button to enter modify mode. All numeric inputs display fractional inches and support arrow-key increment/decrement. `PartsList.tsx` is a sidebar listing assemblies (with nested member rows) and unassigned parts; supports Shift/Cmd+click multi-select, drag-to-assign parts to assemblies, right-click to remove from assembly, per-row visibility toggles, and a New Assembly button. `CutsList.tsx` shows child cuts in modify mode; `Board.tsx` uses Manifold CSG (`src/utils/manifold.ts`) to compute boolean operations (subtract/add) between a parent board and its children. Camera preset logic is in `hooks/useCameraPreset.ts`.
 
 **Target architecture (from requirements.md):**
 - Three.js-based 3D engine with CSG/boolean operations for joinery

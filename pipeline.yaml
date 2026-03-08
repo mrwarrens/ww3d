@@ -436,6 +436,84 @@ tasks:
     description: "When duplicating a part (Cmd+D), the duplicate should appear at the exact same position as the original — no X, Y, or Z offset applied. The user will move it manually afterward. Change duplicatePart and duplicateParts in projectStore.ts to copy the original part's position unchanged."
     deps: [9, 71]
     status: accepted
+  - id: 73
+    phase: 3
+    name: Remove constraints feature
+    description: "Delete the constraints system entirely. Remove: src/models/Constraint.ts, src/utils/constraints.ts, tests/constraints.test.ts. Strip addConstraint/removeConstraint actions and all constraint-related state from projectStore.ts. Remove the constraint add/remove UI section from PartPanel.tsx. Remove constraint fields (constraints: []) from Part.ts createPart and from serializeProject/deserializeProject in Project.ts. Remove the getPartFacePosition, computeConstrainedPosition, and propagateConstraints calls from movePart and updatePart store actions. Update CLAUDE.md project structure to reflect removed files."
+    deps: [25, 26]
+    status: accepted
+  # Phase 5 tasks — Ellipse Parts
+  - id: 74
+    phase: 5
+    name: Extend Part model for shape
+    description: "Add shape?: 'box' | 'ellipse' to the Part interface (default 'box', backwards-compatible). Update createPart to accept and default the field. Update serializeProject/deserializeProject to include it. No store changes required."
+    deps: []
+    status: accepted
+  - id: 75
+    phase: 5
+    name: Ellipse geometry in Board.tsx
+    description: "When part.shape === 'ellipse', build geometry from EllipseCurve(0, 0, L/2, W/2) → Shape → ExtrudeGeometry({ depth: T, bevelEnabled: false }). Fall back to existing <boxGeometry> when shape === 'box' or undefined. <Edges> traces the correct outline automatically for both shapes. Dispose old geometry on unmount or when dims change."
+    deps: [74]
+    status: accepted
+  - id: 76
+    phase: 5
+    name: Shape toggle in PartPanel
+    description: "Add a box/ellipse segmented toggle button to PartPanel, visible only for top-level parts (no parentId). Calls updatePart({ shape: ... }) on toggle. When shape === 'ellipse', label L as 'Length (dia)' and W as 'Width (dia)' to clarify they represent diameters. Style consistently with other segmented controls in the panel."
+    deps: [74, 75]
+    status: accepted
+  - id: 79
+    phase: 5
+    name: Remove diameter label suffix from L and W in PartPanel
+    description: "When a part's shape is 'ellipse', the L and W labels in PartPanel should remain 'L' and 'W' — do not append '(dia)' or any other suffix. Revert the label-change behavior added in task 76."
+    deps: [76]
+    status: accepted
+  - id: 78
+    phase: 5
+    name: Shape toggle in PartPanel for cuts
+    description: "Extend the box/ellipse shape toggle in PartPanel to also appear when a child cut is selected (i.e. remove the parentId guard added in task 76). Calls updatePart({ shape: ... }) the same way as for top-level parts. The ghost wireframe in modify mode will automatically render the correct elliptical outline since it derives from the part's geometry (task 75)."
+    deps: [76, 77]
+    status: accepted
+  - id: 77
+    phase: 5
+    name: Ellipse child cuts
+    description: "Verify that child parts with shape:'ellipse' and operation:'subtract' produce correct CSG results via Manifold. Extend the existing geometry-to-Manifold conversion path (src/utils/manifold.ts) to handle ExtrudeGeometry from ellipse shapes, in addition to the existing box path. Write tests covering ellipse subtraction from a box parent and ellipse subtraction from an ellipse parent."
+    deps: [75, 59]
+    status: accepted
+  # Refactor tasks
+  - id: 80
+    phase: 6
+    name: Refactor PartPanel — extract reusable editable input hook
+    description: >
+      PartPanel.tsx has grown to ~420 lines with 14 useState hooks and near-identical
+      commit/reset/keyDown triplets for every input field (name, L/W/T, Rx/Ry/Rz,
+      Px/Py/Pz). Extract a useEditableField(initialValue, onCommit, options?) hook
+      that encapsulates: (1) local draft string state, (2) sync with incoming prop on
+      prop change, (3) commit on blur and Enter, (4) reset on Escape, (5) arrow-key
+      increment/decrement with configurable step and floor. PartPanel then composes
+      these hooks — one per field — replacing the repeated boilerplate. The hook must
+      support all three field types: dimension (min 1/16", fractional display),
+      position (no floor, fractional display), and rotation (degrees, no floor).
+      No behavior changes — this is a pure refactor. All existing tests must pass
+      unchanged. Write unit tests for the hook covering: blur commit, Enter commit,
+      Escape reset, up arrow increments, down arrow decrements, floor clamping for
+      dimensions, no floor for positions.
+
+      Manual tests (verify in the browser after implementation):
+        1. Name field: type a new name, press Enter → 3D viewport and parts list update immediately.
+        2. Name field: type a new name, press Escape → field reverts to original name, no store update.
+        3. L/W/T fields: type "1.5", tab away → reformats to "1-1/2" and part resizes in viewport.
+        4. L/W/T fields: press Up arrow → increments by 1/16" each keypress; value stays fractional.
+        5. L/W/T fields: press Down arrow at 1/16" → does not go below 1/16" (floor enforced).
+        6. Px/Py/Pz fields: press Down arrow past 0 → goes negative with no floor.
+        7. Rx/Ry/Rz fields: type "45", press Enter → part visibly rotates 45 degrees.
+        8. Rx/Ry/Rz fields: press Up/Down arrow → increments/decrements by 1 degree.
+        9. Color picker: open, pick a color → part color updates in viewport.
+       10. Shape toggle (Box/Ellipse): click Ellipse → part shape changes in viewport; click Box → reverts.
+       11. Operation buttons (Add/Subtract, visible when a child cut is selected): click each → CSG result updates.
+       12. Edit Cuts button: click → enters modify mode (other parts dim); Done/Escape → exits.
+       13. Undo (Cmd+Z) after any field commit → reverts the change in viewport and panel.
+    deps: []
+    status: accepted
   - id: 70
     phase: 3
     name: Collapsible assembly groups in parts list

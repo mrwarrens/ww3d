@@ -1,9 +1,7 @@
 import { create } from 'zustand'
 import { type Part, type PartInit, createPart } from '../models/Part'
 import { type Assembly, createAssembly } from '../models/Assembly'
-import { type Constraint, createConstraint } from '../models/Constraint'
 import { type Project, createProject } from '../models/Project'
-import { computeConstrainedPosition, propagateConstraints } from '../utils/constraints'
 
 interface ProjectStore {
   project: Project
@@ -15,7 +13,7 @@ interface ProjectStore {
   duplicatePart: (id: string) => string | null
   duplicateParts: (ids: string[]) => string[]
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
-  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation'>>) => void
+  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape'>>) => void
   togglePartVisibility: (id: string) => void
   toggleAssemblyVisibility: (id: string) => void
   duplicateAssembly: (id: string) => string | null
@@ -28,8 +26,6 @@ interface ProjectStore {
   moveAssembly: (id: string, position: { x: number; y: number; z: number }) => void
   addChildPart: (parentId: string, init: PartInit) => string
   removeChildPart: (childId: string) => void
-  addConstraint: (constraint: Omit<Constraint, 'id'>) => void
-  removeConstraint: (id: string) => void
   setProjectName: (name: string) => void
   setGridSize: (size: number) => void
   loadProject: (project: Project) => void
@@ -173,8 +169,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   movePart: (id, position) => {
     const current = get().project
     set((state) => {
-      const movedParts = state.project.parts.map((p) => p.id === id ? { ...p, position } : p)
-      const parts = propagateConstraints(movedParts, state.project.constraints, id)
+      const parts = state.project.parts.map((p) => p.id === id ? { ...p, position } : p)
       return {
         history: [...state.history, current],
         future: [],
@@ -185,8 +180,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   updatePart: (id, changes) => {
     const current = get().project
     set((state) => {
-      const updatedParts = state.project.parts.map((p) => p.id === id ? { ...p, ...changes } : p)
-      const parts = propagateConstraints(updatedParts, state.project.constraints, id)
+      const parts = state.project.parts.map((p) => p.id === id ? { ...p, ...changes } : p)
       return {
         history: [...state.history, current],
         future: [],
@@ -320,39 +314,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
             ? { ...p, position: { x: p.position.x + dx, y: p.position.y + dy, z: p.position.z + dz } }
             : p
         ),
-      },
-    }))
-  },
-  addConstraint: (init) => {
-    const current = get().project
-    const constraint = createConstraint(init)
-    const anchorPart = current.parts.find((p) => p.id === constraint.anchorPartId)
-    const constrainedPart = current.parts.find((p) => p.id === constraint.constrainedPartId)
-    set((state) => {
-      let parts = state.project.parts
-      if (anchorPart && constrainedPart) {
-        const newPosition = computeConstrainedPosition(constraint, anchorPart, constrainedPart)
-        parts = parts.map((p) => p.id === constraint.constrainedPartId ? { ...p, position: newPosition } : p)
-      }
-      return {
-        history: [...state.history, current],
-        future: [],
-        project: {
-          ...state.project,
-          constraints: [...state.project.constraints, constraint],
-          parts,
-        },
-      }
-    })
-  },
-  removeConstraint: (id) => {
-    const current = get().project
-    set((state) => ({
-      history: [...state.history, current],
-      future: [],
-      project: {
-        ...state.project,
-        constraints: state.project.constraints.filter((c) => c.id !== id),
       },
     }))
   },

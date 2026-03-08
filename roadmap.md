@@ -84,7 +84,19 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 
 - [ ] **10. Cuts list in modify mode** — While in modify mode, render a small `CutsList` panel (similar in style to `PartsList`) that lists the active parent's children by name. Clicking a row selects that child (same as clicking its ghost wireframe in the viewport). Selected child is highlighted in the list. Children are not shown in `PartsList` outside of modify mode — only the parent row is visible there, with a small indicator icon when it has cuts. _Depends on: #4, #5._
 
-## Phase 5: Desktop UI Polish
+## Phase 5: Ellipse Parts
+
+Parts can be elliptical (coin-stretched shape — ellipse from top view) in addition to rectangular. Shape is set per-part in the PartPanel after creation. Ellipse parts and cuts use `ExtrudeGeometry` (EllipseCurve → Shape → extrude by thickness), which is CSG-compatible with Manifold and automatically produces correct edge lines via `<Edges>`.
+
+- [ ] **1. Extend Part model for shape** — Add `shape?: 'box' | 'ellipse'` to the Part interface (default `'box'`, backwards-compatible). Update `createPart`, `serializeProject`/`deserializeProject`. No store changes required.
+
+- [ ] **2. Ellipse geometry in Board.tsx** — When `part.shape === 'ellipse'`, build geometry from `EllipseCurve(0, 0, L/2, W/2)` → `Shape` → `ExtrudeGeometry({ depth: T, bevelEnabled: false })`. Fall back to existing `<boxGeometry>` when `shape === 'box'`. `<Edges>` traces the correct outline automatically for both shapes. _Depends on: #1._
+
+- [x] **3. Shape toggle in PartPanel** — Add a box/ellipse toggle button to PartPanel (top-level parts only — hide for children). Calls `updatePart({ shape: ... })`. When `shape === 'ellipse'`, label L as "Length (dia)" and W as "Width (dia)" to clarify they are diameters. _Depends on: #1, #2._
+
+- [ ] **4. Ellipse child cuts** — Verify that child parts with `shape: 'ellipse'` and `operation: 'subtract'` produce correct CSG results via Manifold. Ensure `ExtrudeGeometry` → Manifold mesh conversion handles ellipse geometry (extend the existing geometry-to-Manifold path used for box children). _Depends on: #2, Phase 4 #3._
+
+## Phase 6: Desktop UI Polish
 
 - [ ] Toolbar with drawing/selection tools
 - [ ] Keyboard shortcuts system
@@ -92,7 +104,7 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 - [ ] Multi-select and group operations
 - [ ] Render mode toggle (solid, wireframe, transparent)
 
-## Phase 6: Cut List & 2D Output
+## Phase 7: Cut List & 2D Output
 
 - [ ] Auto-generated cut list from project data
 - [ ] Board optimization / nesting layout
@@ -103,7 +115,7 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 - [ ] DXF export
 - [ ] STL export for jigs
 
-## Phase 7: Responsive Modes (iPad / Phone)
+## Phase 8: Responsive Modes (iPad / Phone)
 
 - [ ] iPad shop mode — read-only 3D viewer with touch navigation
 - [ ] Tap-to-select with dimension overlay
@@ -113,7 +125,7 @@ Child positions are stored in parent-local space so cuts move with the board. Ma
 - [ ] Check-off interface for in-store use
 - [ ] Cost estimator
 
-## Phase 8: GitHub Storage & PWA
+## Phase 9: GitHub Storage & PWA
 
 - [ ] GitHub OAuth flow (device flow or auth proxy)
 - [ ] Save/load projects to GitHub repo via API

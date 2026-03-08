@@ -120,7 +120,8 @@ describe('Board component', () => {
   it('board has a wireframe edge child', async () => {
     const state = await renderInCanvas(<Board {...boardProps} length={3} width={2} />)
     const board = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
-    const wireframes = board.children.filter(c => (c as THREE.LineSegments).isLineSegments)
+    // <Edges> from drei renders a LineSegments2 (from three-stdlib), not THREE.LineSegments
+    const wireframes = board.children.filter(c => c.type === 'LineSegments2')
     expect(wireframes).toHaveLength(1)
   })
 

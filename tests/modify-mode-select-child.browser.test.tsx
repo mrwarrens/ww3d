@@ -79,18 +79,6 @@ describe('PartPanel with child part', () => {
     expect(opDiv?.getAttribute('aria-label')).toBe('Operation')
   })
 
-  it('hides Constraints section for a child part', async () => {
-    const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
-    const constraintsDiv = container.querySelector('.part-panel-constraints')
-    expect(constraintsDiv).toBeNull()
-  })
-
-  it('shows Constraints section for a top-level part', async () => {
-    const { container } = await render(<PartPanel part={parentPart} onUpdate={vi.fn()} />)
-    const constraintsDiv = container.querySelector('.part-panel-constraints')
-    expect(constraintsDiv).not.toBeNull()
-  })
-
   it('hides Edit Cuts button for a child part', async () => {
     const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
     const editCutsDiv = container.querySelector('.part-panel-edit-cuts')
