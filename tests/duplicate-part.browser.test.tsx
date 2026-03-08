@@ -43,7 +43,7 @@ describe('Duplicate a Part (Cmd+D)', () => {
     expect(useProjectStore.getState().project.parts).toHaveLength(2)
   })
 
-  it('Cmd+D new part has same Y and X/Z offset by 1 from the original', async () => {
+  it('Cmd+D new part has the exact same position as the original', async () => {
     useProjectStore.getState().addPart({
       length: 6, width: 4,
       position: { x: 2, y: BOARD_THICKNESS / 2, z: 3 },
@@ -59,8 +59,8 @@ describe('Duplicate a Part (Cmd+D)', () => {
     const parts = useProjectStore.getState().project.parts
     expect(parts).toHaveLength(2)
     const newPart = parts[1]
-    expect(newPart.position.x).toBe(original.position.x + 1)
-    expect(newPart.position.z).toBe(original.position.z + 1)
+    expect(newPart.position.x).toBe(original.position.x)
+    expect(newPart.position.z).toBe(original.position.z)
     expect(newPart.position.y).toBe(original.position.y)
   })
 
