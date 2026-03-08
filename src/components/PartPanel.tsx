@@ -1,24 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Part } from '../models/Part'
-import type { Constraint } from '../models/Constraint'
 import { toFractionalInches, parseInches } from '../utils/units'
-
-type ConstraintPreset = 'flush-min' | 'flush-max' | 'centered' | 'offset'
-
-const PRESET_LABELS: Record<ConstraintPreset, string> = {
-  'flush-min': 'Flush (min faces)',
-  'flush-max': 'Flush (max faces)',
-  'centered': 'Centered',
-  'offset': 'Offset by X',
-}
 
 interface PartPanelProps {
   part: Part
-  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation'>>) => void
-  constraints?: Constraint[]
-  allParts?: Part[]
-  onAddConstraint?: (c: Omit<Constraint, 'id'>) => void
-  onRemoveConstraint?: (id: string) => void
+  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape'>>) => void
   onEyedropperActivate?: () => void
   isModifying?: boolean
   onEnterModifyMode?: () => void
@@ -28,10 +14,6 @@ interface PartPanelProps {
 export default function PartPanel({
   part,
   onUpdate,
-  constraints = [],
-  allParts = [],
-  onAddConstraint,
-  onRemoveConstraint,
   onEyedropperActivate,
   isModifying,
   onEnterModifyMode,
@@ -48,13 +30,6 @@ export default function PartPanel({
   const [draftPosY, setDraftPosY] = useState('')
   const [draftPosZ, setDraftPosZ] = useState('')
   const skipBlurRef = useRef(false)
-
-  // Constraint add form state
-  const [addingConstraint, setAddingConstraint] = useState(false)
-  const [cAnchorId, setCAnchorId] = useState('')
-  const [cPreset, setCPreset] = useState<ConstraintPreset>('flush-min')
-  const [cAxis, setCAxis] = useState<'x' | 'y' | 'z'>('x')
-  const [cOffset, setCOffset] = useState('0')
 
   const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
 
@@ -250,6 +225,7 @@ export default function PartPanel({
     }
   }
 
+  const isEllipse = part.shape === 'ellipse'
   const currentLength = toFractionalInches(part.length)
   const currentWidth = toFractionalInches(part.width)
   const currentThickness = toFractionalInches(part.thickness)
@@ -417,6 +393,20 @@ export default function PartPanel({
           >Subtract</button>
         </div>
       )}
+      <div className="part-panel-shape" aria-label="Shape">
+        <button
+          type="button"
+          className={!isEllipse ? 'active' : ''}
+          onClick={() => onUpdate({ shape: 'box' })}
+          aria-label="Box shape"
+        >Box</button>
+        <button
+          type="button"
+          className={isEllipse ? 'active' : ''}
+          onClick={() => onUpdate({ shape: 'ellipse' })}
+          aria-label="Ellipse shape"
+        >Ellipse</button>
+      </div>
       {!part.parentId && (
         <div className="part-panel-edit-cuts">
           {isModifying
@@ -424,106 +414,6 @@ export default function PartPanel({
             : <button type="button" onClick={onEnterModifyMode}>Edit Cuts</button>
           }
         </div>
-      )}
-      {!part.parentId && (
-        <div className="part-panel-constraints">
-        <div className="part-panel-constraints-header">
-          <strong>Constraints</strong>
-          {onAddConstraint && !addingConstraint && (
-            <button
-              onClick={() => {
-                const firstOther = allParts.find((p) => p.id !== part.id)
-                setCAnchorId(firstOther?.id ?? '')
-                setCPreset('flush-min')
-                setCAxis('x')
-                setCOffset('0')
-                setAddingConstraint(true)
-              }}
-              aria-label="Add constraint"
-            >
-              + Add
-            </button>
-          )}
-        </div>
-        {constraints.map((c) => {
-          const anchor = allParts.find((p) => p.id === c.anchorPartId)
-          const presetLabel = `${c.anchorFace}/${c.constrainedFace}` === 'min/min' ? 'Flush (min)'
-            : `${c.anchorFace}/${c.constrainedFace}` === 'max/max' ? 'Flush (max)'
-            : `${c.anchorFace}/${c.constrainedFace}` === 'center/center' ? 'Centered'
-            : `Offset ${c.offset}"`
-          return (
-            <div key={c.id} className="part-panel-constraint-row">
-              <span>{c.axis.toUpperCase()} — {presetLabel} → {anchor?.name ?? c.anchorPartId}</span>
-              {onRemoveConstraint && (
-                <button onClick={() => onRemoveConstraint(c.id)} aria-label="Remove constraint">✕</button>
-              )}
-            </div>
-          )
-        })}
-        {addingConstraint && (
-          <div className="part-panel-constraint-form">
-            <label>
-              Anchor:&nbsp;
-              <select value={cAnchorId} onChange={(e) => setCAnchorId(e.target.value)} aria-label="Anchor part">
-                {allParts.filter((p) => p.id !== part.id).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Type:&nbsp;
-              <select value={cPreset} onChange={(e) => setCPreset(e.target.value as ConstraintPreset)} aria-label="Constraint type">
-                {(Object.keys(PRESET_LABELS) as ConstraintPreset[]).map((k) => (
-                  <option key={k} value={k}>{PRESET_LABELS[k]}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Axis:&nbsp;
-              <select value={cAxis} onChange={(e) => setCAxis(e.target.value as 'x' | 'y' | 'z')} aria-label="Constraint axis">
-                <option value="x">X</option>
-                <option value="y">Y</option>
-                <option value="z">Z</option>
-              </select>
-            </label>
-            {cPreset === 'offset' && (
-              <label>
-                Distance:&nbsp;
-                <input
-                  type="number"
-                  value={cOffset}
-                  onChange={(e) => setCOffset(e.target.value)}
-                  aria-label="Offset distance"
-                  style={{ width: '4em' }}
-                />
-              </label>
-            )}
-            <div className="part-panel-constraint-form-actions">
-              <button
-                onClick={() => {
-                  if (!onAddConstraint || !cAnchorId) return
-                  const presetMap: Record<ConstraintPreset, { anchorFace: 'min' | 'center' | 'max'; constrainedFace: 'min' | 'center' | 'max'; offset: number }> = {
-                    'flush-min': { anchorFace: 'min', constrainedFace: 'min', offset: 0 },
-                    'flush-max': { anchorFace: 'max', constrainedFace: 'max', offset: 0 },
-                    'centered': { anchorFace: 'center', constrainedFace: 'center', offset: 0 },
-                    'offset': { anchorFace: 'max', constrainedFace: 'min', offset: parseFloat(cOffset) || 0 },
-                  }
-                  onAddConstraint({
-                    anchorPartId: cAnchorId,
-                    constrainedPartId: part.id,
-                    axis: cAxis,
-                    ...presetMap[cPreset],
-                  })
-                  setAddingConstraint(false)
-                }}
-              >
-                Apply
-              </button>
-              <button onClick={() => setAddingConstraint(false)}>Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
       )}
     </div>
   )
