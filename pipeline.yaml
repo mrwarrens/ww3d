@@ -1121,4 +1121,4 @@ tasks:
 
       Add or update browser tests asserting that the Box/Ellipse button group is
       right-aligned when a cut is selected.
-    status: ready
+    status: done

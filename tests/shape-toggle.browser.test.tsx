@@ -47,4 +47,15 @@ describe('shape toggle', () => {
     expect(onUpdate).toHaveBeenCalledWith({ shape: 'ellipse' })
   })
 
+  it('shape buttons are right-aligned in op-shape-row for a child part', async () => {
+    const { container } = await render(
+      <PartPanel part={childPart} onUpdate={vi.fn()} />
+    )
+    const row = container.querySelector('.part-panel-op-shape-row')!
+    const shapeGroup = container.querySelector('.part-panel-op-shape-row .part-panel-shape')!
+    const rowRect = row.getBoundingClientRect()
+    const shapeRect = shapeGroup.getBoundingClientRect()
+    expect(Math.abs(shapeRect.right - rowRect.right)).toBeLessThanOrEqual(2)
+  })
+
 })
