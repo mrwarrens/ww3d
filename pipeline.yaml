@@ -1030,45 +1030,7 @@ tasks:
       Update or add browser tests asserting the visibility button is the last element in
       each row.
     deps: [103]
-    status: done
-  - id: 105
-    phase: 6
-    name: "UX: Align child part text with assembly name text in PartsList"
-    description: >
-      The text label of a child part (e.g. "Board 1") should start at the same horizontal
-      position as the assembly name text (e.g. "Assembly 1"), which sits immediately after
-      the collapse chevron.
-
-      In index.html:
-        - Remove padding-left: 22px from .left-panel-parts .assembly-row > ul
-        - Add padding-left to .left-panel-parts .assembly-row > ul li so that the child
-          name text aligns with the assembly name text. The collapse-btn is font-size:10px
-          with margin-right:4px; effective width is approximately 14px. Set child li
-          padding-left to 14px so both assembly name and child name start at the same
-          horizontal position from the panel left edge.
-
-      Add a browser test (or update an existing one) asserting the visual indent of a
-      child row matches the assembly name indent.
-    deps: [103]
-    status: pending
-
-  - id: 106
-    phase: 6
-    name: "UX: Align unassigned part text with assembly chevron in PartsList"
-    description: >
-      The text label of an unassigned top-level part (e.g. "Board 4") should start at
-      the same horizontal position as the collapse chevron of assembly rows.
-
-      In index.html, change padding-left: 8px to padding-left: 10px in the base
-      .left-panel-parts li rule. This aligns unassigned part text with the chevron
-      column (assembly rows use padding: 5px 10px). Child rows are unaffected because
-      task 105 sets their padding-left explicitly via the more-specific
-      .assembly-row > ul li rule.
-
-      Update or add a browser test asserting that an unassigned part row's left padding
-      matches the assembly chevron start position.
-    deps: [105]
-    status: pending
+    status: accepted
 
   - id: 70
     phase: 3
@@ -1076,3 +1038,55 @@ tasks:
     description: "Add expand/collapse toggle to each assembly row in PartsList. Clicking the toggle (a ▶/▼ chevron) shows or hides the nested part rows for that assembly. Default state is expanded. Collapsed state is local UI state (does not persist to the project store or save file). When collapsed, only the assembly header row is visible — its part rows are hidden. The toggle should not interfere with assembly selection (clicking the row name still selects the assembly). This addresses the parts list growing too long to fit on screen when projects have many parts."
     deps: [29]
     status: accepted
+
+  - id: 105
+    phase: 6
+    name: "UX: CutsList shows cuts when part with cuts is selected"
+    description: >
+      When a top-level part that has child cuts is selected (outside of modify mode),
+      the CutsList panel should display the part's cuts in read-only mode so the user
+      can see what cuts exist without entering modify mode. Currently CutsList only
+      renders in modify mode.
+
+      Show the CutsList below PartPanel whenever selectedIds contains a single part
+      that has one or more children (cuts). In this read-only view the cuts are listed
+      by name but are not selectable. The "Edit Cuts" button in PartPanel remains the
+      entry point into full modify mode where cuts can be selected and manipulated.
+
+      Add browser tests asserting that CutsList appears when a part with cuts is
+      selected normally, and does not appear when a part with no cuts is selected.
+    status: done
+  - id: 106
+    phase: 6
+    name: "UX: Compact button row in PartPanel during modify mode"
+    description: >
+      In modify mode (Edit Cuts active), when a child cut is selected in the 3D scene
+      or CutsList, PartPanel shows operation buttons (Add / Subtract) and shape buttons
+      (Box / Ellipse). These currently appear on separate lines, wasting vertical space.
+
+      Place the Add/Subtract toggle and the Box/Ellipse toggle on the same horizontal
+      row in PartPanel. Use a flex row with a small gap between the two groups. Both
+      groups already exist as adjacent button pairs; wrapping them in a shared flex
+      container is the minimal change needed.
+
+      Add or update browser tests to assert both button groups appear within the same
+      row (i.e. have the same offsetTop or are children of a shared wrapper element).
+    status: ready
+  - id: 107
+    phase: 6
+    name: "UX: Parent part stays highlighted in PartsList while a cut is selected"
+    description: >
+      When the user is in modify mode and selects a child cut (via CutsList or the 3D
+      scene), the parent part row in PartsList loses its visual selection highlight
+      because selectedIds no longer contains the parent's id. This is confusing — the
+      user should always see which top-level part they are editing.
+
+      In PartsList, while modify mode is active (modifyModePartId is set), treat the
+      part whose id matches modifyModePartId as visually selected regardless of the
+      current selectedIds value. Apply the same selected-row CSS class or style that
+      is used for a normally-selected part.
+
+      Add browser tests asserting that after clicking "Edit Cuts" on a part and then
+      selecting a cut, the parent part row in PartsList still has the selected
+      highlight class.
+    status: pending

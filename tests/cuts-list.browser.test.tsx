@@ -235,6 +235,55 @@ describe('LeftPanel cuts section', () => {
     expect(onExitModifyMode).toHaveBeenCalledOnce()
   })
 
+  it('shows read-only cut names when modifyingPartId is null but childParts has items', async () => {
+    const screen = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[cut1, cut2]}
+      />
+    )
+    await expect.element(screen.getByText('Dado Cut')).toBeInTheDocument()
+    await expect.element(screen.getByText('Notch')).toBeInTheDocument()
+  })
+
+  it('shows "select a board" message when modifyingPartId is null and childParts is empty', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[]}
+      />
+    )
+    const emptyEl = container.querySelector('.cuts-empty')
+    expect(emptyEl?.textContent).toContain('select a board')
+  })
+
+  it('read-only rows have no click handler (onSelectIds not called)', async () => {
+    const onSelectIds = vi.fn()
+    const screen = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={onSelectIds}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[cut1]}
+      />
+    )
+    await screen.getByText('Dado Cut').click()
+    expect(onSelectIds).not.toHaveBeenCalled()
+  })
+
   it('does not render child parts (with parentId) when filtered out upstream', async () => {
     const screen = await render(
       <PartsList

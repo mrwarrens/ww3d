@@ -39,7 +39,7 @@ export default function App() {
   const selectedPart = project.parts.find((p) => p.id === selectedId) ?? null
   const selectedAssembly = assemblies.find((a) => a.id === selectedAssemblyId) ?? null
   const topLevelParts = parts.filter((p) => !p.parentId)
-  const childParts = modifyingPartId ? parts.filter((p) => p.parentId === modifyingPartId) : []
+  const childParts = parts.filter((p) => p.parentId === (modifyingPartId ?? selectedId ?? ''))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraPresetRef = useRef<((name: keyof typeof CAMERA_PRESETS) => void) | null>(null)
 

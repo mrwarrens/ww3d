@@ -267,9 +267,15 @@ export default function PartsList({
         </button>
       </div>
       <ul id="cuts-list" className="left-panel-cuts-list">
-        {!modifyingPartId ? (
+        {!modifyingPartId && childParts.length === 0 ? (
           <li className="cuts-empty">To edit cuts, select a board and click Edit Cuts</li>
-        ) : childParts.length === 0 ? (
+        ) : !modifyingPartId && childParts.length > 0 ? (
+          childParts.map((cut) => (
+            <li key={cut.id} className="cuts-readonly">
+              {cut.name}
+            </li>
+          ))
+        ) : modifyingPartId && childParts.length === 0 ? (
           <li className="cuts-empty">Draw in the viewport to add a cut</li>
         ) : (
           childParts.map((cut) => (

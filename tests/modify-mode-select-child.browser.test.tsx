@@ -96,6 +96,15 @@ describe('PartPanel with child part', () => {
 // Board tests — child mesh ref registration
 // ──────────────────────────────────────────────────────────────────────────────
 
+async function waitFor(fn: () => void, timeout = 3000) {
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    try { fn(); return }
+    catch { await new Promise((r) => setTimeout(r, 16)) }
+  }
+  fn()
+}
+
 describe('Board - onChildMeshRef', () => {
   beforeEach(() => {
     useProjectStore.setState({ project: createProject(), history: [], future: [] })
@@ -126,10 +135,8 @@ describe('Board - onChildMeshRef', () => {
       </Canvas>
     )
 
-    // Allow R3F to render and commit refs
-    await act(async () => { await new Promise((r) => setTimeout(r, 100)) })
-
-    expect(childMeshRefCalled).toHaveBeenCalledWith(child.id, true)
+    // Poll until R3F commits the ref
+    await waitFor(() => expect(childMeshRefCalled).toHaveBeenCalledWith(child.id, true))
   })
 
   it('calls onChildMeshRef with a THREE.Mesh when an add child is rendered in modify mode', async () => {
@@ -157,9 +164,8 @@ describe('Board - onChildMeshRef', () => {
       </Canvas>
     )
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 100)) })
-
-    expect(childMeshRefCalled).toHaveBeenCalledWith(child.id, true)
+    // Poll until R3F commits the ref
+    await waitFor(() => expect(childMeshRefCalled).toHaveBeenCalledWith(child.id, true))
   })
 })
 
@@ -392,9 +398,12 @@ describe('App - modify mode child selection', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     })
 
-    // CutsList should show empty state (modify mode exited)
+    // CutsList should show read-only cut rows (parent re-selected, has children)
     const cutsList = document.getElementById('cuts-list')
-    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
+    const readonlyRow = Array.from(cutsList?.querySelectorAll('.cuts-readonly') ?? []).find(
+      (li) => li.textContent?.includes('Mortise')
+    )
+    expect(readonlyRow).not.toBeUndefined()
 
     // Child must still exist in store
     const parts = useProjectStore.getState().project.parts
@@ -487,9 +496,12 @@ describe('App - modify mode child selection', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     })
 
-    // CutsList should show empty state (modify mode exited, no cut rows visible)
+    // CutsList should show read-only cut rows (parent is re-selected after exiting modify mode)
     const cutsList = document.getElementById('cuts-list')
-    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
+    const readonlyRow = Array.from(cutsList?.querySelectorAll('.cuts-readonly') ?? []).find(
+      (li) => li.textContent?.includes('Dado Cut')
+    )
+    expect(readonlyRow).not.toBeUndefined()
     // Operation toggle (child-only UI) should be gone
     expect(document.querySelector('.part-panel-operation')).toBeNull()
   })
@@ -527,9 +539,12 @@ describe('App - modify mode child selection', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     })
 
-    // CutsList should show empty state (modify mode exited)
+    // CutsList should show read-only cut rows (parent re-selected, has children)
     const cutsList = document.getElementById('cuts-list')
-    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
+    const readonlyRow = Array.from(cutsList?.querySelectorAll('.cuts-readonly') ?? []).find(
+      (li) => li.textContent?.includes('Tenon')
+    )
+    expect(readonlyRow).not.toBeUndefined()
 
     // Child must still exist in store
     const parts = useProjectStore.getState().project.parts

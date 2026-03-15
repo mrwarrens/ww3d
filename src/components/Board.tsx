@@ -111,6 +111,13 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
   const allParts = useProjectStore(s => s.project.parts)
   const children = useMemo(() => allParts.filter(p => p.parentId === id), [allParts, id])
 
+  const boxGeo = useMemo(() => {
+    if (shape === 'ellipse') return null
+    return new THREE.BoxGeometry(length, thickness, width)
+  }, [shape, length, thickness, width])
+
+  useEffect(() => () => boxGeo?.dispose(), [boxGeo])
+
   const ellipseGeo = useMemo(() => {
     if (shape !== 'ellipse') return null
     const curve = new THREE.EllipseCurve(0, 0, length / 2, width / 2)
@@ -121,9 +128,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
     return geo
   }, [shape, length, width, thickness])
 
-  useEffect(() => {
-    return () => ellipseGeo?.dispose()
-  }, [ellipseGeo])
+  useEffect(() => () => ellipseGeo?.dispose(), [ellipseGeo])
 
   const [csgGeo, setCsgGeo] = useState<THREE.BufferGeometry | null>(null)
   const prevCsgGeoRef = useRef<THREE.BufferGeometry | null>(null)
@@ -246,7 +251,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
         ? <primitive object={csgGeo} attach="geometry" />
         : ellipseGeo
           ? <primitive object={ellipseGeo} attach="geometry" />
-          : <boxGeometry args={[length, thickness, width]} />
+          : <primitive object={boxGeo!} attach="geometry" />
       }
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       {!csgGeo && <Edges color="white" transparent opacity={0.3} />}

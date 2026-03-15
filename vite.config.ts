@@ -28,6 +28,7 @@ export default defineConfig({
         test: {
           name: 'browser',
           include: ['tests/*.browser.test.{ts,tsx}'],
+          fileParallelism: false,
           browser: {
             enabled: true,
             headless: true,
