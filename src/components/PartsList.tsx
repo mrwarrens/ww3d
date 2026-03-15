@@ -86,7 +86,10 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       draggable={true}
-      onDragStart={(e) => e.dataTransfer.setData('text/plain', part.id)}
+      onDragStart={(e) => {
+        const ids = selectedIds.includes(part.id) ? selectedIds : [part.id]
+        e.dataTransfer.setData('text/plain', ids.join(','))
+      }}
     >
       {part.name}
       <button
@@ -204,8 +207,8 @@ export default function PartsList({
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.stopPropagation()
-                  const draggedPartId = e.dataTransfer.getData('text/plain')
-                  if (draggedPartId) onAssignPart?.(draggedPartId, assembly.id)
+                  const data = e.dataTransfer.getData('text/plain')
+                  if (data) data.split(',').forEach((id) => onAssignPart?.(id, assembly.id))
                 }}
               >
                 <button

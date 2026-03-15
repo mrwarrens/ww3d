@@ -1139,3 +1139,21 @@ tasks:
       Add browser tests asserting that the instructional text is not present in the DOM
       (or is hidden) when an assembly row is selected in PartsList.
     status: done
+
+  - id: 111
+    phase: 6
+    name: "UX: Drag multi-selected parts in PartsList assigns all of them to an assembly"
+    description: >
+      When multiple parts are selected in PartsList (via Shift/Cmd+click) and the user
+      drags one of the selected rows onto an assembly, only the dragged part is currently
+      assigned to the assembly. All selected parts should be assigned.
+
+      In the drag-to-assign handler in PartsList: when the drop completes, check whether
+      the dragged part's id is included in selectedIds. If it is, call assignPartToAssembly
+      for every id in selectedIds (not just the single dragged id). If the dragged part is
+      not in selectedIds (i.e. the user dragged an unselected row), keep the existing
+      single-part behaviour.
+
+      Add browser tests asserting that dragging one of two multi-selected parts onto an
+      assembly header causes both parts to be assigned to that assembly.
+    status: done

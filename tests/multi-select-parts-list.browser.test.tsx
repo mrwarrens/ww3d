@@ -111,6 +111,65 @@ describe('PartsList multi-select', () => {
     expect(onSelectIds).toHaveBeenCalledWith([partBAssigned.id, partCAssigned.id, partA.id])
   })
 
+  it('dragging a selected part when multiple are selected assigns all selected parts to assembly', async () => {
+    const assembly = createAssembly('Cabinet')
+    const onAssignPart = vi.fn()
+    const { container } = await render(
+      <PartsList
+        parts={[partA, partB, partC]}
+        assemblies={[assembly]}
+        selectedIds={[partA.id, partB.id]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onToggleAssemblyVisibility={vi.fn()}
+        onAddAssembly={vi.fn()}
+        onAssignPart={onAssignPart}
+        onRemoveFromAssembly={vi.fn()}
+      />
+    )
+    const partALi = container.querySelector(`li[data-part-id="${partA.id}"]`) as HTMLElement
+    const assemblyLi = container.querySelector('.assembly-row') as HTMLElement
+
+    // Simulate drag from partA (which is selected) and drop on assembly
+    partALi.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: new DataTransfer() }))
+    assemblyLi.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
+
+    const dropTransfer = new DataTransfer()
+    dropTransfer.setData('text/plain', `${partA.id},${partB.id}`)
+    assemblyLi.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dropTransfer }))
+
+    expect(onAssignPart).toHaveBeenCalledWith(partA.id, assembly.id)
+    expect(onAssignPart).toHaveBeenCalledWith(partB.id, assembly.id)
+    expect(onAssignPart).toHaveBeenCalledTimes(2)
+  })
+
+  it('dragging an unselected part only assigns that part to assembly', async () => {
+    const assembly = createAssembly('Cabinet')
+    const onAssignPart = vi.fn()
+    const { container } = await render(
+      <PartsList
+        parts={[partA, partB, partC]}
+        assemblies={[assembly]}
+        selectedIds={[partA.id, partB.id]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onToggleAssemblyVisibility={vi.fn()}
+        onAddAssembly={vi.fn()}
+        onAssignPart={onAssignPart}
+        onRemoveFromAssembly={vi.fn()}
+      />
+    )
+    const assemblyLi = container.querySelector('.assembly-row') as HTMLElement
+
+    // Drop only partC's id (it is not in selectedIds)
+    const dropTransfer = new DataTransfer()
+    dropTransfer.setData('text/plain', partC.id)
+    assemblyLi.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dropTransfer }))
+
+    expect(onAssignPart).toHaveBeenCalledWith(partC.id, assembly.id)
+    expect(onAssignPart).toHaveBeenCalledTimes(1)
+  })
+
   it('clicking an assembly row does not throw when onSelectAssembly is omitted', async () => {
     const assembly = createAssembly('Cabinet')
     const screen = await render(
