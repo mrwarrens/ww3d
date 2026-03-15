@@ -1089,4 +1089,4 @@ tasks:
       Add browser tests asserting that after clicking "Edit Cuts" on a part and then
       selecting a cut, the parent part row in PartsList still has the selected
       highlight class.
-    status: ready
+    status: done

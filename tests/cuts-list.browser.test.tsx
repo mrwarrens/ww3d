@@ -284,6 +284,57 @@ describe('LeftPanel cuts section', () => {
     expect(onSelectIds).not.toHaveBeenCalled()
   })
 
+  it('applies selected class to parent part row when modifyingPartId matches and selectedIds is empty', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={parent.id}
+        childParts={[cut1]}
+      />
+    )
+    const partsItems = container.querySelectorAll('.left-panel-parts li')
+    const parentRow = Array.from(partsItems).find((li) => li.textContent?.includes('Side Panel'))
+    expect(parentRow?.classList.contains('selected')).toBe(true)
+  })
+
+  it('keeps parent part row selected when modifyingPartId matches and a child id is in selectedIds', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[cut1.id]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={parent.id}
+        childParts={[cut1]}
+      />
+    )
+    const partsItems = container.querySelectorAll('.left-panel-parts li')
+    const parentRow = Array.from(partsItems).find((li) => li.textContent?.includes('Side Panel'))
+    expect(parentRow?.classList.contains('selected')).toBe(true)
+  })
+
+  it('does not apply selected class to parent row when modifyingPartId is null and part is not selected', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[]}
+      />
+    )
+    const partsItems = container.querySelectorAll('.left-panel-parts li')
+    const parentRow = Array.from(partsItems).find((li) => li.textContent?.includes('Side Panel'))
+    expect(parentRow?.classList.contains('selected')).toBe(false)
+  })
+
   it('does not render child parts (with parentId) when filtered out upstream', async () => {
     const screen = await render(
       <PartsList

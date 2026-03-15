@@ -39,7 +39,7 @@ interface PartsListProps {
   onExitModifyMode?: () => void
 }
 
-function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedIdxRef, onToggleVisibility, onRemoveFromAssembly }: {
+function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedIdxRef, onToggleVisibility, onRemoveFromAssembly, modifyingPartId }: {
   part: Part
   index: number
   allParts: Part[]
@@ -48,6 +48,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
   lastClickedIdxRef: React.MutableRefObject<number>
   onToggleVisibility: (id: string) => void
   onRemoveFromAssembly?: (partId: string) => void
+  modifyingPartId?: string | null
 }) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -80,7 +81,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
     <li
       key={part.id}
       data-part-id={part.id}
-      className={selectedIds.includes(part.id) ? 'selected' : undefined}
+      className={(selectedIds.includes(part.id) || part.id === modifyingPartId) ? 'selected' : undefined}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       draggable={true}
@@ -233,6 +234,7 @@ export default function PartsList({
                         lastClickedIdxRef={lastClickedIdxRef}
                         onToggleVisibility={onToggleVisibility}
                         onRemoveFromAssembly={onRemoveFromAssembly}
+                        modifyingPartId={modifyingPartId}
                       />
                     ))}
                   </ul>
@@ -251,6 +253,7 @@ export default function PartsList({
               lastClickedIdxRef={lastClickedIdxRef}
               onToggleVisibility={onToggleVisibility}
               onRemoveFromAssembly={onRemoveFromAssembly}
+              modifyingPartId={modifyingPartId}
             />
           ))}
         </ul>
