@@ -371,6 +371,40 @@ describe('LeftPanel cuts section', () => {
     expect(parentRow?.classList.contains('selected')).toBe(false)
   })
 
+  it('hides instructional text when an assembly is selected', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[]}
+        selectedAssemblyId="assembly-123"
+      />
+    )
+    const emptyEl = container.querySelector('.cuts-empty')
+    expect(emptyEl).toBeNull()
+  })
+
+  it('shows instructional text when no assembly is selected', async () => {
+    const { container } = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[]}
+        selectedAssemblyId={null}
+      />
+    )
+    const emptyEl = container.querySelector('.cuts-empty')
+    expect(emptyEl?.textContent).toContain('select a board')
+  })
+
   it('does not render child parts (with parentId) when filtered out upstream', async () => {
     const screen = await render(
       <PartsList

@@ -1106,7 +1106,7 @@ tasks:
       Add browser tests asserting that clicking a cut row when not in modify mode
       transitions into modify mode with that cut selected (e.g. the "Done" button
       appears and the cut row has the selected highlight).
-    status: done
+    status: accepted
   - id: 109
     phase: 6
     name: "UX: Right-align Box/Ellipse buttons in PartPanel when a cut is selected"
@@ -1121,4 +1121,21 @@ tasks:
 
       Add or update browser tests asserting that the Box/Ellipse button group is
       right-aligned when a cut is selected.
+    status: accepted
+
+  - id: 110
+    phase: 6
+    name: "UX: Hide instructional text in CutsList when an assembly is selected"
+    description: >
+      CutsList currently shows instructional text (e.g. "Select a part to see its cuts"
+      or similar placeholder copy) at all times when not in modify mode. When an
+      assembly is selected this text is irrelevant and adds visual noise.
+
+      Hide the instructional text inside CutsList whenever an assembly is selected
+      (selectedAssemblyId is set and selectedIds is empty). The panel itself may remain
+      visible or be hidden entirely — whichever is simpler — but the text must not
+      be shown.
+
+      Add browser tests asserting that the instructional text is not present in the DOM
+      (or is hidden) when an assembly row is selected in PartsList.
     status: done

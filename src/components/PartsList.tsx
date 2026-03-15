@@ -272,7 +272,7 @@ export default function PartsList({
         </button>
       </div>
       <ul id="cuts-list" className="left-panel-cuts-list">
-        {!modifyingPartId && childParts.length === 0 ? (
+        {!modifyingPartId && childParts.length === 0 && !selectedAssemblyId ? (
           <li className="cuts-empty">To edit cuts, select a board and click Edit Cuts</li>
         ) : !modifyingPartId && childParts.length > 0 ? (
           childParts.map((cut) => (
