@@ -232,19 +232,35 @@ export default function PartPanel({
           />
         </label>
       </div>
-      <div className="part-panel-color">
-        <label>
-          Color:&nbsp;
-          <input
-            type="color"
-            value={part.color}
-            onChange={(e) => onUpdate({ color: e.target.value })}
-            aria-label="Color"
-          />
-        </label>
-        {onEyedropperActivate && (
-          <button type="button" onClick={onEyedropperActivate} aria-label="Eyedropper">Pick</button>
-        )}
+      <div className="part-panel-color-shape-row">
+        <div className="part-panel-color">
+          <label>
+            Color:&nbsp;
+            <input
+              type="color"
+              value={part.color}
+              onChange={(e) => onUpdate({ color: e.target.value })}
+              aria-label="Color"
+            />
+          </label>
+          {onEyedropperActivate && (
+            <button type="button" onClick={onEyedropperActivate} aria-label="Eyedropper">Pick</button>
+          )}
+        </div>
+        <div className="part-panel-shape" aria-label="Shape">
+          <button
+            type="button"
+            className={!isEllipse ? 'active' : ''}
+            onClick={() => onUpdate({ shape: 'box' })}
+            aria-label="Box shape"
+          >Box</button>
+          <button
+            type="button"
+            className={isEllipse ? 'active' : ''}
+            onClick={() => onUpdate({ shape: 'ellipse' })}
+            aria-label="Ellipse shape"
+          >Ellipse</button>
+        </div>
       </div>
       {part.parentId && (
         <div className="part-panel-operation" aria-label="Operation">
@@ -262,20 +278,6 @@ export default function PartPanel({
           >Subtract</button>
         </div>
       )}
-      <div className="part-panel-shape" aria-label="Shape">
-        <button
-          type="button"
-          className={!isEllipse ? 'active' : ''}
-          onClick={() => onUpdate({ shape: 'box' })}
-          aria-label="Box shape"
-        >Box</button>
-        <button
-          type="button"
-          className={isEllipse ? 'active' : ''}
-          onClick={() => onUpdate({ shape: 'ellipse' })}
-          aria-label="Ellipse shape"
-        >Ellipse</button>
-      </div>
     </div>
   )
 }

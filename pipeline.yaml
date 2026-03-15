@@ -974,8 +974,7 @@ tasks:
       Add a browser test asserting that selecting a part causes its row to have the
       selected background class.
     deps: [99]
-    status: planned
-
+    status: done
   - id: 102
     phase: 6
     name: "UX: Color swatch, eyedropper, and Box/Ellipse on one row in PartPanel"
@@ -997,7 +996,7 @@ tasks:
       Update affected browser tests (shape-toggle, eyedropper, partPanel) to match
       the new DOM structure if selectors change.
     deps: [95]
-    status: done
+    status: accepted
   - id: 70
     phase: 3
     name: Collapsible assembly groups in parts list

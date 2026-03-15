@@ -86,6 +86,7 @@ function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedI
       draggable={true}
       onDragStart={(e) => e.dataTransfer.setData('text/plain', part.id)}
     >
+      <span className="part-color-swatch" style={{ backgroundColor: part.color }} />
       {part.name}
       <button
         className="visibility-btn"
