@@ -348,7 +348,7 @@
     }
     .left-panel-parts li {
       padding: 6px 10px;
-      padding-left: 8px;
+      padding-left: 10px;
       border-left: 2px solid transparent;
       cursor: pointer;
       display: flex;
@@ -366,7 +366,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      padding: 5px 10px;
+      padding: 5px 0 0 10px;
       font-size: 10px;
       font-weight: bold;
       text-transform: uppercase;
@@ -384,10 +384,13 @@
       line-height: 1;
     }
 
+    .left-panel-parts .assembly-row > .visibility-btn {
+      margin-right: 10px;
+    }
     .left-panel-parts .assembly-row > ul {
       list-style: none;
       margin: 0;
-      padding-left: 22px;
+      padding-left: 0;
       flex-basis: 100%;
     }
     .left-panel-parts .assembly-row > ul li {
@@ -396,6 +399,7 @@
       text-transform: none;
       letter-spacing: normal;
       color: #fff;
+      padding-left: 14px;
     }
     .visibility-btn {
       background: transparent;
@@ -459,7 +463,7 @@
       opacity: 0.35;
       cursor: default;
     }
-    .edit-cuts-btn.active {
+    .edit-cuts-btn.editing {
       color: #f5a623;
       border-color: #f5a623;
       background: rgba(245,166,35,0.15);
@@ -580,7 +584,7 @@
       border-color: rgba(100,180,255,0.5);
     }
   </style>
-  <script type="module" crossorigin src="/ww3d/assets/index-ll4tHhC1.js"></script>
+  <script type="module" crossorigin src="/ww3d/assets/index-DGVXi-bz.js"></script>
 </head>
 <body>
   <div id="root"></div>
