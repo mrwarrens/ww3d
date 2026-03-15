@@ -50,10 +50,12 @@ describe('PartsList', () => {
 
   it('calls onSelectIds with a single-item array when a row is clicked', async () => {
     const onSelectIds = vi.fn()
-    const screen = await render(
+    const { container } = await render(
       <PartsList parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={onSelectIds} onToggleVisibility={vi.fn()} {...defaultProps} />
     )
-    await screen.getByText('Bottom Rail').click()
+    const partLis = Array.from(container.querySelectorAll('.left-panel-parts li:not(.assembly-row)'))
+    const bottomRailLi = partLis.find((li) => li.textContent?.includes('Bottom Rail')) as HTMLElement
+    bottomRailLi.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     expect(onSelectIds).toHaveBeenCalledWith([partB.id])
   })
 
@@ -65,22 +67,20 @@ describe('PartsList', () => {
     expect(btns.length).toBe(2)
   })
 
-  it('visibility button shows ● for a visible part', async () => {
+  it('visibility button has aria-label "Hide" for a visible part', async () => {
     const { container } = await render(
       <PartsList parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
     )
     const btn = container.querySelector('.visibility-btn')
-    expect(btn?.textContent).toBe('●')
     expect(btn?.getAttribute('aria-label')).toBe('Hide')
   })
 
-  it('visibility button shows ○ for a hidden part', async () => {
+  it('visibility button has aria-label "Show" for a hidden part', async () => {
     const hiddenPart = { ...partA, visible: false }
     const { container } = await render(
       <PartsList parts={[hiddenPart]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
     )
     const btn = container.querySelector('.visibility-btn')
-    expect(btn?.textContent).toBe('○')
     expect(btn?.getAttribute('aria-label')).toBe('Show')
   })
 
@@ -106,33 +106,15 @@ describe('PartsList', () => {
     expect(onSelectIds).not.toHaveBeenCalled()
   })
 
-  describe('#parts-list positioning', () => {
-    let styleEl: HTMLStyleElement
-
-    beforeEach(() => {
-      styleEl = document.createElement('style')
-      styleEl.textContent = `
-        #parts-list {
-          position: absolute;
-          top: 50px;
-          left: 10px;
-          width: 200px;
-        }
-      `
-      document.head.appendChild(styleEl)
-    })
-
-    afterEach(() => {
-      document.head.removeChild(styleEl)
-    })
-
-    it('#parts-list is positioned on the left side (left: 10px)', async () => {
+  describe('#left-panel positioning', () => {
+    it('#left-panel is positioned on the left side', async () => {
       const { container } = await render(
         <PartsList parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
       )
-      const el = container.querySelector('#parts-list') as HTMLElement
-      const style = window.getComputedStyle(el)
-      expect(style.left).toBe('10px')
+      const el = container.querySelector('#left-panel') as HTMLElement
+      expect(el).not.toBeNull()
+      const left = parseFloat(el.style.left)
+      expect(left).toBeGreaterThanOrEqual(0)
     })
   })
 
@@ -165,27 +147,51 @@ describe('PartsList', () => {
         <PartsList parts={[member, partB]} assemblies={[assembly]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
       )
       // root <ul> should have 2 children: the assembly <li> and the unassigned part <li>
-      const rootUl = container.querySelector('#parts-list > ul') as HTMLElement
+      const rootUl = container.querySelector('#left-panel .left-panel-parts > ul') as HTMLElement
       expect(rootUl.children.length).toBe(2)
       // The second child is the unassigned part
       expect(rootUl.children[1].textContent).toContain(partB.name)
     })
   })
 
-  describe('New Assembly button', () => {
-    it('renders a "New Assembly" button', async () => {
-      const screen = await render(
-        <PartsList parts={[]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
+  describe('data-part-id attribute', () => {
+    it('each part row has a data-part-id attribute matching its part id', async () => {
+      const { container } = await render(
+        <PartsList parts={[partA, partB]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
       )
-      await expect.element(screen.getByText('New Assembly')).toBeVisible()
+      const items = container.querySelectorAll('#parts-list li[data-part-id]')
+      const ids = Array.from(items).map((li) => li.getAttribute('data-part-id'))
+      expect(ids).toContain(partA.id)
+      expect(ids).toContain(partB.id)
     })
 
-    it('clicking "New Assembly" button calls onAddAssembly', async () => {
+    it('selected row has both selected class and data-part-id', async () => {
+      const { container } = await render(
+        <PartsList parts={[partA, partB]} assemblies={[]} selectedIds={[partA.id]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
+      )
+      const selectedLi = container.querySelector(`#parts-list li[data-part-id="${partA.id}"]`)
+      expect(selectedLi).not.toBeNull()
+      expect(selectedLi?.classList.contains('selected')).toBe(true)
+    })
+  })
+
+  describe('New Assembly button', () => {
+    it('renders a "+" button in the panel header', async () => {
+      const { container } = await render(
+        <PartsList parts={[]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
+      )
+      const btn = container.querySelector('.left-panel-header button') as HTMLElement
+      expect(btn).not.toBeNull()
+      expect(btn.textContent).toBe('+')
+    })
+
+    it('clicking the "+" header button calls onAddAssembly', async () => {
       const onAddAssembly = vi.fn()
-      const screen = await render(
+      const { container } = await render(
         <PartsList parts={[]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} onAddAssembly={onAddAssembly} onAssignPart={vi.fn()} onRemoveFromAssembly={vi.fn()} />
       )
-      await screen.getByText('New Assembly').click()
+      const btn = container.querySelector('.left-panel-header button') as HTMLElement
+      btn.click()
       expect(onAddAssembly).toHaveBeenCalled()
     })
   })

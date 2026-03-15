@@ -514,6 +514,490 @@ tasks:
        13. Undo (Cmd+Z) after any field commit → reverts the change in viewport and panel.
     deps: []
     status: accepted
+  # Phase 6 tasks — UX Overhaul
+  - id: 81
+    phase: 6
+    name: "UX: Merge Parts and Cuts into a single draggable left panel"
+    description: >
+      Replace the separate PartsList and CutsList panels with a single floating card
+      that contains both sections. The card is draggable by clicking anywhere on it
+      except inputs and buttons (mousedown on the card itself, not just the header).
+      Layout from top to bottom:
+        1. Card header row: label "Parts" on the left, "+" button on the right to create a new assembly.
+        2. Scrollable parts list (the existing PartsList rows unchanged).
+        3. A resize handle (a subtle drag zone) between the parts list and cuts section — dragging it
+           adjusts the height of the parts list. Min height 60px, no hard max (capped by viewport).
+        4. Section header row: label "Cuts" on the left, "Edit Cuts" toggle button on the right.
+           The toggle is amber-highlighted when cut mode is active (matching existing modify-mode styling).
+           Clicking it enters/exits modify mode (same behavior as the existing Edit Cuts button in PartPanel).
+        5. Cuts list rows (the existing CutsList rows) — only visible when a part with children is selected;
+           shows "No cuts" placeholder otherwise.
+      Remove the cut-badge (✂ scissors indicator) from parts list rows.
+      Remove the standalone CutsList component rendering from App.tsx — it is now embedded in this panel.
+      The Edit Cuts button in PartPanel should also be removed since it moves to this panel.
+      Card position defaults to top: 54px, left: 12px (below the menu bar). Position is local component
+      state; does not need to persist across sessions.
+    deps: [66, 70]
+    status: accepted
+  - id: 82
+    phase: 6
+    name: "UX: Replace top controls with Menu and Camera dropdown menus"
+    description: >
+      Replace the current scattered top controls (Help button, Grid controls pane, Load/Save buttons,
+      Camera preset buttons) with two compact dropdown menus in the upper-left corner.
+
+      Menu button (labeled "Menu ▾"):
+        - Opens a dropdown with sections:
+          - Project: Load (⌘O), Save (⌘S)
+          - View: Grid size control, Axes toggle
+          - Help (shows the existing help pane)
+        - Dropdown closes on outside click or item selection.
+
+      Camera button (labeled "Camera ▾"):
+        - Opens a dropdown listing: Front (1), Right (2), Top (3), Iso (4)
+        - Each item shows the keyboard shortcut on the right.
+        - Clicking fires the existing camera preset logic.
+        - Dropdown closes on selection or outside click.
+
+      Both buttons sit in the upper-left at top: 12px, left: 12px, with a small gap between them.
+      Style: semi-transparent dark background, monospace font, consistent with existing panel aesthetics.
+
+      Remove from the UI:
+        - The standalone Help button (#help-btn)
+        - The standalone Load/Save buttons (#load-btn, #save-btn)
+        - The Grid controls button and pane (#grid-controls, #grid-pane)
+        - The Camera presets column (#camera-presets)
+
+      All existing keyboard shortcuts (⌘S, ⌘O, 1/2/3/4) continue to work unchanged.
+      The help pane itself (#help-pane) is still rendered — just triggered from the Menu dropdown.
+    deps: []
+    status: accepted
+  - id: 83
+    phase: 6
+    name: "UX: Redesign Properties panel as compact draggable floating card"
+    description: >
+      Redesign the PartPanel and AssemblyPanel into a single compact floating card
+      positioned bottom-right by default. The card is draggable (mousedown anywhere
+      except inputs and buttons moves it). Position is local component state.
+
+      Card header: label "Properties" (or "Cut Properties" in cut mode — amber color).
+
+      Card body layout:
+        1. Name row: a single text input spanning the full width, showing the part/assembly name.
+           Editable inline — same commit/blur/Escape behavior as today. No subtitle line below it.
+        2. Dimensions group (Parts only, hidden for assemblies): label "Dimensions" above a 3-column
+           grid with fields L, W, T.
+        3. Rotation group: label "Rotation" above a 3-column grid with fields Rx, Ry, Rz.
+        4. Position group: label "Position" above a 3-column grid with fields Px, Py, Pz.
+        5. Bottom action row:
+           - Part mode (no parentId): [color swatch] [eyedropper ⊕ icon button]  [Box | Ellipse toggle]
+           - Cut mode (has parentId):  [Add | Subtract toggle]  [Box | Ellipse toggle]
+           No color picker or eyedropper in cut mode.
+
+      All existing input behaviors (fractional inches, arrow-key increment, blur commit, Escape reset)
+      are preserved unchanged — only the layout changes.
+
+      The eyedropper ⊕ button activates eyedropper mode the same as today.
+
+      For assembly selection: show only the name input, Rotation group, and Position group
+      (no Dimensions, no color, no shape toggle).
+
+      Remove the subtitle line ("Part · Assembly 1" or equivalent) entirely.
+      Remove the standalone "Edit Cuts" button from the panel body (it moves to the left panel per task 81).
+      Remove the Operation buttons (Add/Subtract) from the old location — they appear in the bottom
+      action row of the new layout.
+
+      Default position: bottom: 24px, right: 12px.
+    deps: [81, 82]
+    status: accepted
+  - id: 84
+    phase: 6
+    name: "Bug: dragging a part row into an assembly drags the left panel"
+    description: >
+      In the redesigned left panel (task 81), the card is draggable via mousedown anywhere
+      on the card body. This conflicts with the existing drag-to-assign interaction in PartsList,
+      where dragging a part row onto an assembly row assigns the part to that assembly.
+      When a user tries to drag a part row, the whole panel moves instead.
+
+      Fix: restrict the card drag interaction to the card header row only (the row containing
+      the "Parts" label and "+" button). Mousedown on any other area of the card — including
+      part rows, the resize handle, the Cuts section, and all buttons and inputs — must NOT
+      initiate a card drag. The drag-to-assign behavior for part rows must be fully restored
+      and must not conflict with card movement.
+    deps: [81]
+    status: accepted
+  - id: 85
+    phase: 6
+    name: "UX: Match left panel and properties card appearance to ux-mockup-c.html"
+    description: >
+      Polish the visual appearance of the left panel (task 81) and properties card (task 83)
+      to match the reference mockup at ~/Downloads/ux-mockup-c.html.
+
+      Specific changes:
+
+      Left panel:
+        - Assembly rows: font-size 10px, bold, uppercase, letter-spacing 0.04em,
+          color rgba(255,255,255,0.5) — dimmer than part rows.
+        - Part rows: font-size 12px, normal weight.
+        - Expand/collapse chevron: use ▶ (collapsed) and ▼ (expanded) — no other icon.
+        - Visibility toggle: use the 👁 emoji at opacity 0.35; on hover opacity 1.
+          Remove any text labels from the visibility button.
+        - Row hover background: rgba(255,255,255,0.07).
+        - Selected row background: rgba(255,255,255,0.18).
+        - Child rows indent: padding-left 22px.
+        - Section divider between Parts scroll area and Cuts header:
+          border-top 1px solid rgba(255,255,255,0.1).
+        - Resize handle: subtle — height 6px, border-top 1px solid rgba(255,255,255,0.07),
+          background rgba(255,255,255,0.03); center three dots "· · ·" at opacity 0.2.
+          On hover: background rgba(255,255,255,0.09).
+        - Cuts section header: same style as Parts header but with the Edit Cuts toggle button
+          styled as font-size 10px, border 1px solid rgba(255,255,255,0.2), border-radius 3px,
+          amber highlight when active.
+        - Card border: 1px solid rgba(255,255,255,0.1), border-radius 8px.
+        - Card background: rgba(16,16,22,0.92).
+        - Box shadow: 0 4px 24px rgba(0,0,0,0.6).
+        - Scrollbar: width 4px, thumb rgba(255,255,255,0.15).
+
+      Properties card:
+        - Name input: full-width, bold 14px, transparent border until hover/focus.
+          On hover: border rgba(255,255,255,0.15), background rgba(255,255,255,0.05).
+          On focus: border rgba(255,255,255,0.4), background rgba(255,255,255,0.08).
+        - Group labels (Dimensions, Rotation, Position): font-size 9px, uppercase,
+          letter-spacing 0.1em, color rgba(255,255,255,0.35).
+        - Field labels (L, W, T, Rx…): font-size 9px, opacity 0.4, uppercase.
+        - Field inputs: background rgba(255,255,255,0.07), border 1px solid rgba(255,255,255,0.12),
+          border-radius 3px; on focus border rgba(255,255,255,0.4).
+        - Dividers between groups: border-top 1px solid rgba(255,255,255,0.07).
+        - Color swatch: 28×22px, border-radius 4px, border 1px solid rgba(255,255,255,0.2).
+        - Eyedropper button: 26×22px, border 1px solid rgba(255,255,255,0.15), border-radius 4px;
+          active state: background rgba(100,180,255,0.2), border rgba(100,180,255,0.5).
+        - Box/Ellipse and Add/Subtract toggles: segmented control style — active button
+          background rgba(255,255,255,0.22), inactive rgba(255,255,255,0.06).
+        - Cut mode: card border-color rgba(255,180,50,0.3), header label color rgba(255,200,80,0.8).
+
+      Menu buttons (task 82):
+        - background rgba(16,16,22,0.92), border 1px solid rgba(255,255,255,0.15),
+          border-radius 6px, font-size 12px, padding 6px 14px.
+        - Dropdown: same background, border sans top edge when open, border-radius 0 6px 6px 6px.
+        - Dropdown items: padding 8px 16px, keyboard shortcut right-aligned at opacity 0.35.
+        - Section labels inside dropdown: font-size 9px, uppercase, opacity 0.35.
+    deps: [81, 82, 83]
+    status: accepted
+  - id: 86
+    phase: 6
+    name: "UX: Add close button to help panel"
+    description: >
+      The help panel (#help-pane) currently has no way to close it other than clicking the
+      Help button again (a toggle). Add a visible close button inside the help panel itself.
+
+      Placement: top-right corner of the help panel.
+      Style: small "✕" button, background transparent, color rgba(255,255,255,0.4),
+      no border; on hover color rgba(255,255,255,0.9).
+      Behavior: clicking it closes the help panel (sets showHelp to false in App.tsx state),
+      identical to clicking the Menu > Help item again.
+
+      Update the help panel test (tests/help-panel.browser.test.tsx) to verify the close
+      button is present and clicking it hides the panel.
+    deps: [82]
+    status: accepted
+  - id: 88
+    phase: 6
+    name: "UX: Inline grid size control in Menu dropdown"
+    description: >
+      In the Menu dropdown (task 82), replace the current grid size control with an inline row
+      that reads: "Grid: {size}  [−]  [+]"
+
+      The row is a non-dismissing menu item — clicking the − or + buttons adjusts the grid size
+      without closing the dropdown, so the user can tap repeatedly to reach the desired size.
+      Clicking anywhere outside the row (or on a normal menu item) closes the dropdown as usual.
+
+      The size label between the buttons updates live as − or + are clicked, showing the current
+      grid increment in fractional inches (e.g. "1/4"", "1/2"", "1"", "2"").
+
+      The − and + buttons use the same step increments as the existing Grid controls pane.
+      Minimum grid size is 1/16"; no hard maximum.
+
+      Style the row consistently with other dropdown items (padding 8px 16px, font-size 12px,
+      monospace). The − and + buttons are small (font-size 12px, padding 1px 6px, border
+      1px solid rgba(255,255,255,0.2), border-radius 3px, transparent background).
+    deps: [82]
+    status: accepted
+  - id: 87
+    phase: 6
+    name: "Bug: exiting cut mode does not restore parent part selection"
+    description: >
+      When the user clicks "Done" (or presses Escape) to exit cut mode (modifyingPartId is cleared),
+      the selection state is not restored to the parent part. The properties panel goes blank or
+      retains stale cut context instead of showing the parent part's properties.
+
+      Fix: when modifyingPartId is cleared (either via the Done/Edit Cuts toggle in the left panel
+      or via Escape), set selectedIds to [modifyingPartId] so the parent part becomes the active
+      selection. The properties panel should immediately update to show the parent part's name,
+      dimensions, rotation, position, color, and shape — the same state as if the user had clicked
+      the part row in the parts list.
+    deps: [81]
+    status: accepted
+  - id: 89
+    phase: 6
+    name: "UX: Properties panel — uppercase header and section labels"
+    description: >
+      Update PropertiesPanel.tsx and PartsList.tsx to match the mock's label casing and
+      structure.
+
+      Changes:
+      - PropertiesPanel header: "Properties" → "PROPERTIES", "Cut Properties" → "CUT PROPERTIES"
+      - PropertiesPanel section labels: "Dimensions" → "DIMENSIONS", "Rotation" → "ROTATION",
+        "Position" → "POSITION"
+      - PartsList CUTS section header: <span>Cuts</span> → <span>CUTS</span>
+
+      Update CSS in index.html as needed so uppercase labels look consistent with the mock
+      (letter-spacing, font-size, color — match the mock's subtle uppercase section style).
+
+      Update affected tests so they query by the new text content.
+    deps: [86]
+    status: accepted
+  - id: 90
+    phase: 6
+    name: "UX: Properties panel — add close (×) button"
+    description: >
+      Add a dismiss button to PropertiesPanel so the user can close it without clicking
+      elsewhere.
+
+      Changes:
+      - Add an `onClose?: () => void` prop to PropertiesPanel.
+      - Render a small "×" button in the panel header row (right-aligned, same row as the
+        "PROPERTIES" / "CUT PROPERTIES" label).
+      - In App.tsx, pass onClose to PropertiesPanel; handler should set selectedIds to [] and
+        selectedAssemblyId to null (deselects everything and hides the panel).
+      - Style the × button consistently with the mock: small, muted, no border, hover brightens.
+
+      Update affected tests.
+    deps: [86]
+    status: accepted
+  - id: 91
+    phase: 6
+    name: "UX: Properties panel — icon-only eyedropper, remove Color label"
+    description: >
+      Redesign the color row in PropertiesPanel to match the mock.
+
+      Current: "Color: [color swatch] [Pick button]"
+      Target:  "[color swatch] [eyedropper icon button]"
+
+      Changes in PropertiesPanel.tsx:
+      - Remove the "Color:&nbsp;" label text.
+      - Replace the "Pick" text button with a small icon button using the ⊕ or a simple
+        eyedropper-style character (e.g. the Unicode dropper "⌖" or a small SVG icon).
+        Use aria-label="Eyedropper" for accessibility.
+      - Layout: swatch and icon sit on the same row without a preceding text label.
+
+      Update CSS in index.html for the new layout.
+      Update affected tests (any test that looks for "Pick" button text should use aria-label).
+    deps: [86]
+    status: accepted
+  - id: 92
+    phase: 6
+    name: "UX: Cut Properties — show Dimensions section and fix button layout"
+    description: >
+      Two fixes to the CUT PROPERTIES panel to match the mock.
+
+      1. Show Dimensions (L/W/T) for cuts.
+         In PropertiesPanel.tsx the Dimensions block is currently gated by `!isCutMode`.
+         Remove the `!isCutMode` condition so it renders for child parts too.
+
+      2. Separate Add/Subtract and Box/Ellipse onto their own rows.
+         Currently both live inside a single `props-action-row` flex container, causing
+         them to sit side-by-side. Change the layout so Add/Subtract appears on one row
+         and Box/Ellipse on the next row beneath it.
+
+      Update CSS in index.html as needed.
+      Update affected tests.
+    deps: [86]
+    status: accepted
+  - id: 93
+    phase: 6
+    name: "UX: CUTS section — 'Editing' badge instead of 'Done Editing' button"
+    description: >
+      Redesign the CUTS section edit-mode indicator in PartsList.tsx to match the mock.
+
+      Current: A single button that reads "Edit Cuts" normally and "Done Editing" when active.
+      Target:  "Edit Cuts" button always visible; when in edit mode an amber "✏ Editing" badge
+               appears next to the CUTS label (or replaces the button label area).
+
+      Implementation:
+      - Keep the "Edit Cuts" button. Its click still toggles modify mode.
+      - When modifyingPartId is set, render a styled amber badge/pill element reading
+        "✏ Editing" adjacent to (or instead of) the button text in the header row.
+      - The "Edit Cuts" button text stays "Edit Cuts" at all times; the badge communicates
+        the active state separately.
+
+      Style the badge amber (#f5a623), small font, pill shape (border-radius: 4px, padding
+      1px 6px), consistent with the mock.
+      Update CSS in index.html.
+      Update affected tests (any test checking "Done Editing" text).
+    deps: [86]
+    status: accepted
+  - id: 94
+    phase: 6
+    name: "UX: Cut rows — visibility icons and improved empty state"
+    description: >
+      Two small improvements to the cuts list in PartsList.tsx.
+
+      1. Visibility toggle icons on cut rows.
+         Each cut row in the `#cuts-list` should show a visibility eye icon on the right,
+         identical in behavior to the visibility icons on part rows in the parts list.
+         Clicking it calls `togglePartVisibility(cut.id)` in the project store.
+         The icon appearance (filled vs dimmed) reflects `cut.visible`.
+
+      2. Better empty-state text.
+         Change the empty-state message from "No cuts" to "No cuts on this part".
+
+      Update CSS in index.html for the cut-row visibility icon layout if needed.
+      Update affected tests.
+    deps: [86]
+    status: accepted
+  - id: 95
+    phase: 6
+    name: "UX: Two-state visibility icons (open eye / slashed eye SVGs)"
+    description: >
+      Replace the single 👁 emoji used for all visibility toggle buttons with two distinct
+      inline SVG icons — one for visible, one for hidden — so the toggle state is immediately
+      clear.
+
+      Create two small functional components (or a single VisibilityIcon component with a
+      `visible` prop) in PartsList.tsx (or extract to src/components/icons.tsx if reused):
+
+        const EyeOpen = () => (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        )
+
+        const EyeOff = () => (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        )
+
+      Replace every {'👁'} in PartsList.tsx with:
+        {part.visible !== false ? <EyeOpen /> : <EyeOff />}
+      (and equivalently for assembly rows using assembly.visible).
+
+      Apply to all visibility buttons: part rows, assembly rows, and cut rows (task 94).
+
+      No CSS changes required — the SVGs inherit currentColor from the button.
+      Update affected tests: any test asserting '👁' text content should instead query by
+      aria-label ("Hide" / "Show").
+    deps: [94]
+    status: accepted
+  # Phase 6 bug fixes — cuts list / edit mode
+  - id: 96
+    phase: 6
+    name: "Bug: Edit Cuts button label shows 'Editing' in modify mode"
+    description: >
+      In PartPanel.tsx, the "Edit Cuts" button that enters modify mode should update its
+      label to "Editing" (or similar) when modify mode is active, so the user knows they
+      are currently in edit mode. Currently the button always reads "Edit Cuts".
+    deps: [95]
+    status: accepted
+  - id: 97
+    phase: 6
+    name: "Bug: CutsList cut show/hide visibility icons do not work"
+    description: >
+      In CutsList.tsx, clicking the visibility toggle icon on a cut row has no effect —
+      the part's visibility does not change. Fix the handler so toggling a cut's visibility
+      icon calls the appropriate store action and updates the cut's visible state.
+    deps: [96]
+    status: accepted
+  - id: 98
+    phase: 6
+    name: "Bug: Clicking 'Editing' button in CutsList should exit modify mode"
+    description: >
+      When the user is in modify mode (Edit Cuts active), clicking the button (which should
+      now read "Editing" per task 96) should exit modify mode, returning the UI to the
+      normal part-selection state. Currently the button has no click handler to exit modify
+      mode.
+    deps: [96]
+    status: accepted
+
+  # Phase 6 UX — parts list panel polish
+  - id: 99
+    phase: 6
+    name: "UX: PARTS header font and separator styling"
+    description: >
+      Small CSS fixes to .left-panel-header in index.html to match the mock:
+        1. font-size: 11px -> 10px
+        2. letter-spacing: 0.06em -> 0.08em
+        3. Replace opacity: 0.7 with explicit color: rgba(255,255,255,0.45)
+        4. Add border-bottom: 1px solid rgba(255,255,255,0.07)
+
+      Apply the same border-bottom to .left-panel-cuts-header for consistency.
+      No component changes needed. Update any tests that assert on header styling.
+    deps: [95]
+    status: done
+  - id: 100
+    phase: 6
+    name: "UX: Assembly row layout — chevron, alignment, and right-aligned visibility icon"
+    description: >
+      Three related fixes to assembly rows in PartsList.tsx and index.html:
+
+      1. Collapse button chrome — .collapse-btn has no CSS. Add: background transparent,
+         border none, padding 0, cursor pointer, color inherit, font-size 10px so it
+         renders as a plain inline chevron with no browser button styling.
+
+      2. Assembly row flex layout — .assembly-row is display:block so the visibility
+         button is not right-aligned. Change to display:flex, align-items:center,
+         justify-content:space-between, padding: 5px 10px. Collapse button + name on
+         the left; visibility button on the right.
+
+      3. Child indentation — .left-panel-parts .assembly-row > ul li already has
+         padding-left:22px; verify the assembly header aligns to the same 10px left
+         edge so parent/child hierarchy is visually clear.
+
+      Update affected browser tests (assembly-visibility, collapsible-assembly, etc.).
+    deps: [99]
+    status: done
+  - id: 101
+    phase: 6
+    name: "UX: Selected part row highlight in PartsList"
+    description: >
+      Verify and fix that a selected part's li in PartsList gets the .selected class
+      (background: rgba(255,255,255,0.18)) when the part's id is in selectedIds.
+
+      Check that selectedIds is passed to PartsList and applied to the li className.
+      Also confirm the assembly row gets .selected when selectedAssemblyId matches.
+
+      Add a browser test asserting that selecting a part causes its row to have the
+      selected background class.
+    deps: [99]
+    status: planned
+
+  - id: 102
+    phase: 6
+    name: "UX: Color swatch, eyedropper, and Box/Ellipse on one row in PartPanel"
+    description: >
+      In PartPanel.tsx, the color swatch, eyedropper button, and Box/Ellipse shape toggle
+      are currently stacked on separate rows. They should all appear on a single flex row.
+
+      In PartPanel.tsx, wrap the color input, eyedropper button, and the shape toggle
+      buttons together in one div with display:flex; align-items:center; gap:8px.
+      Remove the separate .part-panel-color and .part-panel-shape wrapper divs (or keep
+      them but nest them inside a new single-row wrapper).
+
+      In index.html, add a .part-panel-color-row rule:
+        display: flex; align-items: center; gap: 8px; margin-top: 6px;
+      and remove margin-top from .part-panel-shape since it is now inline.
+
+      The resulting row should read: [color swatch] [eyedropper] [Box | Ellipse]
+
+      Update affected browser tests (shape-toggle, eyedropper, partPanel) to match
+      the new DOM structure if selectors change.
+    deps: [95]
+    status: done
   - id: 70
     phase: 3
     name: Collapsible assembly groups in parts list

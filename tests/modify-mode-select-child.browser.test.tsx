@@ -3,7 +3,13 @@ import { render, cleanup } from 'vitest-browser-react'
 import { act } from 'react'
 import * as THREE from 'three'
 import { Canvas } from '@react-three/fiber'
-import PartPanel from '../src/components/PartPanel'
+import PropertiesPanel from '../src/components/PropertiesPanel'
+import type { Part } from '../src/models/Part'
+
+type PartPanelProps = { part: Part; onUpdate: Parameters<typeof PropertiesPanel>[0]['onUpdate'] }
+function PartPanel({ part, onUpdate }: PartPanelProps) {
+  return <PropertiesPanel part={part} assembly={null} onUpdate={onUpdate} onMoveAssembly={() => {}} />
+}
 import Board from '../src/components/Board'
 import App from '../src/App'
 import { createPart } from '../src/models/Part'
@@ -235,7 +241,7 @@ describe('App - modify mode child selection', () => {
     await act(async () => { (notchRow as HTMLElement)!.click() })
 
     // PartPanel should show the child's name
-    const nameInput = document.querySelector('#part-panel input[aria-label="Part name"]') as HTMLInputElement
+    const nameInput = document.querySelector('#properties-panel input[aria-label="Part name"]') as HTMLInputElement
     expect(nameInput).not.toBeNull()
     expect(nameInput.value).toBe('Notch')
   })
@@ -353,7 +359,7 @@ describe('App - modify mode child selection', () => {
     expect(children.every((c) => c.parentId === parent.id)).toBe(true)
   })
 
-  it('Done Editing preserves children in the store', async () => {
+  it('exiting modify mode preserves children in the store', async () => {
     useProjectStore.getState().addPart({ name: 'Rail', length: 24, width: 12, position: { x: 0, y: 0.375, z: 0 } })
     const parent = useProjectStore.getState().project.parts[0]
     useProjectStore.getState().addChildPart(parent.id, {
@@ -366,6 +372,8 @@ describe('App - modify mode child selection', () => {
     })
 
     await render(<App />)
+    // Wait for R3F / Scene to mount its keydown listener
+    await act(async () => { await new Promise((r) => setTimeout(r, 100)) })
 
     // Select parent and enter modify mode
     const parentRow = Array.from(document.querySelectorAll('#parts-list li')).find(
@@ -377,21 +385,113 @@ describe('App - modify mode child selection', () => {
     )
     await act(async () => { editCutsBtn!.click() })
 
-    // Exit via Done Editing
-    const doneBtn = Array.from(document.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Done Editing'
-    )
-    expect(doneBtn).toBeDefined()
-    await act(async () => { doneBtn!.click() })
+    expect(document.getElementById('cuts-list')).not.toBeNull()
 
-    // CutsList should be gone
-    expect(document.getElementById('cuts-list')).toBeNull()
+    // Exit via Escape
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+
+    // CutsList should show empty state (modify mode exited)
+    const cutsList = document.getElementById('cuts-list')
+    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
 
     // Child must still exist in store
     const parts = useProjectStore.getState().project.parts
     const child = parts.find((p) => p.parentId === parent.id)
     expect(child).toBeDefined()
     expect(child!.name).toBe('Mortise')
+  })
+
+  it('exiting modify mode restores PropertiesPanel to the parent part name', async () => {
+    useProjectStore.getState().addPart({ name: 'Top Rail', length: 24, width: 12, position: { x: 0, y: 0.375, z: 0 } })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      name: 'Slot Cut',
+      length: 2,
+      width: 2,
+      thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+    })
+
+    await render(<App />)
+    // Wait for R3F / Scene to mount its keydown listener
+    await act(async () => { await new Promise((r) => setTimeout(r, 100)) })
+
+    // Select parent and enter modify mode
+    const parentRow = Array.from(document.querySelectorAll('#parts-list li')).find(
+      (li) => li.textContent?.includes('Top Rail')
+    )
+    await act(async () => { (parentRow as HTMLElement)!.click() })
+    const editCutsBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Edit Cuts'
+    )
+    await act(async () => { editCutsBtn!.click() })
+
+    // Select the child cut
+    const cutRow = Array.from(document.querySelectorAll('#cuts-list li')).find(
+      (li) => li.textContent?.includes('Slot Cut')
+    )
+    await act(async () => { (cutRow as HTMLElement)!.click() })
+
+    // Confirm child name is shown in PropertiesPanel
+    const nameInputBefore = document.querySelector('#properties-panel input[aria-label="Part name"]') as HTMLInputElement
+    expect(nameInputBefore?.value).toBe('Slot Cut')
+
+    // Exit via Escape
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+
+    // PropertiesPanel should now show the parent part name
+    const nameInputAfter = document.querySelector('#properties-panel input[aria-label="Part name"]') as HTMLInputElement
+    expect(nameInputAfter).not.toBeNull()
+    expect(nameInputAfter.value).toBe('Top Rail')
+  })
+
+  it('exiting modify mode hides cuts-list and cut-properties UI', async () => {
+    useProjectStore.getState().addPart({ name: 'Bottom Rail', length: 24, width: 12, position: { x: 0, y: 0.375, z: 0 } })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      name: 'Dado Cut',
+      length: 2,
+      width: 2,
+      thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+    })
+
+    await render(<App />)
+    // Wait for R3F / Scene to mount its keydown listener
+    await act(async () => { await new Promise((r) => setTimeout(r, 100)) })
+
+    // Select parent and enter modify mode
+    const parentRow = Array.from(document.querySelectorAll('#parts-list li')).find(
+      (li) => li.textContent?.includes('Bottom Rail')
+    )
+    await act(async () => { (parentRow as HTMLElement)!.click() })
+    const editCutsBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Edit Cuts'
+    )
+    await act(async () => { editCutsBtn!.click() })
+
+    // Select the child cut
+    const cutRow = Array.from(document.querySelectorAll('#cuts-list li')).find(
+      (li) => li.textContent?.includes('Dado Cut')
+    )
+    await act(async () => { (cutRow as HTMLElement)!.click() })
+
+    // Exit via Escape
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+
+    // CutsList should show empty state (modify mode exited, no cut rows visible)
+    const cutsList = document.getElementById('cuts-list')
+    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
+    // Operation toggle (child-only UI) should be gone
+    expect(document.querySelector('.part-panel-operation')).toBeNull()
   })
 
   it('Escape exits modify mode and children remain in the store', async () => {
@@ -423,11 +523,13 @@ describe('App - modify mode child selection', () => {
     expect(document.getElementById('cuts-list')).not.toBeNull()
 
     // Press Escape (handled by Scene's keydown listener)
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    await act(async () => {})
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
 
-    // CutsList should be gone (modify mode exited)
-    expect(document.getElementById('cuts-list')).toBeNull()
+    // CutsList should show empty state (modify mode exited)
+    const cutsList = document.getElementById('cuts-list')
+    expect(cutsList?.querySelector('.cuts-empty')).not.toBeNull()
 
     // Child must still exist in store
     const parts = useProjectStore.getState().project.parts

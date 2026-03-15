@@ -7,27 +7,104 @@
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
-    #help-btn {
+    #top-bar {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+    .dropdown-group {
+      position: relative;
+    }
+    .dropdown-btn {
+      color: #fff;
+      font-family: monospace;
+      font-size: 12px;
+      background: rgba(16,16,22,0.92);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .dropdown-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: rgba(16,16,22,0.92);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 0 6px 6px 6px;
+      min-width: 180px;
+      padding: 4px 0;
+      z-index: 5;
+    }
+    .dropdown-section {
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.35);
+      padding: 6px 12px 2px;
+    }
+    .dropdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
       color: #fff;
       font-family: monospace;
       font-size: 14px;
-      background: rgba(0,0,0,0.5);
+      padding: 8px 16px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .dropdown-item:hover {
+      background: rgba(255,255,255,0.12);
+    }
+    .dropdown-item span:last-child {
+      color: rgba(255,255,255,0.35);
+      margin-left: 16px;
+    }
+    .dropdown-grid-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .dropdown-grid-row button {
+      background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      z-index: 1;
+      color: #fff;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 3px;
       cursor: pointer;
     }
-    #help-btn:hover {
-      background: rgba(255,255,255,0.15);
+    .dropdown-grid-row button:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .dropdown-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
     }
     #help-pane {
       position: absolute;
-      top: 46px;
-      left: 10px;
+      top: 54px;
+      left: 12px;
       color: #fff;
       font-family: monospace;
       font-size: 14px;
@@ -61,21 +138,99 @@
       color: rgba(255,255,255,0.55);
       text-align: right;
     }
-    #part-panel {
+    #properties-panel {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
+      bottom: 24px;
+      right: 12px;
       color: #fff;
       font-family: monospace;
       font-size: 14px;
-      background: rgba(0,0,0,0.6);
+      background: rgba(16,16,22,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
       padding: 10px 14px;
-      border-radius: 4px;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
       z-index: 1;
+    }
+    #properties-panel.cut-mode {
+      border-color: rgba(255,180,50,0.3);
+    }
+    #properties-panel.cut-mode .props-header span {
+      color: rgba(255,200,80,0.8);
+    }
+    .props-header {
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      font-weight: bold;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+    .props-close-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 0 0 6px;
+      opacity: 0.7;
+    }
+    .props-close-btn:hover {
+      opacity: 1;
+    }
+    .props-section-label {
+      font-family: monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-top: 6px;
+      margin-bottom: 2px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 6px;
+    }
+    .props-section-label:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+    .props-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .props-grid label {
+      display: flex;
+      align-items: center;
+      font-size: 9px;
+      opacity: 0.7;
+      text-transform: uppercase;
     }
     .part-panel-name {
       font-weight: bold;
       margin-bottom: 6px;
+    }
+    .part-panel-name input {
+      width: 100%;
+      font-weight: bold;
+      font-size: 14px;
+      border: 1px solid transparent;
+      background: transparent;
+      box-sizing: border-box;
+    }
+    .part-panel-name input:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+    .part-panel-name input:focus {
+      border-color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.08);
     }
     .part-panel-dims {
       display: flex;
@@ -101,6 +256,24 @@
     }
     .part-panel-dim-input {
       width: 7em;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px;
+    }
+    .part-panel-dim-input:focus {
+      border-color: rgba(255,255,255,0.4);
+    }
+    .part-panel-color-shape-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+    .part-panel-color-shape-row .part-panel-color {
+      margin-top: 0;
+    }
+    .part-panel-color-shape-row .part-panel-shape {
+      margin-top: 0;
     }
     .part-panel-color {
       margin-top: 6px;
@@ -112,122 +285,117 @@
     }
     .part-panel-color input[type="color"] {
       width: 28px;
-      height: 20px;
+      height: 22px;
       padding: 0;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
       background: transparent;
       cursor: pointer;
     }
-    #save-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: #fff;
-      font-family: monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      z-index: 1;
-      cursor: pointer;
-    }
-    #save-btn:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    #load-btn {
-      position: absolute;
-      top: 10px;
-      right: 74px;
-      color: #fff;
-      font-family: monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      z-index: 1;
-      cursor: pointer;
-    }
-    #load-btn:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    #grid-controls {
-      position: absolute;
-      top: 10px;
-      right: 148px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: #fff;
-      font-family: monospace;
-      font-size: 14px;
-      z-index: 1;
-    }
-    #grid-controls button {
-      color: #fff;
-      font-family: monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #grid-controls button:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    #grid-pane {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 4px;
-      padding: 4px;
-      z-index: 1;
-    }
-    #parts-list {
-      position: absolute;
-      top: 50px;
-      left: 10px;
+    #left-panel {
       width: 200px;
       color: #fff;
       font-family: monospace;
       font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 4px;
-      z-index: 1;
+      background: rgba(16,16,22,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      user-select: none;
+      cursor: default;
     }
-    #parts-list ul {
+    .left-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px 4px;
+      font-weight: bold;
+      opacity: 0.7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .left-panel-header button {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 1px 6px;
+      border-radius: 3px;
+      line-height: 1.4;
+    }
+    .left-panel-header button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .left-panel-parts {
+      overflow-y: auto;
+    }
+    .left-panel-parts::-webkit-scrollbar {
+      width: 4px;
+    }
+    .left-panel-parts::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.15);
+    }
+    .left-panel-parts ul {
       list-style: none;
       margin: 0;
       padding: 0;
     }
-    #parts-list li {
+    .left-panel-parts li {
       padding: 6px 10px;
+      padding-left: 8px;
+      border-left: 2px solid transparent;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 12px;
     }
-    #parts-list li:hover {
-      background: rgba(255,255,255,0.1);
+    .left-panel-parts li:hover {
+      background: rgba(255,255,255,0.07);
     }
-    #parts-list li.selected {
-      background: rgba(255,255,255,0.2);
+    .left-panel-parts li.selected {
+      background: rgba(74,144,226,0.22);
+      border-left: 2px solid rgba(100,180,255,0.7);
     }
-    #parts-list .assembly-row {
-      display: block;
+    .left-panel-parts .assembly-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.5);
     }
-    #parts-list .assembly-row > ul {
+    .collapse-btn {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      color: inherit;
+      font-size: 10px;
+      margin-right: 4px;
+      line-height: 1;
+    }
+    .left-panel-parts .assembly-row > .visibility-btn {
+      margin-left: auto;
+    }
+    .left-panel-parts .assembly-row > ul {
       list-style: none;
       margin: 0;
-      padding-left: 12px;
+      padding-left: 22px;
+      flex-basis: 100%;
+    }
+    .left-panel-parts .assembly-row > ul li {
+      font-size: 12px;
+      font-weight: normal;
+      text-transform: none;
+      letter-spacing: normal;
+      color: #fff;
     }
     .visibility-btn {
       background: transparent;
@@ -239,83 +407,95 @@
       padding: 0;
       width: 16px;
       line-height: 1;
-      opacity: 0.7;
+      opacity: 0.35;
     }
     .visibility-btn:hover {
       opacity: 1;
     }
-    #cuts-list {
-      position: absolute;
-      top: 320px;
-      left: 10px;
-      width: 200px;
+    .left-panel-resize {
+      height: 6px;
+      cursor: ns-resize;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: rgba(255,255,255,0.2);
+    }
+    .left-panel-resize:hover {
+      background: rgba(255,255,255,0.09);
+    }
+    .left-panel-cuts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px 4px;
+      font-weight: bold;
+      opacity: 0.7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .edit-cuts-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
       color: #fff;
       font-family: monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 4px;
-      z-index: 1;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: none;
+      letter-spacing: normal;
+      opacity: 1;
     }
-    #cuts-list ul {
+    .edit-cuts-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,0.15);
+    }
+    .edit-cuts-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .edit-cuts-btn.active {
+      color: #f5a623;
+      border-color: #f5a623;
+      background: rgba(245,166,35,0.15);
+    }
+    .editing-badge {
+      color: #f5a623;
+      border: 1px solid #f5a623;
+      background: rgba(245,166,35,0.15);
+      font-family: monospace;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .left-panel-cuts-list {
       list-style: none;
       margin: 0;
       padding: 0;
     }
-    #cuts-list li {
+    .left-panel-cuts-list li {
       padding: 6px 10px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    #cuts-list li:hover {
+    .left-panel-cuts-list li:hover {
       background: rgba(255,255,255,0.1);
     }
-    #cuts-list li.selected {
+    .left-panel-cuts-list li.selected {
       background: rgba(255,255,255,0.2);
     }
-    #cuts-list li.cuts-empty {
+    .left-panel-cuts-list li.cuts-empty {
       opacity: 0.4;
       cursor: default;
     }
-    #cuts-list li.cuts-empty:hover {
+    .left-panel-cuts-list li.cuts-empty:hover {
       background: transparent;
-    }
-    #cuts-list .cuts-heading {
-      font-weight: bold;
-      opacity: 0.6;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 6px 10px 2px;
-    }
-    .cuts-indicator {
-      opacity: 0.5;
-      font-size: 11px;
-      margin-left: 4px;
-    }
-    #camera-presets {
-      position: absolute;
-      top: 50px;
-      right: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      z-index: 1;
-    }
-    #camera-presets button {
-      color: #fff;
-      font-family: monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: left;
-    }
-    #camera-presets button:hover {
-      background: rgba(255,255,255,0.15);
     }
     .part-panel-operation {
       display: flex;
@@ -340,10 +520,61 @@
       border-radius: 0 4px 4px 0;
     }
     .part-panel-operation button.active {
-      background: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.22);
+    }
+    .part-panel-operation button:not(.active) {
+      background: rgba(255,255,255,0.06);
     }
     .part-panel-operation button:not(.active):hover {
       background: rgba(255,255,255,0.1);
+    }
+    .part-panel-shape {
+      display: flex;
+      flex-direction: row;
+      margin-top: 6px;
+    }
+    .part-panel-shape button {
+      color: #fff;
+      font-family: monospace;
+      font-size: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      border-radius: 0;
+      cursor: pointer;
+    }
+    .part-panel-shape button:first-child {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+    .part-panel-shape button:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+    .part-panel-shape button.active {
+      background: rgba(255,255,255,0.22);
+    }
+    .part-panel-shape button:not(.active):hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .part-panel-color button {
+      width: 26px;
+      height: 22px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .part-panel-color button:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .part-panel-color button.active {
+      background: rgba(100,180,255,0.2);
+      border-color: rgba(100,180,255,0.5);
     }
   </style>
 </head>

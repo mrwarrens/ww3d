@@ -1,8 +1,13 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, cleanup } from 'vitest-browser-react'
-import { act } from 'react'
-import PartPanel from '../src/components/PartPanel'
+import { describe, it, expect } from 'vitest'
+import { render } from 'vitest-browser-react'
+import PropertiesPanel from '../src/components/PropertiesPanel'
 import { createPart } from '../src/models/Part'
+import type { Part } from '../src/models/Part'
+
+type PartPanelProps = { part: Part; onUpdate: Parameters<typeof PropertiesPanel>[0]['onUpdate'] }
+function PartPanel({ part, onUpdate }: PartPanelProps) {
+  return <PropertiesPanel part={part} assembly={null} onUpdate={onUpdate} onMoveAssembly={() => {}} />
+}
 
 const topLevelPart = createPart({
   name: 'Board',
@@ -21,51 +26,30 @@ const childPart = createPart({
   parentId: topLevelPart.id,
 })
 
-afterEach(() => cleanup())
-
-describe('Modify mode', () => {
-  it('shows "Edit Cuts" button for top-level part', async () => {
-    const screen = await render(
-      <PartPanel part={topLevelPart} onUpdate={vi.fn()} isModifying={false} onEnterModifyMode={vi.fn()} onExitModifyMode={vi.fn()} />
+describe('Modify mode - PartPanel', () => {
+  it('does not contain an Edit Cuts button (moved to left panel)', async () => {
+    const { container } = await render(
+      <PartPanel part={topLevelPart} onUpdate={() => {}} />
     )
-    const btn = screen.getByRole('button', { name: /edit cuts/i })
-    await expect.element(btn).toBeInTheDocument()
-  })
-
-  it('clicking "Edit Cuts" calls onEnterModifyMode', async () => {
-    const onEnter = vi.fn()
-    const screen = await render(
-      <PartPanel part={topLevelPart} onUpdate={vi.fn()} isModifying={false} onEnterModifyMode={onEnter} onExitModifyMode={vi.fn()} />
-    )
-    const btn = screen.getByRole('button', { name: /edit cuts/i })
-    await act(async () => { btn.element().click() })
-    expect(onEnter).toHaveBeenCalledOnce()
-  })
-
-  it('shows "Done Editing" button when isModifying is true', async () => {
-    const screen = await render(
-      <PartPanel part={topLevelPart} onUpdate={vi.fn()} isModifying={true} onEnterModifyMode={vi.fn()} onExitModifyMode={vi.fn()} />
-    )
-    const btn = screen.getByRole('button', { name: /done editing/i })
-    await expect.element(btn).toBeInTheDocument()
-  })
-
-  it('clicking "Done Editing" calls onExitModifyMode', async () => {
-    const onExit = vi.fn()
-    const screen = await render(
-      <PartPanel part={topLevelPart} onUpdate={vi.fn()} isModifying={true} onEnterModifyMode={vi.fn()} onExitModifyMode={onExit} />
-    )
-    const btn = screen.getByRole('button', { name: /done editing/i })
-    await act(async () => { btn.element().click() })
-    expect(onExit).toHaveBeenCalledOnce()
-  })
-
-  it('does not show Edit Cuts button for a part with parentId', async () => {
-    await render(
-      <PartPanel part={childPart} onUpdate={vi.fn()} isModifying={false} onEnterModifyMode={vi.fn()} onExitModifyMode={vi.fn()} />
-    )
-    const buttons = Array.from(document.querySelectorAll('button'))
+    const buttons = Array.from(container.querySelectorAll('button'))
     const editCutsBtn = buttons.find((b) => /edit cuts/i.test(b.textContent ?? ''))
     expect(editCutsBtn).toBeUndefined()
+  })
+
+  it('does not contain a Done Editing / Done button', async () => {
+    const { container } = await render(
+      <PartPanel part={topLevelPart} onUpdate={() => {}} />
+    )
+    const buttons = Array.from(container.querySelectorAll('button'))
+    const doneBtn = buttons.find((b) => /done/i.test(b.textContent ?? ''))
+    expect(doneBtn).toBeUndefined()
+  })
+
+  it('does not render edit-cuts section for a child part', async () => {
+    const { container } = await render(
+      <PartPanel part={childPart} onUpdate={() => {}} />
+    )
+    const editCutsDiv = container.querySelector('.part-panel-edit-cuts')
+    expect(editCutsDiv).toBeNull()
   })
 })

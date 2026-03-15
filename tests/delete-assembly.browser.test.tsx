@@ -29,7 +29,7 @@ describe('Delete key removes selected assembly', () => {
     await act(async () => {})
 
     expect(document.querySelector('li.assembly-row')).toBeNull()
-    const outliner = document.getElementById('parts-list')!
+    const outliner = document.getElementById('left-panel')!
     expect(outliner.textContent).not.toContain('Top')
     expect(outliner.textContent).not.toContain('Bottom')
   })

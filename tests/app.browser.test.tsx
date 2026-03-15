@@ -7,89 +7,103 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+async function openMenu() {
+  await act(async () => { document.getElementById('menu-btn')!.click() })
+}
+
 describe('App', () => {
-  it('renders the help button and no hint text by default', async () => {
+  it('renders the Menu button', async () => {
     const screen = await render(<App />)
-    await expect.element(screen.getByRole('button', { name: '?' })).toBeVisible()
+    await expect.element(screen.getByRole('button', { name: /Menu/ })).toBeVisible()
+  })
+
+  it('renders the Camera button', async () => {
+    const screen = await render(<App />)
+    await expect.element(screen.getByRole('button', { name: /Camera/ })).toBeVisible()
+  })
+
+  it('help pane is not visible by default', async () => {
+    await render(<App />)
     expect(document.querySelector('#help-pane')).toBeNull()
   })
 
-  it('shows the help pane when the help button is clicked', async () => {
+  it('shows the help pane via Menu > Keyboard Shortcuts', async () => {
     await render(<App />)
-    await act(async () => { document.getElementById('help-btn')!.click() })
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    const kbBtn = Array.from(menu.querySelectorAll('button')).find((b) => b.textContent?.includes('Keyboard Shortcuts'))!
+    await act(async () => { kbBtn.click() })
     const pane = document.querySelector('#help-pane')
     expect(pane).not.toBeNull()
     expect(pane?.textContent).toContain('Left-drag')
   })
 
-  it('hides the help pane when the help button is clicked again', async () => {
+  it('Menu dropdown shows Save item', async () => {
     await render(<App />)
-    const helpBtn = document.getElementById('help-btn')!
-    await act(async () => { helpBtn.click() })
-    expect(document.querySelector('#help-pane')).not.toBeNull()
-    await act(async () => { helpBtn.click() })
-    expect(document.querySelector('#help-pane')).toBeNull()
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    expect(menu.textContent).toContain('Save')
   })
 
-  it('renders the save button', async () => {
-    const screen = await render(<App />)
-    await expect.element(screen.getByRole('button', { name: 'Save' })).toBeVisible()
-  })
-
-  it('renders the load button', async () => {
-    const screen = await render(<App />)
-    await expect.element(screen.getByRole('button', { name: 'Load' })).toBeVisible()
-  })
-
-  it('renders a grid toggle button showing the current grid size', async () => {
+  it('Menu dropdown shows Load item', async () => {
     await render(<App />)
-    const btn = document.getElementById('grid-toggle-btn')
-    expect(btn).not.toBeNull()
-    expect(btn?.textContent?.trim()).toMatch(/^Grid: \d+$/)
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    expect(menu.textContent).toContain('Load')
   })
 
-  it('grid pane is hidden by default', async () => {
+  it('Menu dropdown shows grid size', async () => {
     await render(<App />)
-    expect(document.getElementById('grid-pane')).toBeNull()
+    await openMenu()
+    const gridRow = document.querySelector('.dropdown-grid-row')
+    expect(gridRow).not.toBeNull()
+    expect(gridRow!.textContent).toContain('Grid:')
   })
 
-  it('opens the grid pane when the toggle button is clicked', async () => {
+  it('Menu dropdown is hidden by default', async () => {
     await render(<App />)
-    await act(async () => { document.getElementById('grid-toggle-btn')!.click() })
-    expect(document.getElementById('grid-pane')).not.toBeNull()
+    expect(document.getElementById('menu-dropdown')).toBeNull()
   })
 
-  it('closes the grid pane when the toggle button is clicked again', async () => {
+  it('Menu dropdown opens when Menu button is clicked', async () => {
     await render(<App />)
-    const toggleBtn = document.getElementById('grid-toggle-btn')!
-    await act(async () => { toggleBtn.click() })
-    expect(document.getElementById('grid-pane')).not.toBeNull()
-    await act(async () => { toggleBtn.click() })
-    expect(document.getElementById('grid-pane')).toBeNull()
+    await openMenu()
+    expect(document.getElementById('menu-dropdown')).not.toBeNull()
+  })
+
+  it('Menu dropdown closes when Menu button is clicked again', async () => {
+    await render(<App />)
+    await openMenu()
+    expect(document.getElementById('menu-dropdown')).not.toBeNull()
+    await openMenu()
+    expect(document.getElementById('menu-dropdown')).toBeNull()
   })
 
   it('clicking Grid + increases the displayed grid size', async () => {
     await render(<App />)
-    const toggleBtn = document.getElementById('grid-toggle-btn')!
-    const initialText = toggleBtn.textContent?.trim() ?? ''
-    const initialSize = parseInt(initialText.replace('Grid: ', ''), 10)
-    await act(async () => { toggleBtn.click() })
-    const pane = document.getElementById('grid-pane')!
-    const plusBtn = Array.from(pane.querySelectorAll('button')).find((b) => b.textContent?.includes('+'))!
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    const gridRow = menu.querySelector('.dropdown-grid-row')!
+    const initialSize = parseInt((gridRow.textContent ?? '').replace(/[^0-9]/g, ''), 10)
+    const plusBtn = Array.from(menu.querySelectorAll('button')).find((b) => b.textContent === '+')!
     await act(async () => { plusBtn.click() })
-    expect(toggleBtn.textContent?.trim()).toBe(`Grid: ${initialSize + 5}`)
+    const newSize = parseInt((menu.querySelector('.dropdown-grid-row')!.textContent ?? '').replace(/[^0-9]/g, ''), 10)
+    expect(newSize).toBe(initialSize + 5)
   })
 
-  it('renders the parts-list panel', async () => {
+  it('renders the left panel', async () => {
     await render(<App />)
-    expect(document.getElementById('parts-list')).not.toBeNull()
+    expect(document.getElementById('left-panel')).not.toBeNull()
   })
 
   it('help pane z-index is greater than part outliner z-index', async () => {
     await render(<App />)
-    await act(async () => { document.getElementById('help-btn')!.click() })
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    const kbBtn = Array.from(menu.querySelectorAll('button')).find((b) => b.textContent?.includes('Keyboard Shortcuts'))!
+    await act(async () => { kbBtn.click() })
     const helpPane = document.getElementById('help-pane')!
-    const outliner = document.getElementById('parts-list')!
+    const outliner = document.getElementById('left-panel')!
     const helpZ = parseInt(getComputedStyle(helpPane).zIndex, 10)
     const outlinerZ = parseInt(getComputedStyle(outliner).zIndex, 10)
     expect(helpZ).toBeGreaterThan(outlinerZ)
@@ -97,10 +111,12 @@ describe('App', () => {
 
   it('help pane background is fully opaque', async () => {
     await render(<App />)
-    await act(async () => { document.getElementById('help-btn')!.click() })
+    await openMenu()
+    const menu = document.getElementById('menu-dropdown')!
+    const kbBtn = Array.from(menu.querySelectorAll('button')).find((b) => b.textContent?.includes('Keyboard Shortcuts'))!
+    await act(async () => { kbBtn.click() })
     const helpPane = document.getElementById('help-pane')!
     const bg = getComputedStyle(helpPane).backgroundColor
-    // Parse alpha from rgb(r,g,b) or rgba(r,g,b,a)
     const match = bg.match(/rgba?\([\d\s,]+(?:,\s*([\d.]+))?\)/)
     const alpha = match?.[1] !== undefined ? parseFloat(match[1]) : 1
     expect(alpha).toBe(1)

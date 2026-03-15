@@ -27,25 +27,23 @@ describe('assembly visibility toggle', () => {
     expect(assemblyLi.querySelector('.visibility-btn')).not.toBeNull()
   })
 
-  it('visibility button shows ● when assembly.visible is true (default)', async () => {
+  it('visibility button has aria-label "Hide" when assembly.visible is true (default)', async () => {
     const assembly = createAssembly('Cabinet')
     const { container } = await render(
       <PartsList {...defaultProps} assemblies={[assembly]} />
     )
     const assemblyLi = container.querySelector('li.assembly-row') as HTMLElement
     const btn = assemblyLi.querySelector('.visibility-btn') as HTMLElement
-    expect(btn.textContent).toBe('●')
     expect(btn.getAttribute('aria-label')).toBe('Hide')
   })
 
-  it('visibility button shows ○ when assembly.visible is false', async () => {
+  it('visibility button has aria-label "Show" when assembly.visible is false', async () => {
     const assembly = { ...createAssembly('Cabinet'), visible: false }
     const { container } = await render(
       <PartsList {...defaultProps} assemblies={[assembly]} />
     )
     const assemblyLi = container.querySelector('li.assembly-row') as HTMLElement
     const btn = assemblyLi.querySelector('.visibility-btn') as HTMLElement
-    expect(btn.textContent).toBe('○')
     expect(btn.getAttribute('aria-label')).toBe('Show')
   })
 

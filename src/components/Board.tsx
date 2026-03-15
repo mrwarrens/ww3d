@@ -130,7 +130,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
 
   // Stable string key — only recompute CSG when child geometry/transform actually changes
   const childKey = useMemo(
-    () => children.map(c => `${c.id}:${c.length}:${c.width}:${c.thickness}:${c.position.x},${c.position.y},${c.position.z}:${c.rotation.x},${c.rotation.y},${c.rotation.z}:${c.operation ?? 'subtract'}:${c.shape ?? 'box'}`).join('|'),
+    () => children.map(c => `${c.id}:${c.length}:${c.width}:${c.thickness}:${c.position.x},${c.position.y},${c.position.z}:${c.rotation.x},${c.rotation.y},${c.rotation.z}:${c.operation ?? 'subtract'}:${c.shape ?? 'box'}:${c.visible}`).join('|'),
     [children]
   )
 
@@ -162,6 +162,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       }
 
       for (const child of currentChildren) {
+        if (child.visible === false) continue
         const op = child.operation ?? 'subtract'
         let childMf
         if (child.shape === 'ellipse') {
@@ -249,7 +250,7 @@ const Board = forwardRef<THREE.Mesh, BoardProps>(function Board({ id, length, wi
       }
       <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       {!csgGeo && <Edges color="white" transparent opacity={0.3} />}
-      {isModifying && children.map(child => (
+      {isModifying && children.filter(c => c.visible !== false).map(child => (
         <ChildGhost key={child.id} child={child} onSelect={() => onChildSelect?.(child.id)} onMeshRef={(mesh) => onChildMeshRef?.(child.id, mesh)} />
       ))}
     </mesh>

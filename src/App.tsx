@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import Scene from './components/Scene'
-import AssemblyPanel from './components/AssemblyPanel'
-import PartPanel from './components/PartPanel'
+import PropertiesPanel from './components/PropertiesPanel'
 import PartsList from './components/PartsList'
-import CutsList from './components/CutsList'
 import { useProjectStore } from './stores/projectStore'
 import { serializeProject, deserializeProject } from './models/Project'
 import type { CAMERA_PRESETS } from './utils/constants'
@@ -14,7 +12,8 @@ export default function App() {
   const selectedId = selectedIds[0] ?? null
   const [selectedAssemblyId, setSelectedAssemblyId] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
-  const [gridPaneOpen, setGridPaneOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [cameraOpen, setCameraOpen] = useState(false)
   const [showAxes, setShowAxes] = useState(false)
   const [eyedropperActive, setEyedropperActive] = useState(false)
   const [modifyingPartId, setModifyingPartId] = useState<string | null>(null)
@@ -41,7 +40,6 @@ export default function App() {
   const selectedAssembly = assemblies.find((a) => a.id === selectedAssemblyId) ?? null
   const topLevelParts = parts.filter((p) => !p.parentId)
   const childParts = modifyingPartId ? parts.filter((p) => p.parentId === modifyingPartId) : []
-  const partsWithCuts = new Set(parts.filter((p) => p.parentId).map((p) => p.parentId as string))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraPresetRef = useRef<((name: keyof typeof CAMERA_PRESETS) => void) | null>(null)
 
@@ -57,6 +55,14 @@ export default function App() {
       // even if a child was just added and React hasn't re-rendered yet.
       const latestParts = useProjectStore.getState().project.parts
       if (ids.length === 1 && latestParts.find((p) => p.id === ids[0])?.parentId === prev) return prev
+      return null
+    })
+  }, [])
+
+  const handleExitModifyMode = useCallback(() => {
+    setModifyingPartId((prev) => {
+      if (prev) setSelectedIds([prev])
+      else setSelectedIds([])
       return null
     })
   }, [])
@@ -99,6 +105,10 @@ export default function App() {
         e.preventDefault()
         saveProject()
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+        e.preventDefault()
+        fileInputRef.current?.click()
+      }
       const tag = (document.activeElement as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedAssemblyId) {
@@ -129,9 +139,63 @@ export default function App() {
 
   return (
     <>
-      <button id="help-btn" onClick={() => setHelpOpen((o) => !o)}>?</button>
+      <div id="top-bar">
+        <div className="dropdown-group">
+          <button className="dropdown-btn" id="menu-btn" onClick={() => { setMenuOpen((o) => !o); setCameraOpen(false) }}>Menu ▾</button>
+          {menuOpen && (
+            <>
+              <div className="dropdown-backdrop" onClick={() => setMenuOpen(false)} />
+              <div id="menu-dropdown" className="dropdown-menu">
+                <div className="dropdown-section">Project</div>
+                <button className="dropdown-item" onClick={() => { fileInputRef.current?.click(); setMenuOpen(false) }}>
+                  <span>Load</span><span>⌘O</span>
+                </button>
+                <button className="dropdown-item" onClick={() => { saveProject(); setMenuOpen(false) }}>
+                  <span>Save</span><span>⌘S</span>
+                </button>
+                <div className="dropdown-section">View</div>
+                <div className="dropdown-grid-row">
+                  <span>Grid: {gridSize}</span>
+                  <button onClick={(e) => { e.stopPropagation(); setGridSize(Math.max(5, gridSize - 5)) }}>−</button>
+                  <button onClick={(e) => { e.stopPropagation(); setGridSize(gridSize + 5) }}>+</button>
+                </div>
+                <button className="dropdown-item" onClick={() => setShowAxes((o) => !o)}>
+                  Axes {showAxes ? 'On' : 'Off'}
+                </button>
+                <div className="dropdown-section">Help</div>
+                <button className="dropdown-item" onClick={() => { setHelpOpen((o) => !o); setMenuOpen(false) }}>
+                  Keyboard Shortcuts
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="dropdown-group">
+          <button className="dropdown-btn" id="camera-btn" onClick={() => { setCameraOpen((o) => !o); setMenuOpen(false) }}>Camera ▾</button>
+          {cameraOpen && (
+            <>
+              <div className="dropdown-backdrop" onClick={() => setCameraOpen(false)} />
+              <div id="camera-dropdown" className="dropdown-menu">
+                <button className="dropdown-item" onClick={() => { cameraPresetRef.current?.('front'); setCameraOpen(false) }}>
+                  <span>Front</span><span>1</span>
+                </button>
+                <button className="dropdown-item" onClick={() => { cameraPresetRef.current?.('right'); setCameraOpen(false) }}>
+                  <span>Right</span><span>2</span>
+                </button>
+                <button className="dropdown-item" onClick={() => { cameraPresetRef.current?.('top'); setCameraOpen(false) }}>
+                  <span>Top</span><span>3</span>
+                </button>
+                <button className="dropdown-item" onClick={() => { cameraPresetRef.current?.('iso'); setCameraOpen(false) }}>
+                  <span>Iso</span><span>4</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
       {helpOpen && (
         <div id="help-pane" style={{ zIndex: 10, background: 'rgba(20,20,20,1)' }}>
+          <button id="help-pane-close" onClick={() => setHelpOpen(false)} style={{ position: 'absolute', top: 6, right: 8, background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 16 }}>✕</button>
           <div className="help-section">Mouse / Drag</div>
           <div className="help-row"><span>Left-drag on empty grid</span><span>Draw board</span></div>
           <div className="help-row"><span>Left-drag on board</span><span>Move part</span></div>
@@ -160,26 +224,6 @@ export default function App() {
           <div className="help-row"><span>1 / 2 / 3 / 4</span><span>Front / Right / Top / Iso view</span></div>
         </div>
       )}
-      <button id="save-btn" onClick={saveProject}>Save</button>
-      <button id="load-btn" onClick={() => fileInputRef.current?.click()}>Load</button>
-      <div id="camera-presets">
-        <button onClick={() => cameraPresetRef.current?.('front')}>1 Front</button>
-        <button onClick={() => cameraPresetRef.current?.('right')}>2 Right</button>
-        <button onClick={() => cameraPresetRef.current?.('top')}>3 Top</button>
-        <button onClick={() => cameraPresetRef.current?.('iso')}>4 Iso</button>
-      </div>
-      <div id="grid-controls">
-        <button id="grid-toggle-btn" onClick={() => setGridPaneOpen((o) => !o)}>
-          Grid: {gridSize}
-        </button>
-        {gridPaneOpen && (
-          <div id="grid-pane">
-            <button onClick={() => setGridSize(Math.max(5, gridSize - 5))}>Grid −</button>
-            <button onClick={() => setGridSize(gridSize + 5)}>Grid +</button>
-            <button onClick={() => setShowAxes((o) => !o)}>Axes {showAxes ? 'On' : 'Off'}</button>
-          </div>
-        )}
-      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -187,34 +231,20 @@ export default function App() {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      {selectedAssembly && !selectedPart && (
-        <AssemblyPanel
+      {(selectedPart || (selectedAssembly && !selectedPart)) && (
+        <PropertiesPanel
+          part={selectedPart}
           assembly={selectedAssembly}
+          onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
           onMoveAssembly={(position) => selectedAssemblyId && moveAssembly(selectedAssemblyId, position)}
           onRenameAssembly={(name) => selectedAssemblyId && renameAssembly(selectedAssemblyId, name)}
-        />
-      )}
-      {selectedPart && (
-        <PartPanel
-          part={selectedPart}
-          onUpdate={(changes) => selectedId && updatePart(selectedId, changes)}
           onEyedropperActivate={() => setEyedropperActive(true)}
-          isModifying={modifyingPartId === selectedId}
-          onEnterModifyMode={() => selectedId && setModifyingPartId(selectedId)}
-          onExitModifyMode={() => setModifyingPartId(null)}
-        />
-      )}
-      {modifyingPartId && (
-        <CutsList
-          children={childParts}
-          selectedIds={selectedIds}
-          onSelectIds={handleSelectIds}
+          onClose={() => { handleSelectIds([]); handleSelectAssembly(null) }}
         />
       )}
       <PartsList
         parts={topLevelParts}
         assemblies={assemblies}
-        partsWithCuts={partsWithCuts}
         selectedIds={selectedIds}
         onSelectIds={handleSelectIds}
         selectedAssemblyId={selectedAssemblyId}
@@ -224,6 +254,11 @@ export default function App() {
         onAddAssembly={() => addAssembly('Assembly ' + (assemblies.length + 1))}
         onAssignPart={assignPartToAssembly}
         onRemoveFromAssembly={removePartFromAssembly}
+        modifyingPartId={modifyingPartId}
+        childParts={childParts}
+        selectedPartId={selectedId}
+        onEnterModifyMode={() => selectedId && setModifyingPartId(selectedId)}
+        onExitModifyMode={handleExitModifyMode}
       />
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 200, position: [3, 2, 3] }}
@@ -247,7 +282,7 @@ export default function App() {
           onEyedropperCancel={() => setEyedropperActive(false)}
           showAxes={showAxes}
           modifyingPartId={modifyingPartId}
-          onExitModifyMode={() => setModifyingPartId(null)}
+          onExitModifyMode={handleExitModifyMode}
         />
       </Canvas>
     </>

@@ -3,7 +3,7 @@ import { render, cleanup } from 'vitest-browser-react'
 import { userEvent } from '@vitest/browser/context'
 import { Canvas } from '@react-three/fiber'
 import type { RootState } from '@react-three/fiber'
-import PartPanel from '../src/components/PartPanel'
+import PropertiesPanel from '../src/components/PropertiesPanel'
 import Board from '../src/components/Board'
 import { createPart } from '../src/models/Part'
 
@@ -35,7 +35,7 @@ afterEach(() => cleanup())
 describe('Eyedropper', () => {
   it('renders Pick button when onEyedropperActivate is provided', async () => {
     const screen = await render(
-      <PartPanel
+      <PropertiesPanel
         part={testPart}
         onUpdate={vi.fn()}
         assembly={null}
@@ -50,7 +50,7 @@ describe('Eyedropper', () => {
   it('calls onEyedropperActivate when Pick button is clicked', async () => {
     const onEyedropperActivate = vi.fn()
     const screen = await render(
-      <PartPanel
+      <PropertiesPanel
         part={testPart}
         onUpdate={vi.fn()}
         assembly={null}
@@ -65,7 +65,7 @@ describe('Eyedropper', () => {
 
   it('does not render Pick button when onEyedropperActivate is not provided', async () => {
     const { container } = await render(
-      <PartPanel
+      <PropertiesPanel
         part={testPart}
         onUpdate={vi.fn()}
         assembly={null}

@@ -86,7 +86,7 @@ describe('PartsList multi-select', () => {
     const partBAssigned = { ...partB, assemblyId: assembly.id }
     const partCAssigned = { ...partC, assemblyId: assembly.id }
     const onSelectIds = vi.fn()
-    const screen = await render(
+    const { container } = await render(
       <PartsList
         parts={[partA, partBAssigned, partCAssigned]}
         assemblies={[assembly]}
@@ -99,11 +99,15 @@ describe('PartsList multi-select', () => {
         onRemoveFromAssembly={vi.fn()}
       />
     )
-    // Plain click Part B (visual index 0) to set anchor
-    await screen.getByText('Part B').click()
+    // Find all part rows (non-assembly-header li elements) within the parts list
+    const partLis = Array.from(container.querySelectorAll('.left-panel-parts li:not(.assembly-row)'))
+    const partBLi = partLis.find((li) => li.textContent?.includes('Part B')) as HTMLElement
+    const partALi = partLis.find((li) => li.textContent?.includes('Part A')) as HTMLElement
+    // Plain click Part B (visual index 0) to set anchor; use dispatchEvent for reliability
+    partBLi.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
     onSelectIds.mockClear()
     // Shift+click Part A (visual index 2) — should select all three in visual order
-    await screen.getByText('Part A').click({ modifiers: ['Shift'] })
+    partALi.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, shiftKey: true }))
     expect(onSelectIds).toHaveBeenCalledWith([partBAssigned.id, partCAssigned.id, partA.id])
   })
 

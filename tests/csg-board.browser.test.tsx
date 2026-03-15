@@ -298,4 +298,29 @@ describe('ghost overlays in modify mode', () => {
     expect(ghost).toBeDefined()
     expect((ghost as THREE.Mesh).isMesh).toBe(true)
   })
+
+  it('does not render ghost for hidden child in modify mode', async () => {
+    useProjectStore.getState().addPart({
+      length: 6, width: 4,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+    })
+    const parent = useProjectStore.getState().project.parts[0]
+    useProjectStore.getState().addChildPart(parent.id, {
+      length: 0.5, width: 4, thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      operation: 'subtract',
+    })
+    const child = useProjectStore.getState().project.parts.find(p => p.parentId === parent.id)!
+    useProjectStore.getState().togglePartVisibility(child.id)
+
+    const state = await renderInCanvas(
+      <Board {...parent} isSelected={false} onSelect={() => {}} isModifying={true} />
+    )
+
+    await new Promise(r => setTimeout(r, 100))
+
+    const mesh = state.scene.children.find(c => (c as THREE.Mesh).isMesh) as THREE.Mesh
+    const ghosts = mesh.children.filter(c => c.name === 'child-ghost')
+    expect(ghosts).toHaveLength(0)
+  })
 })

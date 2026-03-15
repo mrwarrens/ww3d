@@ -7,9 +7,6 @@ interface PartPanelProps {
   part: Part
   onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape'>>) => void
   onEyedropperActivate?: () => void
-  isModifying?: boolean
-  onEnterModifyMode?: () => void
-  onExitModifyMode?: () => void
 }
 
 const radToDeg = (r: number) => (r * 180 / Math.PI).toFixed(1)
@@ -20,9 +17,6 @@ export default function PartPanel({
   part,
   onUpdate,
   onEyedropperActivate,
-  isModifying,
-  onEnterModifyMode,
-  onExitModifyMode,
 }: PartPanelProps) {
   const [draftName, setDraftName] = useState(part.name)
   const skipBlurRef = useRef(false)
@@ -282,14 +276,6 @@ export default function PartPanel({
           aria-label="Ellipse shape"
         >Ellipse</button>
       </div>
-      {!part.parentId && (
-        <div className="part-panel-edit-cuts">
-          {isModifying
-            ? <button type="button" onClick={onExitModifyMode}>Done Editing</button>
-            : <button type="button" onClick={onEnterModifyMode}>Edit Cuts</button>
-          }
-        </div>
-      )}
     </div>
   )
 }

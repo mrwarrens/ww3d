@@ -68,6 +68,16 @@ run_plan() {
       mv "$plan_file" "$DONE_DIR/$plan_name"
       update_yaml_status "$id" "done"
       log "SUCCESS: task #${id} → done (plan moved to done/)"
+      # Commit and push any changes made by the plan
+      if ! git -C "$PROJECT_ROOT" diff --quiet || ! git -C "$PROJECT_ROOT" diff --cached --quiet || [[ -n "$(git -C "$PROJECT_ROOT" ls-files --others --exclude-standard)" ]]; then
+        log "Committing changes for task #${id}..."
+        git -C "$PROJECT_ROOT" add -A
+        git -C "$PROJECT_ROOT" commit -m "feat: task #${id} - ${name}"
+        git -C "$PROJECT_ROOT" push
+        log "Pushed to origin"
+      else
+        log "No changes to commit for task #${id}"
+      fi
       ;;
     *)
       mv "$plan_file" "$FAILED_DIR/$plan_name"

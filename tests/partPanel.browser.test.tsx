@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup } from 'vitest-browser-react'
 import { userEvent } from '@vitest/browser/context'
-import PartPanel from '../src/components/PartPanel'
+import PropertiesPanel from '../src/components/PropertiesPanel'
+import type { Part } from '../src/models/Part'
+
+type PartPanelProps = { part: Part; onUpdate: Parameters<typeof PropertiesPanel>[0]['onUpdate']; onEyedropperActivate?: () => void; onClose?: () => void }
+function PartPanel({ part, onUpdate, onEyedropperActivate, onClose }: PartPanelProps) {
+  return <PropertiesPanel part={part} assembly={null} onUpdate={onUpdate} onMoveAssembly={() => {}} onEyedropperActivate={onEyedropperActivate} onClose={onClose} />
+}
 import { createPart } from '../src/models/Part'
 
 const testPart = createPart({
@@ -422,5 +428,82 @@ describe('PartPanel', () => {
     const el = input.element() as HTMLInputElement
     const width = parseFloat(getComputedStyle(el).width)
     expect(width).toBeGreaterThanOrEqual(90)
+  })
+
+  it('section labels are present with props-section-label class', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const labels = screen.container.querySelectorAll('.props-section-label')
+    expect(labels.length).toBeGreaterThan(0)
+    const labelTexts = Array.from(labels).map(el => el.textContent?.toLowerCase())
+    expect(labelTexts).toContain('dimensions')
+    expect(labelTexts).toContain('rotation')
+    expect(labelTexts).toContain('position')
+  })
+
+  it('shows Dimensions section and Length input for a child cut part', async () => {
+    const cutPart = createPart({
+      name: 'Dado',
+      length: 6,
+      width: 3,
+      thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      parentId: 'parent-id',
+    })
+    const screen = await render(<PartPanel part={cutPart} onUpdate={vi.fn()} />)
+    const labels = screen.container.querySelectorAll('.props-section-label')
+    const labelTexts = Array.from(labels).map(el => el.textContent?.toLowerCase())
+    expect(labelTexts).toContain('dimensions')
+    const lengthInput = screen.getByRole('textbox', { name: /length/i })
+    await expect.element(lengthInput).toHaveValue('6"')
+  })
+
+  it('renders a close button with aria-label "Close properties panel"', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    await expect.element(screen.getByRole('button', { name: /close properties panel/i })).toBeInTheDocument()
+  })
+
+  it('calls onClose when close button is clicked', async () => {
+    const onClose = vi.fn()
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} onClose={onClose} />)
+    await screen.getByRole('button', { name: /close properties panel/i }).click()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('renders both operation and shape button groups for a child cut part', async () => {
+    const cutPart = createPart({
+      name: 'Dado',
+      length: 6,
+      width: 3,
+      thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      parentId: 'parent-id',
+    })
+    const screen = await render(<PartPanel part={cutPart} onUpdate={vi.fn()} />)
+    await expect.element(screen.getByRole('button', { name: /add operation/i })).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: /subtract operation/i })).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: /box shape/i })).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: /ellipse shape/i })).toBeInTheDocument()
+  })
+
+  it('color swatch and Box/Ellipse buttons share a part-panel-color-shape-row ancestor for top-level parts', async () => {
+    const screen = await render(<PartPanel part={testPart} onUpdate={vi.fn()} />)
+    const row = screen.container.querySelector('.part-panel-color-shape-row')
+    expect(row).not.toBeNull()
+    expect(row!.querySelector('input[type="color"]')).not.toBeNull()
+    expect(row!.querySelector('[aria-label="Box shape"]')).not.toBeNull()
+    expect(row!.querySelector('[aria-label="Ellipse shape"]')).not.toBeNull()
+  })
+
+  it('does not render part-panel-color-shape-row for child cut parts', async () => {
+    const cutPart = createPart({
+      name: 'Dado',
+      length: 6,
+      width: 3,
+      thickness: 0.375,
+      position: { x: 0, y: 0, z: 0 },
+      parentId: 'parent-id',
+    })
+    const screen = await render(<PartPanel part={cutPart} onUpdate={vi.fn()} />)
+    expect(screen.container.querySelector('.part-panel-color-shape-row')).toBeNull()
   })
 })

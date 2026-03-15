@@ -51,7 +51,10 @@ describe('Camera pan configuration', () => {
 describe('Help pane mentions pan', () => {
   it('help pane contains the word "pan"', async () => {
     await render(<App />)
-    await act(async () => { document.getElementById('help-btn')!.click() })
+    await act(async () => { document.getElementById('menu-btn')!.click() })
+    const menu = document.getElementById('menu-dropdown')!
+    const kbBtn = Array.from(menu.querySelectorAll('button')).find((b) => b.textContent?.includes('Keyboard Shortcuts'))!
+    await act(async () => { kbBtn.click() })
     const pane = document.getElementById('help-pane')
     expect(pane).not.toBeNull()
     expect(pane!.textContent?.toLowerCase()).toContain('pan')

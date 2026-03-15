@@ -20,9 +20,9 @@ function mockKeyEvent(key: string) {
 }
 
 describe('useEditableInput', () => {
-  it('initializes draft to externalValue', () => {
+  it('initializes draft to externalValue', async () => {
     const skipBlurRef = makeSkipBlurRef()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5"',
         parse: parseFloat,
@@ -37,7 +37,7 @@ describe('useEditableInput', () => {
   it('syncs draft when externalValue changes', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result, rerender } = renderHook(
+    const { result, rerender } = await renderHook(
       ({ val }: { val: string }) =>
         useEditableInput({
           externalValue: val,
@@ -58,7 +58,7 @@ describe('useEditableInput', () => {
   it('calls onCommit with parsed value and normalizes draft on valid blur', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -76,7 +76,7 @@ describe('useEditableInput', () => {
   it('resets draft to externalValue on invalid blur without calling onCommit', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: (s) => { const v = parseFloat(s); if (isNaN(v)) throw new Error(); return v },
@@ -94,7 +94,7 @@ describe('useEditableInput', () => {
   it('resets draft when validate returns false, without calling onCommit', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -110,11 +110,11 @@ describe('useEditableInput', () => {
     expect(result.current.draft).toBe('5')
   })
 
-  it('skips blur commit and clears skipBlurRef when skipBlurRef is true', () => {
+  it('skips blur commit and clears skipBlurRef when skipBlurRef is true', async () => {
     const skipBlurRef = makeSkipBlurRef()
     skipBlurRef.current = true
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -129,10 +129,10 @@ describe('useEditableInput', () => {
     expect(skipBlurRef.current).toBe(false)
   })
 
-  it('ArrowUp increments by step and calls onCommit', () => {
+  it('ArrowUp increments by step and calls onCommit', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -148,10 +148,10 @@ describe('useEditableInput', () => {
     expect(result.current.draft).toBe('6.0')
   })
 
-  it('ArrowDown decrements by step and calls onCommit', () => {
+  it('ArrowDown decrements by step and calls onCommit', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -167,10 +167,10 @@ describe('useEditableInput', () => {
     expect(result.current.draft).toBe('4.0')
   })
 
-  it('ArrowDown clamps to minValue', () => {
+  it('ArrowDown clamps to minValue', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '1',
         parse: parseFloat,
@@ -187,10 +187,10 @@ describe('useEditableInput', () => {
     expect(onCommit).toHaveBeenCalledWith(0.0625)
   })
 
-  it('arrow keys are ignored when step is not provided', () => {
+  it('arrow keys are ignored when step is not provided', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -204,10 +204,10 @@ describe('useEditableInput', () => {
     expect(onCommit).not.toHaveBeenCalled()
   })
 
-  it('Enter commits then sets skipBlurRef and blurs', () => {
+  it('Enter commits then sets skipBlurRef and blurs', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,
@@ -224,10 +224,10 @@ describe('useEditableInput', () => {
     expect(blur).toHaveBeenCalled()
   })
 
-  it('Escape resets draft to externalValue, sets skipBlurRef, and blurs without calling onCommit', () => {
+  it('Escape resets draft to externalValue, sets skipBlurRef, and blurs without calling onCommit', async () => {
     const skipBlurRef = makeSkipBlurRef()
     const onCommit = vi.fn()
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useEditableInput({
         externalValue: '5',
         parse: parseFloat,

@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import PartPanel from '../src/components/PartPanel'
+import PropertiesPanel from '../src/components/PropertiesPanel'
 import { createPart } from '../src/models/Part'
+import type { Part } from '../src/models/Part'
+
+type PartPanelProps = { part: Part; onUpdate: Parameters<typeof PropertiesPanel>[0]['onUpdate'] }
+function PartPanel({ part, onUpdate }: PartPanelProps) {
+  return <PropertiesPanel part={part} assembly={null} onUpdate={onUpdate} onMoveAssembly={() => {}} />
+}
 
 const topLevelPart = createPart({ name: 'Board', length: 12, width: 8, position: { x: 0, y: 0.375, z: 0 } })
 const childPart = createPart({ name: 'Cut', length: 4, width: 4, position: { x: 0, y: 0, z: 0 }, parentId: 'parent-id' })
