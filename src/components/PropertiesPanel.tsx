@@ -211,7 +211,7 @@ export default function PropertiesPanel({
       {part && (
         <>
           {isCutMode ? (
-            <>
+            <div className="part-panel-op-shape-row">
               <div className="part-panel-operation" aria-label="Operation">
                 <button type="button" className={part.operation === 'add' ? 'active' : ''} onClick={() => onUpdate({ operation: 'add' })} aria-label="Add operation">Add</button>
                 <button type="button" className={part.operation !== 'add' ? 'active' : ''} onClick={() => onUpdate({ operation: 'subtract' })} aria-label="Subtract operation">Subtract</button>
@@ -220,7 +220,7 @@ export default function PropertiesPanel({
                 <button type="button" className={!isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'box' })} aria-label="Box shape">Box</button>
                 <button type="button" className={isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'ellipse' })} aria-label="Ellipse shape">Ellipse</button>
               </div>
-            </>
+            </div>
           ) : (
             <div className="part-panel-color-shape-row">
               <div className="part-panel-color">

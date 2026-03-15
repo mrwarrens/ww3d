@@ -90,6 +90,25 @@ describe('PartPanel with child part', () => {
     const editCutsDiv = container.querySelector('.part-panel-edit-cuts')
     expect(editCutsDiv).toBeNull()
   })
+
+  it('renders .part-panel-op-shape-row wrapper for a child part', async () => {
+    const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
+    const row = container.querySelector('.part-panel-op-shape-row')
+    expect(row).not.toBeNull()
+  })
+
+  it('.part-panel-operation and .part-panel-shape are children of .part-panel-op-shape-row for a child part', async () => {
+    const { container } = await render(<PartPanel part={childPart} onUpdate={vi.fn()} />)
+    const row = container.querySelector('.part-panel-op-shape-row')!
+    expect(row.querySelector('.part-panel-operation')).not.toBeNull()
+    expect(row.querySelector('.part-panel-shape')).not.toBeNull()
+  })
+
+  it('does not render .part-panel-op-shape-row for a top-level part', async () => {
+    const { container } = await render(<PartPanel part={parentPart} onUpdate={vi.fn()} />)
+    const row = container.querySelector('.part-panel-op-shape-row')
+    expect(row).toBeNull()
+  })
 })
 
 // ──────────────────────────────────────────────────────────────────────────────
