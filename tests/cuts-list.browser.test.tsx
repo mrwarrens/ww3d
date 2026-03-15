@@ -284,6 +284,42 @@ describe('LeftPanel cuts section', () => {
     expect(onSelectIds).not.toHaveBeenCalled()
   })
 
+  it('calls onEnterModifyModeForCut with cut id when a read-only cut row is clicked', async () => {
+    const onEnterModifyModeForCut = vi.fn()
+    const screen = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[cut1]}
+        onEnterModifyModeForCut={onEnterModifyModeForCut}
+      />
+    )
+    await screen.getByText('Dado Cut').click()
+    expect(onEnterModifyModeForCut).toHaveBeenCalledWith(cut1.id)
+  })
+
+  it('does not call onSelectIds when a read-only cut row is clicked and onEnterModifyModeForCut is provided', async () => {
+    const onSelectIds = vi.fn()
+    const screen = await render(
+      <PartsList
+        parts={[parent]}
+        assemblies={[]}
+        selectedIds={[]}
+        onSelectIds={onSelectIds}
+        onToggleVisibility={vi.fn()}
+        modifyingPartId={null}
+        childParts={[cut1]}
+        onEnterModifyModeForCut={vi.fn()}
+      />
+    )
+    await screen.getByText('Dado Cut').click()
+    expect(onSelectIds).not.toHaveBeenCalled()
+  })
+
   it('applies selected class to parent part row when modifyingPartId matches and selectedIds is empty', async () => {
     const { container } = await render(
       <PartsList

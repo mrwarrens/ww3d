@@ -59,6 +59,13 @@ export default function App() {
     })
   }, [])
 
+  const handleEnterModifyModeForCut = useCallback((cutId: string) => {
+    if (!selectedId) return
+    setModifyingPartId(selectedId)
+    setSelectedIds([cutId])
+    setSelectedAssemblyId(null)
+  }, [selectedId])
+
   const handleExitModifyMode = useCallback(() => {
     setModifyingPartId((prev) => {
       if (prev) setSelectedIds([prev])
@@ -259,6 +266,7 @@ export default function App() {
         selectedPartId={selectedId}
         onEnterModifyMode={() => selectedId && setModifyingPartId(selectedId)}
         onExitModifyMode={handleExitModifyMode}
+        onEnterModifyModeForCut={handleEnterModifyModeForCut}
       />
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 200, position: [3, 2, 3] }}

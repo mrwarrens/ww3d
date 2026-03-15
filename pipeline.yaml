@@ -1055,7 +1055,7 @@ tasks:
 
       Add browser tests asserting that CutsList appears when a part with cuts is
       selected normally, and does not appear when a part with no cuts is selected.
-    status: done
+    status: accepted
   - id: 106
     phase: 6
     name: "UX: Compact button row in PartPanel during modify mode"
@@ -1071,7 +1071,7 @@ tasks:
 
       Add or update browser tests to assert both button groups appear within the same
       row (i.e. have the same offsetTop or are children of a shared wrapper element).
-    status: done
+    status: accepted
   - id: 107
     phase: 6
     name: "UX: Parent part stays highlighted in PartsList while a cut is selected"
@@ -1089,4 +1089,36 @@ tasks:
       Add browser tests asserting that after clicking "Edit Cuts" on a part and then
       selecting a cut, the parent part row in PartsList still has the selected
       highlight class.
+    status: accepted
+  - id: 108
+    phase: 6
+    name: "UX: Selecting a cut in CutsList enters modify mode automatically"
+    description: >
+      When CutsList is shown in read-only mode (part with cuts selected, not yet in
+      modify mode), clicking a cut row should automatically enter modify mode for the
+      parent part and select that cut — equivalent to the user clicking "Edit Cuts"
+      first and then clicking the cut.
+
+      On cut row click in the read-only CutsList view: set modifyModePartId to the
+      parent part's id and set selectedIds to the clicked cut's id, exactly as if the
+      user had pressed "Edit Cuts" and then clicked that cut in the CutsList.
+
+      Add browser tests asserting that clicking a cut row when not in modify mode
+      transitions into modify mode with that cut selected (e.g. the "Done" button
+      appears and the cut row has the selected highlight).
     status: done
+  - id: 109
+    phase: 6
+    name: "UX: Right-align Box/Ellipse buttons in PartPanel when a cut is selected"
+    description: >
+      When a cut is selected in modify mode, PartPanel shows Box and Ellipse shape
+      toggle buttons. These buttons are currently left-aligned, inconsistent with other
+      right-aligned controls in the panel.
+
+      Apply margin-left: auto (or equivalent flex alignment) to the Box/Ellipse button
+      group so it is flush against the right edge of PartPanel, matching the alignment
+      style used for other button groups in the panel.
+
+      Add or update browser tests asserting that the Box/Ellipse button group is
+      right-aligned when a cut is selected.
+    status: ready

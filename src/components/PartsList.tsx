@@ -37,6 +37,7 @@ interface PartsListProps {
   selectedPartId?: string | null
   onEnterModifyMode?: () => void
   onExitModifyMode?: () => void
+  onEnterModifyModeForCut?: (cutId: string) => void
 }
 
 function PartRow({ part, index, allParts, selectedIds, onSelectIds, lastClickedIdxRef, onToggleVisibility, onRemoveFromAssembly, modifyingPartId }: {
@@ -116,6 +117,7 @@ export default function PartsList({
   selectedPartId,
   onEnterModifyMode,
   onExitModifyMode,
+  onEnterModifyModeForCut,
 }: PartsListProps) {
   const lastClickedIdxRef = useRef<number>(-1)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -274,7 +276,11 @@ export default function PartsList({
           <li className="cuts-empty">To edit cuts, select a board and click Edit Cuts</li>
         ) : !modifyingPartId && childParts.length > 0 ? (
           childParts.map((cut) => (
-            <li key={cut.id} className="cuts-readonly">
+            <li
+              key={cut.id}
+              className="cuts-readonly"
+              onClick={(e) => { e.stopPropagation(); onEnterModifyModeForCut?.(cut.id) }}
+            >
               {cut.name}
             </li>
           ))
