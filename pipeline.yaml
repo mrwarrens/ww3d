@@ -938,7 +938,7 @@ tasks:
       Apply the same border-bottom to .left-panel-cuts-header for consistency.
       No component changes needed. Update any tests that assert on header styling.
     deps: [95]
-    status: done
+    status: accepted
   - id: 100
     phase: 6
     name: "UX: Assembly row layout — chevron, alignment, and right-aligned visibility icon"
@@ -960,7 +960,7 @@ tasks:
 
       Update affected browser tests (assembly-visibility, collapsible-assembly, etc.).
     deps: [99]
-    status: done
+    status: accepted
   - id: 101
     phase: 6
     name: "UX: Selected part row highlight in PartsList"
@@ -974,7 +974,7 @@ tasks:
       Add a browser test asserting that selecting a part causes its row to have the
       selected background class.
     deps: [99]
-    status: done
+    status: accepted
   - id: 102
     phase: 6
     name: "UX: Color swatch, eyedropper, and Box/Ellipse on one row in PartPanel"
@@ -997,6 +997,80 @@ tasks:
       the new DOM structure if selectors change.
     deps: [95]
     status: accepted
+
+  - id: 103
+    phase: 6
+    name: "UX: Remove color swatches from PartsList"
+    description: >
+      Remove the color swatch boxes shown to the left of part names in PartsList.
+
+      In PartsList.tsx, delete the <span className="part-color-swatch" .../> element
+      from the PartRow component.
+
+      In index.html, delete the .part-color-swatch CSS rule.
+
+      Update any browser tests that assert on the presence of color swatches.
+    deps: [102]
+    status: done
+  - id: 104
+    phase: 6
+    name: "UX: Right-align show/hide icons in PartsList"
+    description: >
+      Ensure the visibility (eye) buttons are flush against the right edge of the
+      panel for every row type: assembly rows, child part rows, and unassigned part rows.
+
+      After the color swatches are removed (task 103), each part row li contains only
+      the part name text and the visibility button. With justify-content: space-between
+      and two flex items the eye is already at the right edge; add margin-left: auto to
+      .visibility-btn inside .left-panel-parts li as an explicit guarantee.
+
+      Verify assembly rows (which use margin-left: auto on .assembly-row > .visibility-btn)
+      are unaffected.
+
+      Update or add browser tests asserting the visibility button is the last element in
+      each row.
+    deps: [103]
+    status: pending
+
+  - id: 105
+    phase: 6
+    name: "UX: Align child part text with assembly name text in PartsList"
+    description: >
+      The text label of a child part (e.g. "Board 1") should start at the same horizontal
+      position as the assembly name text (e.g. "Assembly 1"), which sits immediately after
+      the collapse chevron.
+
+      In index.html:
+        - Remove padding-left: 22px from .left-panel-parts .assembly-row > ul
+        - Add padding-left to .left-panel-parts .assembly-row > ul li so that the child
+          name text aligns with the assembly name text. The collapse-btn is font-size:10px
+          with margin-right:4px; effective width is approximately 14px. Set child li
+          padding-left to 14px so both assembly name and child name start at the same
+          horizontal position from the panel left edge.
+
+      Add a browser test (or update an existing one) asserting the visual indent of a
+      child row matches the assembly name indent.
+    deps: [103]
+    status: pending
+
+  - id: 106
+    phase: 6
+    name: "UX: Align unassigned part text with assembly chevron in PartsList"
+    description: >
+      The text label of an unassigned top-level part (e.g. "Board 4") should start at
+      the same horizontal position as the collapse chevron of assembly rows.
+
+      In index.html, change padding-left: 8px to padding-left: 10px in the base
+      .left-panel-parts li rule. This aligns unassigned part text with the chevron
+      column (assembly rows use padding: 5px 10px). Child rows are unaffected because
+      task 105 sets their padding-left explicitly via the more-specific
+      .assembly-row > ul li rule.
+
+      Update or add a browser test asserting that an unassigned part row's left padding
+      matches the assembly chevron start position.
+    deps: [105]
+    status: pending
+
   - id: 70
     phase: 3
     name: Collapsible assembly groups in parts list
