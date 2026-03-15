@@ -219,6 +219,49 @@ describe('PartsList', () => {
     })
   })
 
+  describe('visibility button right-alignment', () => {
+    let styleEl: HTMLStyleElement
+
+    beforeEach(() => {
+      styleEl = document.createElement('style')
+      styleEl.textContent = `
+        .left-panel-parts li { display: flex; align-items: center; padding: 6px 10px; width: 200px; box-sizing: border-box; }
+        .visibility-btn { margin-left: auto; width: 16px; }
+      `
+      document.head.appendChild(styleEl)
+    })
+
+    afterEach(() => {
+      document.head.removeChild(styleEl)
+    })
+
+    it('visibility button is right-aligned in a top-level part row', async () => {
+      const { container } = await render(
+        <PartsList parts={[partA]} assemblies={[]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
+      )
+      const li = container.querySelector('li[data-part-id]') as HTMLElement
+      const btn = li.querySelector('.visibility-btn') as HTMLElement
+      const liRect = li.getBoundingClientRect()
+      const btnRect = btn.getBoundingClientRect()
+      // Button right edge should be within 20px of the row right edge (accounts for padding)
+      expect(liRect.right - btnRect.right).toBeLessThan(20)
+    })
+
+    it('visibility button is right-aligned in a child part row inside an assembly', async () => {
+      const assembly = createAssembly('Cabinet')
+      const member = { ...partA, assemblyId: assembly.id }
+      const { container } = await render(
+        <PartsList parts={[member]} assemblies={[assembly]} selectedIds={[]} onSelectIds={vi.fn()} onToggleVisibility={vi.fn()} {...defaultProps} />
+      )
+      const assemblyLi = container.querySelector('li.assembly-row') as HTMLElement
+      const childLi = assemblyLi.querySelector('li') as HTMLElement
+      const btn = childLi.querySelector('.visibility-btn') as HTMLElement
+      const childRect = childLi.getBoundingClientRect()
+      const btnRect = btn.getBoundingClientRect()
+      expect(childRect.right - btnRect.right).toBeLessThan(20)
+    })
+  })
+
   describe('right-click to remove from assembly', () => {
     it('right-clicking a part with an assemblyId calls onRemoveFromAssembly', async () => {
       const assembly = createAssembly('Cabinet')

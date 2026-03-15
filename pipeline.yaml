@@ -1011,7 +1011,7 @@ tasks:
 
       Update any browser tests that assert on the presence of color swatches.
     deps: [102]
-    status: done
+    status: accepted
   - id: 104
     phase: 6
     name: "UX: Right-align show/hide icons in PartsList"
@@ -1030,8 +1030,7 @@ tasks:
       Update or add browser tests asserting the visibility button is the last element in
       each row.
     deps: [103]
-    status: pending
-
+    status: done
   - id: 105
     phase: 6
     name: "UX: Align child part text with assembly name text in PartsList"
