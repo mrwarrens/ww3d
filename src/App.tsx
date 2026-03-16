@@ -229,6 +229,8 @@ export default function App() {
           <div className="help-row"><span>New Assembly button</span><span>Create empty assembly</span></div>
           <div className="help-section">View</div>
           <div className="help-row"><span>1 / 2 / 3 / 4</span><span>Front / Right / Top / Iso view</span></div>
+          <div className="help-row"><span>Arrow keys</span><span>Orbit camera</span></div>
+          <div className="help-row"><span>Shift+Arrow keys</span><span>Pan camera</span></div>
         </div>
       )}
       <input

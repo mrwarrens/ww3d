@@ -176,12 +176,44 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
       else if (e.key === '2') goToPreset('right')
       else if (e.key === '3') goToPreset('top')
       else if (e.key === '4') goToPreset('iso')
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (!controls) return
+        e.preventDefault()
+        const ORBIT_STEP = Math.PI / 36
+        if (e.shiftKey) {
+          const distance = camera.position.distanceTo(controls.target)
+          const panStep = distance * 0.02
+          const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0)
+          const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1)
+          let delta = new THREE.Vector3()
+          if (e.key === 'ArrowRight') delta = right.multiplyScalar(panStep)
+          else if (e.key === 'ArrowLeft') delta = right.multiplyScalar(-panStep)
+          else if (e.key === 'ArrowUp') delta = up.multiplyScalar(panStep)
+          else if (e.key === 'ArrowDown') delta = up.multiplyScalar(-panStep)
+          camera.position.add(delta)
+          controls.target.add(delta)
+          controls.update()
+        } else {
+          const spherical = new THREE.Spherical().setFromVector3(
+            camera.position.clone().sub(controls.target)
+          )
+          if (e.key === 'ArrowLeft') spherical.theta -= ORBIT_STEP
+          else if (e.key === 'ArrowRight') spherical.theta += ORBIT_STEP
+          else if (e.key === 'ArrowUp') spherical.phi -= ORBIT_STEP
+          else if (e.key === 'ArrowDown') spherical.phi += ORBIT_STEP
+          spherical.phi = Math.max(0.01, Math.min(Math.PI - 0.01, spherical.phi))
+          const newPos = new THREE.Vector3().setFromSpherical(spherical)
+          newPos.add(controls.target)
+          camera.position.copy(newPos)
+          controls.update()
+        }
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
     // selectedIds and parts are read via refs — excluded from deps intentionally
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAssemblySelected, removeParts, removeChildPart, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode])
+  }, [isAssemblySelected, removeParts, removeChildPart, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode, camera, controls])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)

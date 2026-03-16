@@ -58,6 +58,16 @@ describe('Help Panel', () => {
     expect(pane.textContent).toContain('1 / 2 / 3 / 4')
   })
 
+  it('shows "Arrow keys" orbit entry', async () => {
+    const pane = await openHelp()
+    expect(pane.textContent).toContain('Arrow keys')
+  })
+
+  it('shows "Shift+Arrow keys" pan entry', async () => {
+    const pane = await openHelp()
+    expect(pane.textContent).toContain('Shift+Arrow keys')
+  })
+
   it('shows "Cmd+G" entry', async () => {
     const pane = await openHelp()
     expect(pane.textContent).toContain('Cmd+G')

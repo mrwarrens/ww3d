@@ -1138,8 +1138,37 @@ tasks:
 
       Add browser tests asserting that the instructional text is not present in the DOM
       (or is hidden) when an assembly row is selected in PartsList.
-    status: done
+    status: accepted
+  - id: 112
+    phase: 6
+    name: "UX: Arrow key orbit and pan"
+    description: >
+      Add keyboard-driven camera control using arrow keys. In Scene.tsx's existing keydown
+      handler, after the isTyping guard, add:
 
+      - Arrow keys (no modifier): orbit the camera around the scene. Compute a THREE.Spherical
+        from the camera position relative to controls.target, adjust theta (ArrowLeft/Right)
+        and phi (ArrowUp/Down) by a fixed step (~5°), convert back to Cartesian, set
+        camera.position, and call controls.update(). Call e.preventDefault() to suppress
+        browser scroll.
+
+      - Shift+Arrow keys: pan the camera (translate both camera.position and controls.target
+        together) along camera-relative right and up vectors. Scale pan distance proportionally
+        to the camera's distance from the target so it feels consistent at any zoom level.
+        Call e.preventDefault().
+
+      Input focus suppression is already handled by the existing isTyping guard — no extra
+      work needed. Add new code after the if (isTyping) return line.
+
+      Update the help pane in App.tsx (View section) to include rows for arrow key orbit
+      and Shift+Arrow pan. Update help-panel.browser.test.tsx to cover the new entries.
+
+      Add browser tests in camera-arrow-keys.browser.test.tsx: verify ArrowLeft changes
+      camera position, verify ArrowRight moves it in the opposite azimuth direction, verify
+      Shift+ArrowRight pans (shifts both camera and target), verify no camera movement
+      when an input is focused.
+    deps: []
+    status: done
   - id: 111
     phase: 6
     name: "UX: Drag multi-selected parts in PartsList assigns all of them to an assembly"
@@ -1156,4 +1185,124 @@ tasks:
 
       Add browser tests asserting that dragging one of two multi-selected parts onto an
       assembly header causes both parts to be assigned to that assembly.
-    status: done
+    status: accepted
+
+  # Phase 7 tasks — Cut List
+  - id: 113
+    phase: 7
+    name: Add materialType field to Part model
+    description: >
+      Add optional materialType field ('sheet' | 'hardwood' | 'dimensional') to the Part
+      interface and PartInit type in Part.ts. Default to 'hardwood' in createPart. Update
+      deserializeProject in Project.ts to handle missing field on older saved files. Add
+      'materialType' to the updatePart Pick union in projectStore.ts so it can be changed
+      via the properties panel. Unit tests in tests/part-materialtype.test.ts covering the
+      default value, createPart with explicit materialType, and round-trip serialization.
+    deps: []
+    status: ready
+  - id: 114
+    phase: 7
+    name: Add material type selector to PropertiesPanel
+    description: >
+      Add a segmented button row (Sheet / Hardwood / Dimensional) to PropertiesPanel for
+      top-level parts only (!part.parentId). Add 'materialType' to the onUpdate Pick union
+      in PropertiesPanelProps. Add CSS class .part-panel-material in index.html with
+      identical styling to .part-panel-shape. Browser tests in
+      tests/material-type-panel.browser.test.tsx asserting the selector appears for
+      top-level parts, is absent for child cuts, and clicking a button calls onUpdate with
+      the correct materialType value.
+    deps: [113]
+    status: pending
+
+  - id: 115
+    phase: 7
+    name: Hash-based routing between design and cut list views
+    description: >
+      Replace the single <App /> render in src/main.tsx with a Root component that listens
+      to hashchange events and renders <CutListView /> when window.location.hash === '#/cutlist'
+      and <App /> otherwise. Add a "Cut List" item to the Menu dropdown in App.tsx that sets
+      window.location.hash = '#/cutlist'. Create a skeleton src/components/CutListView.tsx
+      with a header showing the project name, a "Design" back-link (sets hash to ''), and a
+      Load button (file input, reuses deserializeProject + loadProject). Add CSS classes
+      .cutlist-page and .cutlist-header in index.html. Browser tests in
+      tests/routing.browser.test.tsx asserting navigation to #/cutlist renders the cut list
+      header and the back link returns to the design view.
+    deps: []
+    status: ready
+  - id: 116
+    phase: 7
+    name: Cut list computation utilities
+    description: >
+      Create src/utils/cutlist.ts with all pure computation functions (no React):
+      getCutListParts (filter to top-level parts), groupByMaterialType, groupByThickness,
+      toQuarterNotation (lookup table: 0.75→"4/4", 1.0→"5/4", etc.), boardFeet
+      (length*width*thickness/144), glueUpBoardCount (Math.ceil(width/boardWidth)),
+      toNominalSize (actual→nominal lookup: 1.5x3.5→"2x4", 0.75x3.5→"1x4", etc.),
+      assignBoardLength (shortest available length >= partLength or null), and packSheets
+      (guillotine Best Short Side Fit algorithm: sort by area desc, try both orientations,
+      BSSF heuristic for free rect selection, guillotine split, open new sheet when needed,
+      compute wastePercent). See cut-list-spec.md section 5 for full signatures and
+      algorithm detail. Unit tests in tests/cutlist.test.ts covering all functions
+      including packing edge cases.
+    deps: [113]
+    status: pending
+
+  - id: 117
+    phase: 7
+    name: Cut list settings persistence
+    description: >
+      Add CutListSettings interface and cutListSettings optional field to the Project
+      interface in Project.ts. CutListSettings has three sub-records keyed by thickness
+      string (sheetGoods, hardwood) and nominal size string (dimensional). Update
+      deserializeProject to default missing cutListSettings to empty objects. Add
+      updateCutListSettings(settings: CutListSettings) action to projectStore.ts.
+      Unit tests covering settings round-trip serialization and the store action.
+      See cut-list-spec.md section 3.2 for the full interface definition.
+    deps: [113]
+    status: pending
+
+  - id: 118
+    phase: 7
+    name: Sheet goods section with nesting diagram
+    description: >
+      Create src/components/SheetNestingDiagram.tsx: renders one SVG per PackedSheet with
+      a light gray outline rect for the sheet, colored <rect> elements for each placed part
+      (using part.color), and <text> labels (part name + dimensions). SVG uses viewBox and
+      width="100%" for responsive scaling. Wire a sheet goods section into CutListView.tsx:
+      groups sheet-type parts by thickness, renders a thickness header, editable sheet width
+      and height inputs (pre-populated from cutListSettings, default 48x96), calls packSheets
+      from cutlist.ts, renders SheetNestingDiagram, and shows "N sheets, X% waste" summary.
+      Persists input changes via updateCutListSettings. Add CSS .cutlist-section and
+      .cutlist-sheet-svg in index.html. Browser tests in tests/cutlist-sheet.browser.test.tsx.
+    deps: [115, 116, 117]
+    status: pending
+
+  - id: 119
+    phase: 7
+    name: Hardwood lumber section
+    description: >
+      Wire a hardwood lumber section into CutListView.tsx. Groups hardwood-type parts by
+      thickness, displays quarter notation headers (e.g. "4/4 stock"). Per group: editable
+      board width and board length inputs (defaults 6" and 96", persisted to cutListSettings).
+      Per-part table rows showing name, L×W dimensions, and glue-up board count from
+      glueUpBoardCount(). Show a warning badge on rows where part.length > boardLength.
+      Group footer shows total boards and total board-feet (boardFeet()). Add .cutlist-table
+      and .cutlist-warning CSS. Browser tests in tests/cutlist-hardwood.browser.test.tsx
+      asserting board counts, warnings, and board-feet totals.
+    deps: [115, 116, 117]
+    status: pending
+
+  - id: 120
+    phase: 7
+    name: Dimensional lumber section
+    description: >
+      Wire a dimensional lumber section into CutListView.tsx. Groups dimensional-type parts
+      by nominal size (toNominalSize()). Per group: editable available lengths list with add
+      and remove controls (default [96, 120, 144], persisted to cutListSettings). Per-part
+      table rows showing name, required length, and assigned board length from
+      assignBoardLength() or a warning badge when no length fits. Group footer shows count
+      per length (e.g. "3× 8', 2× 10'") and total linear feet. Browser tests in
+      tests/cutlist-dimensional.browser.test.tsx asserting length assignments, warnings,
+      and summary counts.
+    deps: [115, 116, 117]
+    status: pending
