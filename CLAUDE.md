@@ -47,7 +47,8 @@ src/
     Scene.tsx           # Scene setup: background, lights, grid, OrbitControls, axis lines; drag-to-move parts; Delete/Backspace/Escape/Cmd+D key handlers; camera preset wiring; eyedropper mode; double-click to select assembly
     Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler; eyedropper click handler
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
-    CutListView.tsx     # Skeleton cut list page: header with back link, project name, load button; placeholder body
+    CutListView.tsx     # Cut list page: header with back link, project name, load button; sheet goods section with per-thickness nesting diagrams and settings
+    SheetNestingDiagram.tsx # SVG nesting diagram for a single packed sheet: colored part rects with name/dimension labels
     AssemblyPanel.tsx   # DOM overlay for assembly selection: editable assembly name and position (Px/Py/Pz)
     PartPanel.tsx       # DOM overlay for part selection: editable name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper, shape toggle (Box/Ellipse), operation buttons (Add/Subtract) for child parts, Edit Cuts button for top-level parts
     PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned top-level parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button; ✂ indicator on parts with cuts

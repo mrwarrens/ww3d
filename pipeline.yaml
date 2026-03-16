@@ -1272,8 +1272,7 @@ tasks:
       Persists input changes via updateCutListSettings. Add CSS .cutlist-section and
       .cutlist-sheet-svg in index.html. Browser tests in tests/cutlist-sheet.browser.test.tsx.
     deps: [115, 116, 117]
-    status: pending
-
+    status: done
   - id: 119
     phase: 7
     name: Hardwood lumber section
@@ -1287,8 +1286,7 @@ tasks:
       and .cutlist-warning CSS. Browser tests in tests/cutlist-hardwood.browser.test.tsx
       asserting board counts, warnings, and board-feet totals.
     deps: [115, 116, 117]
-    status: pending
-
+    status: ready
   - id: 120
     phase: 7
     name: Dimensional lumber section
@@ -1302,4 +1300,4 @@ tasks:
       tests/cutlist-dimensional.browser.test.tsx asserting length assignments, warnings,
       and summary counts.
     deps: [115, 116, 117]
-    status: pending
+    status: ready

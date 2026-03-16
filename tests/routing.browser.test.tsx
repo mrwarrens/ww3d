@@ -32,7 +32,6 @@ describe('hash-based routing', () => {
     render(<Root />)
     window.location.hash = '#/cutlist'
     await expect.element(page.getByText('← Design')).toBeVisible()
-    await expect.element(page.getByText('Cut list coming soon')).toBeVisible()
   })
 
   it('returns to design view when hash changes back to #/', async () => {
