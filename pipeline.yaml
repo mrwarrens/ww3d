@@ -1257,7 +1257,7 @@ tasks:
       Unit tests covering settings round-trip serialization and the store action.
       See cut-list-spec.md section 3.2 for the full interface definition.
     deps: [113]
-    status: ready
+    status: done
   - id: 118
     phase: 7
     name: Sheet goods section with nesting diagram

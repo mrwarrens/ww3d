@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { type Part, type PartInit, createPart } from '../models/Part'
 import { type Assembly, createAssembly } from '../models/Assembly'
-import { type Project, createProject } from '../models/Project'
+import { type Project, type CutListSettings, createProject } from '../models/Project'
 
 interface ProjectStore {
   project: Project
@@ -28,6 +28,7 @@ interface ProjectStore {
   removeChildPart: (childId: string) => void
   setProjectName: (name: string) => void
   setGridSize: (size: number) => void
+  updateCutListSettings: (settings: CutListSettings) => void
   loadProject: (project: Project) => void
   undo: () => void
   redo: () => void
@@ -331,6 +332,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       history: [...state.history, current],
       future: [],
       project: { ...state.project, gridSize: size },
+    }))
+  },
+  updateCutListSettings: (settings) => {
+    const current = get().project
+    set((state) => ({
+      history: [...state.history, current],
+      future: [],
+      project: { ...state.project, cutListSettings: settings },
     }))
   },
   loadProject: (project) => set(() => ({ project, history: [], future: [] })),
