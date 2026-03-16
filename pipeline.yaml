@@ -1286,7 +1286,7 @@ tasks:
       and .cutlist-warning CSS. Browser tests in tests/cutlist-hardwood.browser.test.tsx
       asserting board counts, warnings, and board-feet totals.
     deps: [115, 116, 117]
-    status: ready
+    status: done
   - id: 120
     phase: 7
     name: Dimensional lumber section

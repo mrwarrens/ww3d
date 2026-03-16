@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo } from 'react'
 import { useProjectStore } from '../stores/projectStore'
 import { deserializeProject } from '../models/Project'
-import { getCutListParts, groupByMaterialType, groupByThickness, packSheets } from '../utils/cutlist'
+import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, toQuarterNotation, glueUpBoardCount, boardFeet } from '../utils/cutlist'
 import { toFractionalInches } from '../utils/units'
 import SheetNestingDiagram from './SheetNestingDiagram'
 import type { Part } from '../models/Part'
@@ -81,6 +81,81 @@ function ThicknessSection({ thickness, parts, partsById, initialWidth, initialHe
   )
 }
 
+interface HardwoodSectionProps {
+  thickness: number
+  parts: Part[]
+  initialBoardWidth: number
+  initialBoardLength: number
+  onSettingsChange: (thickness: number, boardWidth: number, boardLength: number) => void
+}
+
+function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLength, onSettingsChange }: HardwoodSectionProps) {
+  const [boardWidth, setBoardWidth] = useState(initialBoardWidth)
+  const [boardLength, setBoardLength] = useState(initialBoardLength)
+
+  const quarterKey = toQuarterNotation(thickness)
+
+  const totalBoards = parts.reduce((sum, p) => sum + glueUpBoardCount(p.width, boardWidth), 0)
+  const totalBoardFeet = parts.reduce((sum, p) => {
+    const count = glueUpBoardCount(p.width, boardWidth)
+    return sum + boardFeet(p.length, boardWidth * count, thickness)
+  }, 0)
+
+  return (
+    <section className="cutlist-hardwood-section">
+      <h2 className="cutlist-section-header">{quarterKey} stock</h2>
+      <div className="cutlist-settings-row">
+        <label>
+          Board Width&nbsp;
+          <input
+            type="number"
+            value={boardWidth}
+            onChange={(e) => setBoardWidth(Number(e.target.value))}
+            onBlur={() => onSettingsChange(thickness, boardWidth, boardLength)}
+            min={1}
+          />
+        </label>
+        <label>
+          Board Length&nbsp;
+          <input
+            type="number"
+            value={boardLength}
+            onChange={(e) => setBoardLength(Number(e.target.value))}
+            onBlur={() => onSettingsChange(thickness, boardWidth, boardLength)}
+            min={1}
+          />
+        </label>
+      </div>
+      <table className="cutlist-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>L × W</th>
+            <th>Boards</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parts.map((part) => {
+            const count = glueUpBoardCount(part.width, boardWidth)
+            const tooLong = part.length > boardLength
+            return (
+              <tr key={part.id}>
+                <td>{part.name}</td>
+                <td>
+                  {toFractionalInches(part.length)} × {toFractionalInches(part.width)}
+                  {tooLong && <span className="cutlist-warning"> ⚠ part exceeds board length</span>}
+                </td>
+                <td>{count}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      <p>Total: {totalBoards} board{totalBoards !== 1 ? 's' : ''}, {totalBoardFeet.toFixed(2)} board-feet</p>
+    </section>
+  )
+}
+
 export default function CutListView() {
   const projectName = useProjectStore((s) => s.project.name)
   const loadProject = useProjectStore((s) => s.loadProject)
@@ -103,9 +178,17 @@ export default function CutListView() {
   }, [loadProject])
 
   const topLevel = useMemo(() => getCutListParts(parts), [parts])
-  const sheetParts = useMemo(() => groupByMaterialType(topLevel).sheet, [topLevel])
+  const materialGroups = useMemo(() => groupByMaterialType(topLevel), [topLevel])
+  const sheetParts = useMemo(() => materialGroups.sheet, [materialGroups])
   const thicknessGroups = useMemo(() => groupByThickness(sheetParts), [sheetParts])
   const sortedThicknesses = useMemo(() => Array.from(thicknessGroups.keys()).sort((a, b) => a - b), [thicknessGroups])
+
+  const hardwoodParts = useMemo(() => materialGroups.hardwood, [materialGroups])
+  const hardwoodThicknessGroups = useMemo(() => groupByThickness(hardwoodParts), [hardwoodParts])
+  const sortedHardwoodThicknesses = useMemo(
+    () => Array.from(hardwoodThicknessGroups.keys()).sort((a, b) => b - a),
+    [hardwoodThicknessGroups]
+  )
 
   const partsById = useMemo(() => {
     const map = new Map<string, Part>()
@@ -121,6 +204,18 @@ export default function CutListView() {
         [key]: { sheetWidth, sheetHeight },
       },
       hardwood: cutListSettings?.hardwood ?? {},
+      dimensional: cutListSettings?.dimensional ?? {},
+    })
+  }, [cutListSettings, updateCutListSettings])
+
+  const handleHardwoodSettingsChange = useCallback((thickness: number, boardWidth: number, boardLength: number) => {
+    const key = toQuarterNotation(thickness)
+    updateCutListSettings({
+      sheetGoods: cutListSettings?.sheetGoods ?? {},
+      hardwood: {
+        ...(cutListSettings?.hardwood ?? {}),
+        [key]: { boardWidth, boardLength },
+      },
       dimensional: cutListSettings?.dimensional ?? {},
     })
   }, [cutListSettings, updateCutListSettings])
@@ -152,6 +247,24 @@ export default function CutListView() {
               onSettingsChange={handleSettingsChange}
             />
           ))}
+        </div>
+      )}
+      {sortedHardwoodThicknesses.length > 0 && (
+        <div className="cutlist-hardwood-groups">
+          {sortedHardwoodThicknesses.map((thickness) => {
+            const quarterKey = toQuarterNotation(thickness)
+            const settings = cutListSettings?.hardwood[quarterKey]
+            return (
+              <HardwoodSection
+                key={thickness}
+                thickness={thickness}
+                parts={hardwoodThicknessGroups.get(thickness)!}
+                initialBoardWidth={settings?.boardWidth ?? 6}
+                initialBoardLength={settings?.boardLength ?? 96}
+                onSettingsChange={handleHardwoodSettingsChange}
+              />
+            )
+          })}
         </div>
       )}
     </div>
