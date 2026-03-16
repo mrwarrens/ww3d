@@ -1244,7 +1244,7 @@ tasks:
       algorithm detail. Unit tests in tests/cutlist.test.ts covering all functions
       including packing edge cases.
     deps: [113]
-    status: ready
+    status: done
   - id: 117
     phase: 7
     name: Cut list settings persistence

@@ -60,6 +60,7 @@ src/
     constants.ts        # BOARD_THICKNESS, SNAP_INCREMENT, snapToGrid, CAMERA_PRESETS
     units.ts            # Fractional inch display and parsing utilities
     manifold.ts         # Manifold-3d CSG utilities: getManifold, manifoldEllipse, manifoldMeshToThreeGeometry
+    cutlist.ts          # Pure cut list computation utilities: getCutListParts, groupByMaterialType, groupByThickness, toQuarterNotation, boardFeet, glueUpBoardCount, toNominalSize, assignBoardLength, packSheets (Guillotine BSSF)
   hooks/
     useCameraPreset.ts  # Hook: animates camera to a named preset position
     useEditableInput.ts # Hook: draft state, commit, reset, and keydown logic for numeric editable inputs
@@ -102,6 +103,7 @@ tests/
   undo-redo-child-ops.test.ts               # Unit tests for undo/redo with child part operations
   units.test.ts           # Unit tests for inch display and parsing utilities
   constants.test.ts       # Unit tests for snapToGrid and constants
+  cutlist.test.ts         # Unit tests for cut list computation utilities
 tsconfig.json             # TypeScript configuration (strict mode)
 vite.config.ts            # Vite config + Vitest projects: unit (Node.js) + browser (Playwright)
 ```
