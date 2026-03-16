@@ -98,6 +98,7 @@ tests/
   routing.browser.test.tsx                  # Browser-mode tests for hash-based routing between design and cut list views
   material-type-panel.browser.test.tsx      # Browser-mode tests for material type selector in PropertiesPanel
   cutlist-hardwood.browser.test.tsx         # Browser-mode tests for hardwood lumber section (board counts, warnings, board-feet totals)
+  cutlist-dimensional.browser.test.tsx      # Browser-mode tests for dimensional lumber section (nominal size grouping, board assignment, footer counts)
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   part-shape.test.ts      # Unit tests for Part shape field and serialization

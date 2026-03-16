@@ -1300,4 +1300,4 @@ tasks:
       tests/cutlist-dimensional.browser.test.tsx asserting length assignments, warnings,
       and summary counts.
     deps: [115, 116, 117]
-    status: ready
+    status: done

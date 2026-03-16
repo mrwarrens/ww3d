@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo } from 'react'
 import { useProjectStore } from '../stores/projectStore'
 import { deserializeProject } from '../models/Project'
-import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, toQuarterNotation, glueUpBoardCount, boardFeet } from '../utils/cutlist'
+import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, toQuarterNotation, glueUpBoardCount, boardFeet, toNominalSize, assignBoardLength } from '../utils/cutlist'
 import { toFractionalInches } from '../utils/units'
 import SheetNestingDiagram from './SheetNestingDiagram'
 import type { Part } from '../models/Part'
@@ -156,6 +156,93 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
   )
 }
 
+interface DimensionalSectionProps {
+  nominalSize: string
+  parts: Part[]
+  initialLengths: number[]
+  onSettingsChange: (nominalSize: string, lengths: number[]) => void
+}
+
+function DimensionalSection({ nominalSize, parts, initialLengths, onSettingsChange }: DimensionalSectionProps) {
+  const [lengths, setLengths] = useState(initialLengths)
+  const [newLength, setNewLength] = useState(96)
+
+  function updateLengths(next: number[]) {
+    setLengths(next)
+    onSettingsChange(nominalSize, next)
+  }
+
+  const assignments = parts.map(p => assignBoardLength(p.length, lengths))
+
+  const lengthCounts = new Map<number, number>()
+  for (const assigned of assignments) {
+    if (assigned !== null) {
+      lengthCounts.set(assigned, (lengthCounts.get(assigned) ?? 0) + 1)
+    }
+  }
+
+  const footerCounts = Array.from(lengthCounts.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([len, count]) => `${count}× ${len / 12}'`)
+    .join(',  ')
+
+  const totalLinearFeet = assignments
+    .filter((a): a is number => a !== null)
+    .reduce((sum, a) => sum + a / 12, 0)
+
+  return (
+    <section className="cutlist-dim-section">
+      <h2>{nominalSize}</h2>
+      <div className="cutlist-dim-lengths">
+        {lengths.map((len, i) => (
+          <span key={i} className="cutlist-dim-length-item">
+            {len / 12}'
+            <button onClick={() => updateLengths(lengths.filter((_, j) => j !== i))}>✕</button>
+          </span>
+        ))}
+        <span className="cutlist-dim-length-add">
+          <input
+            type="number"
+            value={newLength}
+            onChange={e => setNewLength(Number(e.target.value))}
+            min={1}
+          />
+          <button onClick={() => updateLengths([...lengths, newLength])}>Add</button>
+        </span>
+      </div>
+      <table className="cutlist-dim-table">
+        <thead>
+          <tr>
+            <th>Part Name</th>
+            <th>Required Length</th>
+            <th>Assigned Board</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parts.map((part, i) => {
+            const assigned = assignments[i]
+            return (
+              <tr key={part.id}>
+                <td>{part.name}</td>
+                <td>{toFractionalInches(part.length)}</td>
+                <td>
+                  {assigned === null
+                    ? <span className="cutlist-dim-warning">No board fits</span>
+                    : `${assigned / 12}'`}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      <p className="cutlist-dim-footer">
+        {footerCounts || 'No boards assigned'}
+        {totalLinearFeet > 0 && ` — ${totalLinearFeet.toFixed(1)} linear ft total`}
+      </p>
+    </section>
+  )
+}
+
 export default function CutListView() {
   const projectName = useProjectStore((s) => s.project.name)
   const loadProject = useProjectStore((s) => s.loadProject)
@@ -220,6 +307,33 @@ export default function CutListView() {
     })
   }, [cutListSettings, updateCutListSettings])
 
+  const dimensionalParts = useMemo(() => materialGroups.dimensional, [materialGroups])
+  const dimensionalByNominal = useMemo(() => {
+    const map = new Map<string, Part[]>()
+    for (const part of dimensionalParts) {
+      const key = toNominalSize(part.thickness, part.width)
+      const existing = map.get(key)
+      if (existing) existing.push(part)
+      else map.set(key, [part])
+    }
+    return map
+  }, [dimensionalParts])
+  const sortedNominalSizes = useMemo(
+    () => Array.from(dimensionalByNominal.keys()).sort(),
+    [dimensionalByNominal]
+  )
+
+  const handleDimensionalSettingsChange = useCallback((nominalSize: string, lengths: number[]) => {
+    updateCutListSettings({
+      sheetGoods: cutListSettings?.sheetGoods ?? {},
+      hardwood: cutListSettings?.hardwood ?? {},
+      dimensional: {
+        ...(cutListSettings?.dimensional ?? {}),
+        [nominalSize]: { availableLengths: lengths },
+      },
+    })
+  }, [cutListSettings, updateCutListSettings])
+
   return (
     <div className="cutlist-page">
       <div className="cutlist-header">
@@ -265,6 +379,19 @@ export default function CutListView() {
               />
             )
           })}
+        </div>
+      )}
+      {sortedNominalSizes.length > 0 && (
+        <div className="cutlist-dimensional-groups">
+          {sortedNominalSizes.map((nominalSize) => (
+            <DimensionalSection
+              key={nominalSize}
+              nominalSize={nominalSize}
+              parts={dimensionalByNominal.get(nominalSize)!}
+              initialLengths={cutListSettings?.dimensional[nominalSize]?.availableLengths ?? [96, 120, 144]}
+              onSettingsChange={handleDimensionalSettingsChange}
+            />
+          ))}
         </div>
       )}
     </div>
