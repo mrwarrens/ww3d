@@ -1199,7 +1199,7 @@ tasks:
       via the properties panel. Unit tests in tests/part-materialtype.test.ts covering the
       default value, createPart with explicit materialType, and round-trip serialization.
     deps: []
-    status: ready
+    status: done
   - id: 114
     phase: 7
     name: Add material type selector to PropertiesPanel

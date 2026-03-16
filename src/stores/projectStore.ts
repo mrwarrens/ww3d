@@ -13,7 +13,7 @@ interface ProjectStore {
   duplicatePart: (id: string) => string | null
   duplicateParts: (ids: string[]) => string[]
   movePart: (id: string, position: { x: number; y: number; z: number }) => void
-  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape'>>) => void
+  updatePart: (id: string, changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape' | 'materialType'>>) => void
   togglePartVisibility: (id: string) => void
   toggleAssemblyVisibility: (id: string) => void
   duplicateAssembly: (id: string) => string | null

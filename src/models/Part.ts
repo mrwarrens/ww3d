@@ -12,6 +12,7 @@ export interface Part {
   parentId?: string
   operation?: 'add' | 'subtract'
   shape?: 'box' | 'ellipse'
+  materialType?: 'sheet' | 'hardwood' | 'dimensional'
 }
 
 export type PartInit = {
@@ -26,6 +27,7 @@ export type PartInit = {
   parentId?: string
   operation?: 'add' | 'subtract'
   shape?: 'box' | 'ellipse'
+  materialType?: 'sheet' | 'hardwood' | 'dimensional'
 }
 
 export function createPart(init: PartInit): Part {
@@ -42,5 +44,6 @@ export function createPart(init: PartInit): Part {
     ...(init.parentId !== undefined && { parentId: init.parentId }),
     operation: init.operation ?? 'subtract',
     shape: init.shape ?? 'box',
+    materialType: init.materialType ?? 'hardwood',
   }
 }

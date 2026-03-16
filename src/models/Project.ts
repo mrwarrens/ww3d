@@ -27,6 +27,7 @@ export function deserializeProject(json: string): Project {
   const parsed = JSON.parse(json)
   return {
     ...parsed,
+    parts: (parsed.parts ?? []).map((p: any) => ({ materialType: 'hardwood', ...p })),
     assemblies: (parsed.assemblies ?? []).map((a: any) => ({ ...a, visible: a.visible ?? true })),
   } as Project
 }
