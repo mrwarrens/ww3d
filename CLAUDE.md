@@ -47,6 +47,7 @@ src/
     Scene.tsx           # Scene setup: background, lights, grid, OrbitControls, axis lines; drag-to-move parts; Delete/Backspace/Escape/Cmd+D key handlers; camera preset wiring; eyedropper mode; double-click to select assembly
     Board.tsx           # Single board mesh with edge wireframe; selection highlight via Outlines; drag start handler; eyedropper click handler
     BoardCreator.tsx    # Invisible ground plane for drag-to-create interaction
+    CutListView.tsx     # Skeleton cut list page: header with back link, project name, load button; placeholder body
     AssemblyPanel.tsx   # DOM overlay for assembly selection: editable assembly name and position (Px/Py/Pz)
     PartPanel.tsx       # DOM overlay for part selection: editable name, L/W/T, rotation (Rx/Ry/Rz), position (Px/Py/Pz), color picker with eyedropper, shape toggle (Box/Ellipse), operation buttons (Add/Subtract) for child parts, Edit Cuts button for top-level parts
     PartsList.tsx       # Sidebar listing assemblies (collapsible, with members) and unassigned top-level parts; Shift/Cmd+click multi-select; drag-to-assign; right-click to remove from assembly; visibility toggle per part and assembly; New Assembly button; ✂ indicator on parts with cuts
@@ -92,6 +93,7 @@ tests/
   shape-toggle.browser.test.tsx             # Browser-mode tests for shape toggle (Box/Ellipse) in PartPanel
   board-edges-dispose.browser.test.tsx      # Browser-mode tests for edge wireframe cleanup on dispose
   use-editable-input.browser.test.tsx       # Browser-mode tests for useEditableInput hook
+  routing.browser.test.tsx                  # Browser-mode tests for hash-based routing between design and cut list views
   project.test.ts         # Unit tests for Project model and serialization
   part.test.ts            # Unit tests for Part model and createPart
   part-shape.test.ts      # Unit tests for Part shape field and serialization

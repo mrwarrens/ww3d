@@ -169,6 +169,9 @@ export default function App() {
                 <button className="dropdown-item" onClick={() => setShowAxes((o) => !o)}>
                   Axes {showAxes ? 'On' : 'Off'}
                 </button>
+                <a className="dropdown-item" href="#/cutlist" onClick={() => setMenuOpen(false)}>
+                  Cut List
+                </a>
                 <div className="dropdown-section">Help</div>
                 <button className="dropdown-item" onClick={() => { setHelpOpen((o) => !o); setMenuOpen(false) }}>
                   Keyboard Shortcuts

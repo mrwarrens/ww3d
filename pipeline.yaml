@@ -1212,8 +1212,7 @@ tasks:
       top-level parts, is absent for child cuts, and clicking a button calls onUpdate with
       the correct materialType value.
     deps: [113]
-    status: pending
-
+    status: ready
   - id: 115
     phase: 7
     name: Hash-based routing between design and cut list views
@@ -1228,7 +1227,7 @@ tasks:
       tests/routing.browser.test.tsx asserting navigation to #/cutlist renders the cut list
       header and the back link returns to the design view.
     deps: []
-    status: ready
+    status: done
   - id: 116
     phase: 7
     name: Cut list computation utilities
@@ -1245,8 +1244,7 @@ tasks:
       algorithm detail. Unit tests in tests/cutlist.test.ts covering all functions
       including packing edge cases.
     deps: [113]
-    status: pending
-
+    status: ready
   - id: 117
     phase: 7
     name: Cut list settings persistence
@@ -1259,8 +1257,7 @@ tasks:
       Unit tests covering settings round-trip serialization and the store action.
       See cut-list-spec.md section 3.2 for the full interface definition.
     deps: [113]
-    status: pending
-
+    status: ready
   - id: 118
     phase: 7
     name: Sheet goods section with nesting diagram
