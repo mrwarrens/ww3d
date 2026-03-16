@@ -7,7 +7,7 @@ import { useEditableInput } from '../hooks/useEditableInput'
 interface PropertiesPanelProps {
   part: Part | null
   assembly: Assembly | null
-  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape'>>) => void
+  onUpdate: (changes: Partial<Pick<Part, 'name' | 'length' | 'width' | 'thickness' | 'rotation' | 'color' | 'position' | 'operation' | 'shape' | 'materialType'>>) => void
   onMoveAssembly: (position: { x: number; y: number; z: number }) => void
   onRenameAssembly?: (name: string) => void
   onEyedropperActivate?: () => void
@@ -239,6 +239,22 @@ export default function PropertiesPanel({
                 <button type="button" className={!isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'box' })} aria-label="Box shape">Box</button>
                 <button type="button" className={isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'ellipse' })} aria-label="Ellipse shape">Ellipse</button>
               </div>
+            </div>
+          )}
+          {!isCutMode && (
+            <div className="part-panel-material">
+              <label>
+                Material:&nbsp;
+                <select
+                  value={part.materialType ?? 'hardwood'}
+                  onChange={(e) => onUpdate({ materialType: e.target.value as Part['materialType'] })}
+                  aria-label="Material type"
+                >
+                  <option value="hardwood">Hardwood</option>
+                  <option value="sheet">Sheet</option>
+                  <option value="dimensional">Dimensional</option>
+                </select>
+              </label>
             </div>
           )}
         </>

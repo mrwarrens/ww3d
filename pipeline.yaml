@@ -1212,7 +1212,7 @@ tasks:
       top-level parts, is absent for child cuts, and clicking a button calls onUpdate with
       the correct materialType value.
     deps: [113]
-    status: ready
+    status: done
   - id: 115
     phase: 7
     name: Hash-based routing between design and cut list views
