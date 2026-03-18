@@ -47,7 +47,7 @@ describe('hash-based routing', () => {
     await render(<App />)
     await act(async () => { document.getElementById('menu-btn')!.click() })
     const menu = document.getElementById('menu-dropdown')!
-    const cutListLink = Array.from(menu.querySelectorAll('a')).find((a) => a.textContent?.includes('Cut List'))
-    expect(cutListLink).not.toBeNull()
+    const cutListItem = Array.from(menu.querySelectorAll('button, a')).find((el) => el.textContent?.includes('Cut List'))
+    expect(cutListItem).not.toBeNull()
   })
 })

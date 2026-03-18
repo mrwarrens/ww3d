@@ -10,9 +10,11 @@ The cut list is a phone-optimized view (`#/cutlist`) that helps users figure out
 
 ### 2.1 Navigation
 
-- Hash-based routing: `#/cutlist` loads the cut list view; any other hash (or no hash) loads the 3D design view
-- A "Cut List" link in the App's Menu dropdown navigates to `#/cutlist`
+- Hash-based routing: `#/cutlist` loads the cut list view (phone/mobile use); any other hash (or no hash) loads the 3D design view
 - The cut list page has a "Design" back-link in its header that returns to `#/`
+- The "Cut List" item in App's Menu dropdown opens the cut list as a **modal overlay** over the 3D canvas (desktop use) — it does not navigate to `#/cutlist`
+- The modal is dismissed by clicking × in the header, pressing Escape, or clicking the backdrop
+- The 3D canvas remains mounted and visible (dimmed) behind the modal
 
 ### 2.2 Material Types
 
@@ -254,8 +256,19 @@ function packSheets(
 
 ### 6.1 `src/components/CutListView.tsx` (new)
 
-Top-level page component. Reads from `useProjectStore`.
+Top-level content component. Reads from `useProjectStore`. Used in two contexts:
 
+- **Hash route** (`#/cutlist`): rendered full-page by `Root` in `main.tsx`; header shows "Design" hash link
+- **Modal** (design view overlay): rendered inside a modal backdrop by `App.tsx`; header shows × close button
+
+Props:
+```typescript
+interface CutListViewProps {
+  onClose?: () => void  // provided when used as modal; absent when used as hash route
+}
+```
+
+- When `onClose` is provided, the header "Design" link is replaced with a `×` button that calls `onClose`
 - Manages local state for per-section user inputs; syncs to store via `updateCutListSettings` on change
 - File input for loading JSON (reuses `deserializeProject` + `loadProject`)
 - Renders three collapsible sections: Sheet Goods, Hardwood Lumber, Dimensional Lumber
@@ -313,6 +326,8 @@ All styles in `index.html` `<style>` block. New classes:
 | `.cutlist-warning` | Warning badge — amber text/border |
 | `.cutlist-sheet-svg` | Container for SVG nesting diagram |
 | `.part-panel-material` | Segmented button row — identical CSS to `.part-panel-shape` |
+| `.cutlist-modal-backdrop` | Fixed full-viewport overlay, semi-transparent dark bg, z-index above canvas |
+| `.cutlist-modal-card` | Centered scrollable content card, max-width 600px, light bg |
 
 ---
 
@@ -342,6 +357,7 @@ All tasks are Phase 7. Last existing task ID is 112; these start at 113.
 | 118 | Sheet goods section + SheetNestingDiagram; browser tests | 115, 116, 117 |
 | 119 | Hardwood lumber section; browser tests | 115, 116, 117 |
 | 120 | Dimensional lumber section; browser tests | 115, 116, 117 |
+| 121 | Cut list modal overlay in design view; browser tests | 118, 119, 120 |
 
 ---
 

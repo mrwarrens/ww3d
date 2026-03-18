@@ -1168,7 +1168,7 @@ tasks:
       Shift+ArrowRight pans (shifts both camera and target), verify no camera movement
       when an input is focused.
     deps: []
-    status: done
+    status: accepted
   - id: 111
     phase: 6
     name: "UX: Drag multi-selected parts in PartsList assigns all of them to an assembly"
@@ -1300,4 +1300,24 @@ tasks:
       tests/cutlist-dimensional.browser.test.tsx asserting length assignments, warnings,
       and summary counts.
     deps: [115, 116, 117]
+    status: done
+
+  - id: 121
+    phase: 7
+    name: Cut list modal overlay in design view
+    description: >
+      Change the existing "Cut List" menu item in App.tsx from navigating to #/cutlist
+      to opening a modal overlay. Add cutListOpen boolean state to App.tsx. The menu
+      item sets cutListOpen to true instead of setting window.location.hash. When
+      cutListOpen is true, render a full-viewport fixed backdrop over the canvas with
+      CutListView inside a centered scrollable card (max-width 600px). Add an optional
+      onClose prop to CutListView — when provided, render a close button (×) in the
+      header instead of the "Design" hash link; when absent, existing hash-route
+      behavior is unchanged. Escape key closes the modal. The hash route (#/cutlist)
+      continues to work as-is for mobile. Add CSS for .cutlist-modal-backdrop and
+      .cutlist-modal-card in index.html. Browser tests in
+      tests/cutlist-modal.browser.test.tsx asserting: clicking "Cut List" in the menu
+      renders the modal overlay; Escape dismisses it; the 3D canvas is still present
+      in the DOM behind the modal.
+    deps: [118, 119, 120]
     status: done

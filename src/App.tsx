@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import Scene from './components/Scene'
 import PropertiesPanel from './components/PropertiesPanel'
 import PartsList from './components/PartsList'
+import CutListView from './components/CutListView'
 import { useProjectStore } from './stores/projectStore'
 import { serializeProject, deserializeProject } from './models/Project'
 import type { CAMERA_PRESETS } from './utils/constants'
@@ -16,6 +17,7 @@ export default function App() {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [showAxes, setShowAxes] = useState(false)
   const [eyedropperActive, setEyedropperActive] = useState(false)
+  const [cutListOpen, setCutListOpen] = useState(false)
   const [modifyingPartId, setModifyingPartId] = useState<string | null>(null)
   const project = useProjectStore((s) => s.project)
   const parts = useProjectStore((s) => s.project.parts)
@@ -108,6 +110,10 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && cutListOpen) {
+        setCutListOpen(false)
+        return
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         saveProject()
@@ -142,7 +148,7 @@ export default function App() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [saveProject, undo, redo, selectedIds, assemblies, groupPartsIntoAssembly, handleSelectIds, selectedAssemblyId, removeAssembly, handleSelectAssembly, duplicateAssembly])
+  }, [saveProject, undo, redo, selectedIds, assemblies, groupPartsIntoAssembly, handleSelectIds, selectedAssemblyId, removeAssembly, handleSelectAssembly, duplicateAssembly, cutListOpen])
 
   return (
     <>
@@ -169,9 +175,9 @@ export default function App() {
                 <button className="dropdown-item" onClick={() => setShowAxes((o) => !o)}>
                   Axes {showAxes ? 'On' : 'Off'}
                 </button>
-                <a className="dropdown-item" href="#/cutlist" onClick={() => setMenuOpen(false)}>
+                <button className="dropdown-item" onClick={() => { setCutListOpen(true); setMenuOpen(false) }}>
                   Cut List
-                </a>
+                </button>
                 <div className="dropdown-section">Help</div>
                 <button className="dropdown-item" onClick={() => { setHelpOpen((o) => !o); setMenuOpen(false) }}>
                   Keyboard Shortcuts
@@ -273,6 +279,13 @@ export default function App() {
         onExitModifyMode={handleExitModifyMode}
         onEnterModifyModeForCut={handleEnterModifyModeForCut}
       />
+      {cutListOpen && (
+        <div className="cutlist-modal-backdrop" onClick={() => setCutListOpen(false)}>
+          <div className="cutlist-modal-card" onClick={(e) => e.stopPropagation()}>
+            <CutListView onClose={() => setCutListOpen(false)} />
+          </div>
+        </div>
+      )}
       <Canvas
         camera={{ fov: 60, near: 0.1, far: 200, position: [3, 2, 3] }}
         gl={{ antialias: true }}

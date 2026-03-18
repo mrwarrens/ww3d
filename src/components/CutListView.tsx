@@ -243,7 +243,11 @@ function DimensionalSection({ nominalSize, parts, initialLengths, onSettingsChan
   )
 }
 
-export default function CutListView() {
+interface CutListViewProps {
+  onClose?: () => void
+}
+
+export default function CutListView({ onClose }: CutListViewProps = {}) {
   const projectName = useProjectStore((s) => s.project.name)
   const loadProject = useProjectStore((s) => s.loadProject)
   const parts = useProjectStore((s) => s.project.parts)
@@ -337,7 +341,10 @@ export default function CutListView() {
   return (
     <div className="cutlist-page">
       <div className="cutlist-header">
-        <a href="#/" className="cutlist-back">← Design</a>
+        {onClose
+          ? <button className="cutlist-close-btn" onClick={onClose}>✕</button>
+          : <a href="#/" className="cutlist-back">← Design</a>
+        }
         <span className="cutlist-project-name">{projectName}</span>
         <button className="cutlist-load-btn" onClick={() => fileInputRef.current?.click()}>Load</button>
         <input
