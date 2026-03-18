@@ -74,6 +74,54 @@ export function glueUpBoardCount(partWidth: number, availableBoardWidth: number,
   return Math.ceil(strips / Math.max(stripsPerBoard, 1))
 }
 
+export function packHardwood(
+  parts: Part[],
+  boardWidth: number,
+  boardLength: number
+): { totalBoards: number; partBoardCounts: Map<string, number> } {
+  interface Strip { partId: string; length: number }
+  const strips: Strip[] = []
+  for (const part of parts) {
+    const stripCount = Math.ceil(part.width / boardWidth)
+    for (let i = 0; i < stripCount; i++) {
+      strips.push({ partId: part.id, length: part.length })
+    }
+  }
+
+  strips.sort((a, b) => b.length - a.length)
+
+  const boards: { remaining: number }[] = []
+  const partBoards = new Map<string, Set<number>>()
+
+  for (const strip of strips) {
+    let placed = false
+    for (let i = 0; i < boards.length; i++) {
+      if (boards[i].remaining >= strip.length) {
+        boards[i].remaining -= strip.length
+        const set = partBoards.get(strip.partId) ?? new Set<number>()
+        set.add(i)
+        partBoards.set(strip.partId, set)
+        placed = true
+        break
+      }
+    }
+    if (!placed) {
+      const idx = boards.length
+      boards.push({ remaining: boardLength - strip.length })
+      const set = partBoards.get(strip.partId) ?? new Set<number>()
+      set.add(idx)
+      partBoards.set(strip.partId, set)
+    }
+  }
+
+  const partBoardCounts = new Map<string, number>()
+  for (const [partId, set] of partBoards) {
+    partBoardCounts.set(partId, set.size)
+  }
+
+  return { totalBoards: boards.length, partBoardCounts }
+}
+
 const NOMINAL_LOOKUP: Array<{ thickness: number; width: number; nominal: string }> = [
   { thickness: 1.5, width: 3.5, nominal: '2x4' },
   { thickness: 1.5, width: 5.5, nominal: '2x6' },

@@ -1373,3 +1373,20 @@ tasks:
       to assert the new label order.
     deps: [119]
     status: done
+
+  - id: 126
+    phase: 7
+    name: Hardwood cut list — bin-pack parts along board length
+    description: >
+      The hardwood section totals boards by summing one board per part, ignoring that
+      multiple parts can be cross-cut from a single board. For example, two 36"-long
+      parts can both come from one 72" board (36+36=72). Implement 1D bin-packing:
+      given all parts (after glue-up strip expansion) sorted by length descending,
+      greedily assign each part to an existing board where it fits in the remaining
+      length, opening a new board only when none has room. The total board count
+      displayed in the footer and per-row "Boards" column should reflect boards to
+      purchase, not parts count. Update unit tests in tests/cutlist.test.ts and
+      browser tests in tests/cutlist-hardwood.browser.test.tsx to cover multi-part
+      bin-packing scenarios.
+    deps: [122]
+    status: done

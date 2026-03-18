@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo } from 'react'
 import { useProjectStore } from '../stores/projectStore'
 import { deserializeProject } from '../models/Project'
-import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, toQuarterNotation, glueUpBoardCount, boardFeet, toNominalSize, assignBoardLength } from '../utils/cutlist'
+import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, packHardwood, toQuarterNotation, boardFeet, toNominalSize, assignBoardLength } from '../utils/cutlist'
 import { toFractionalInches } from '../utils/units'
 import SheetNestingDiagram from './SheetNestingDiagram'
 import type { Part } from '../models/Part'
@@ -95,11 +95,12 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
 
   const quarterKey = toQuarterNotation(thickness)
 
-  const totalBoards = parts.reduce((sum, p) => sum + glueUpBoardCount(p.width, boardWidth, p.length, boardLength), 0)
-  const totalBoardFeet = parts.reduce((sum, p) => {
-    const count = glueUpBoardCount(p.width, boardWidth, p.length, boardLength)
-    return sum + count * boardFeet(boardLength, boardWidth, thickness)
-  }, 0)
+  const packResult = useMemo(
+    () => packHardwood(parts, boardWidth, boardLength),
+    [parts, boardWidth, boardLength]
+  )
+  const totalBoards = packResult.totalBoards
+  const totalBoardFeet = totalBoards * boardFeet(boardLength, boardWidth, thickness)
 
   return (
     <section className="cutlist-hardwood-section">
@@ -137,7 +138,7 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
         </thead>
         <tbody>
           {parts.map((part) => {
-            const count = glueUpBoardCount(part.width, boardWidth, part.length, boardLength)
+            const count = packResult.partBoardCounts.get(part.id) ?? 0
             const tooLong = part.length > boardLength
             return (
               <tr key={part.id}>

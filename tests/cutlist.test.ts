@@ -10,6 +10,7 @@ import {
   toNominalSize,
   assignBoardLength,
   packSheets,
+  packHardwood,
 } from '../src/utils/cutlist'
 
 function makePart(overrides: Partial<Parameters<typeof createPart>[0]> & { id?: string } = {}) {
@@ -276,5 +277,55 @@ describe('packSheets', () => {
     const p2 = makePart({ id: 'p2', length: 23.875, width: 10 })
     const result = packSheets([p1, p2], 48, 20, 0.125)
     expect(result).toHaveLength(1)
+  })
+})
+
+describe('packHardwood', () => {
+  it('single part fitting in one board: 1 strip x 24" in 96" board → 1 board', () => {
+    const part = makePart({ id: 'p1', length: 24, width: 4, materialType: 'hardwood' })
+    const result = packHardwood([part], 6, 96)
+    expect(result.totalBoards).toBe(1)
+    expect(result.partBoardCounts.get('p1')).toBe(1)
+  })
+
+  it('two parts of length 60" share board 1 then need board 2: totalBoards = 2', () => {
+    const p1 = makePart({ id: 'p1', length: 60, width: 4, materialType: 'hardwood' })
+    const p2 = makePart({ id: 'p2', length: 60, width: 4, materialType: 'hardwood' })
+    // board 0: strip 60" (remaining 36), strip 2: 60 > 36 → board 1
+    const result = packHardwood([p1, p2], 6, 96)
+    expect(result.totalBoards).toBe(2)
+    expect(result.partBoardCounts.get('p1')).toBe(1)
+    expect(result.partBoardCounts.get('p2')).toBe(1)
+  })
+
+  it('two parts sharing a board: lengths 36" and 48" both fit in 96" board → 1 board total', () => {
+    const p1 = makePart({ id: 'p1', length: 48, width: 4, materialType: 'hardwood' })
+    const p2 = makePart({ id: 'p2', length: 36, width: 4, materialType: 'hardwood' })
+    const result = packHardwood([p1, p2], 6, 96)
+    expect(result.totalBoards).toBe(1)
+    expect(result.partBoardCounts.get('p1')).toBe(1)
+    expect(result.partBoardCounts.get('p2')).toBe(1)
+  })
+
+  it('glue-up strip expansion: part width 8", boardWidth 6" → 2 strips both fit in one 96" board', () => {
+    const part = makePart({ id: 'p1', length: 24, width: 8, materialType: 'hardwood' })
+    // strips = ceil(8/6) = 2, each 24"; board 0 can hold both (72 remaining after first)
+    const result = packHardwood([part], 6, 96)
+    expect(result.totalBoards).toBe(1)
+    expect(result.partBoardCounts.get('p1')).toBe(1)
+  })
+
+  it('part board count spans multiple boards when strips do not all fit on one board', () => {
+    // width 13, boardWidth 6 → 3 strips of length 40"; board 0: strips 1+2 (remaining 56→16), board 1: strip 3
+    const part = makePart({ id: 'p1', length: 40, width: 13, materialType: 'hardwood' })
+    const result = packHardwood([part], 6, 96)
+    expect(result.totalBoards).toBe(2)
+    expect(result.partBoardCounts.get('p1')).toBe(2)
+  })
+
+  it('returns totalBoards 0 and empty map for empty parts list', () => {
+    const result = packHardwood([], 6, 96)
+    expect(result.totalBoards).toBe(0)
+    expect(result.partBoardCounts.size).toBe(0)
   })
 })

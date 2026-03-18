@@ -195,24 +195,40 @@ describe('CutListView hardwood section', () => {
     await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
   })
 
-  it('sums boards and board-feet across multiple parts in a group', async () => {
+  it('sums boards and board-feet across multiple parts in a group (bin-packed)', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
           ...state.project,
           parts: [
-            // strips=2, stripsPerBoard=4, boardsToBuy=1, BF=1*boardFeet(96,6,0.75)=3.0
+            // Wide Shelf: strips=ceil(8/6)=2, each 24"; Narrow: strips=1, 24"
+            // All 3 strips (72") fit in one 96" board → totalBoards=1, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Wide Shelf', length: 24, width: 8, thickness: 0.75 }),
-            // strips=1, stripsPerBoard=4, boardsToBuy=1, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Narrow', length: 24, width: 4, thickness: 0.75 }),
           ],
         },
       }))
     })
     await render(<CutListView />)
-    // Total: 2 boards, 6.00 board-feet
+    await expect.element(page.getByText(/Total: 1 board,/)).toBeVisible()
+    await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
+  })
+
+  it('bin-packing: two parts of length 60" with 96" board → 2 boards total', async () => {
+    act(() => {
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: [
+            // Each part: 1 strip of 60"; board 0: 60" (36" remaining), 36 < 60 → board 1
+            makeHardwoodPart({ name: 'Part A', length: 60, width: 4, thickness: 0.75 }),
+            makeHardwoodPart({ name: 'Part B', length: 60, width: 4, thickness: 0.75 }),
+          ],
+        },
+      }))
+    })
+    await render(<CutListView />)
     await expect.element(page.getByText(/Total: 2 boards/)).toBeVisible()
-    await expect.element(page.getByText(/6\.00 board-feet/)).toBeVisible()
   })
 
   it('shows singular "board" when total is 1', async () => {
