@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo } from 'react'
 import { useProjectStore } from '../stores/projectStore'
 import { deserializeProject } from '../models/Project'
-import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, packHardwood, toQuarterNotation, boardFeet, toNominalSize, assignBoardLength } from '../utils/cutlist'
+import { getCutListParts, groupByMaterialType, groupByThickness, packSheets, decimalBoardsForPart, toQuarterNotation, boardFeet, toNominalSize, assignBoardLength } from '../utils/cutlist'
 import { toFractionalInches } from '../utils/units'
 import SheetNestingDiagram from './SheetNestingDiagram'
 import type { Part } from '../models/Part'
@@ -95,11 +95,10 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
 
   const quarterKey = toQuarterNotation(thickness)
 
-  const packResult = useMemo(
-    () => packHardwood(parts, boardWidth, boardLength),
+  const totalBoards = useMemo(
+    () => Math.ceil(parts.reduce((sum, p) => sum + decimalBoardsForPart(p, boardWidth, boardLength), 0)),
     [parts, boardWidth, boardLength]
   )
-  const totalBoards = packResult.totalBoards
   const totalBoardFeet = totalBoards * boardFeet(boardLength, boardWidth, thickness)
 
   return (
@@ -138,7 +137,7 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
         </thead>
         <tbody>
           {parts.map((part) => {
-            const count = packResult.partBoardCounts.get(part.id) ?? 0
+            const decimal = decimalBoardsForPart(part, boardWidth, boardLength)
             const tooLong = part.length > boardLength
             return (
               <tr key={part.id}>
@@ -148,7 +147,7 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
                   {tooLong && <span className="cutlist-warning"> ⚠ part exceeds board length</span>}
                 </td>
                 <td>{toFractionalInches(part.width)}</td>
-                <td>{count}</td>
+                <td>{decimal.toFixed(2)}</td>
               </tr>
             )
           })}

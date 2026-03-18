@@ -7,6 +7,7 @@ import {
   toQuarterNotation,
   boardFeet,
   glueUpBoardCount,
+  decimalBoardsForPart,
   toNominalSize,
   assignBoardLength,
   packSheets,
@@ -123,6 +124,32 @@ describe('boardFeet', () => {
 
   it('returns 0 for zero dimensions', () => {
     expect(boardFeet(0, 12, 1)).toBe(0)
+  })
+})
+
+describe('decimalBoardsForPart', () => {
+  it('returns fraction of board when part width fits in one strip', () => {
+    // strips=ceil(4/6)=1, decimal=1*(24/96)=0.25
+    const part = makePart({ length: 24, width: 4 })
+    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(0.25)
+  })
+
+  it('returns doubled fraction when two strips required', () => {
+    // strips=ceil(8/6)=2, decimal=2*(24/96)=0.50
+    const part = makePart({ length: 24, width: 8 })
+    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(0.5)
+  })
+
+  it('returns 1.0 when part exactly fills a board', () => {
+    // strips=ceil(6/6)=1, decimal=1*(96/96)=1.0
+    const part = makePart({ length: 96, width: 6 })
+    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(1.0)
+  })
+
+  it('returns value greater than 1 when part exceeds one board', () => {
+    // strips=ceil(6/6)=1, decimal=1*(60/96)=0.625 each
+    const part = makePart({ length: 60, width: 4 })
+    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(60 / 96)
   })
 })
 

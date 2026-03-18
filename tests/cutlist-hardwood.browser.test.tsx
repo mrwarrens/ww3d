@@ -112,7 +112,7 @@ describe('CutListView hardwood section', () => {
     expect(headerTexts).not.toContain('L × W')
   })
 
-  it('shows correct glue-up board count: width 8 with board width 6, length 24 in 96" board needs 1 board', async () => {
+  it('shows decimal board consumption per part: width 8 with board width 6, length 24 in 96" board', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
@@ -122,14 +122,14 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // strips=ceil(8/6)=2, stripsPerBoard=floor(96/24)=4, boardsToBuy=ceil(2/4)=1
+    // strips=ceil(8/6)=2, decimal=2*(24/96)=0.50
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     expect(rows.length).toBe(1)
     const cells = rows[0].querySelectorAll('td')
-    expect(cells[3].textContent).toBe('1')
+    expect(cells[3].textContent).toBe('0.50')
   })
 
-  it('shows 1 board when part width fits in one board', async () => {
+  it('shows decimal board consumption per part: width 4 fits in one strip', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
@@ -139,10 +139,10 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // glueUpBoardCount(4, 6) = ceil(4/6) = 1
+    // strips=ceil(4/6)=1, decimal=1*(24/96)=0.25
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     const cells = rows[0].querySelectorAll('td')
-    expect(cells[3].textContent).toBe('1')
+    expect(cells[3].textContent).toBe('0.25')
   })
 
   it('shows warning badge when part length exceeds board length', async () => {
@@ -195,14 +195,15 @@ describe('CutListView hardwood section', () => {
     await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
   })
 
-  it('sums boards and board-feet across multiple parts in a group (bin-packed)', async () => {
+  it('sums decimal boards and ceils total across multiple parts in a group', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
           ...state.project,
           parts: [
-            // Wide Shelf: strips=ceil(8/6)=2, each 24"; Narrow: strips=1, 24"
-            // All 3 strips (72") fit in one 96" board → totalBoards=1, BF=1*boardFeet(96,6,0.75)=3.0
+            // Wide Shelf: strips=ceil(8/6)=2, decimal=2*(24/96)=0.50
+            // Narrow: strips=ceil(4/6)=1, decimal=1*(24/96)=0.25
+            // sum=0.75, ceil=1 board, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Wide Shelf', length: 24, width: 8, thickness: 0.75 }),
             makeHardwoodPart({ name: 'Narrow', length: 24, width: 4, thickness: 0.75 }),
           ],
@@ -214,13 +215,31 @@ describe('CutListView hardwood section', () => {
     await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
   })
 
-  it('bin-packing: two parts of length 60" with 96" board → 2 boards total', async () => {
+  it('ceils decimal sum: two parts each 0.75 boards → sum 1.50 → total 2 boards', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
           ...state.project,
           parts: [
-            // Each part: 1 strip of 60"; board 0: 60" (36" remaining), 36 < 60 → board 1
+            // strips=ceil(8/6)=2, length=36, boardLength=96: decimal=2*(36/96)=0.75
+            makeHardwoodPart({ name: 'Part A', length: 36, width: 8, thickness: 0.75 }),
+            makeHardwoodPart({ name: 'Part B', length: 36, width: 8, thickness: 0.75 }),
+          ],
+        },
+      }))
+    })
+    await render(<CutListView />)
+    // sum=1.50, ceil=2
+    await expect.element(page.getByText(/Total: 2 boards/)).toBeVisible()
+  })
+
+  it('two parts of length 60" with 96" board → ceiled total 2 boards', async () => {
+    act(() => {
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: [
+            // Each part: strips=ceil(4/6)=1, decimal=1*(60/96)=0.625; sum=1.25, ceil=2
             makeHardwoodPart({ name: 'Part A', length: 60, width: 4, thickness: 0.75 }),
             makeHardwoodPart({ name: 'Part B', length: 60, width: 4, thickness: 0.75 }),
           ],

@@ -1199,7 +1199,7 @@ tasks:
       via the properties panel. Unit tests in tests/part-materialtype.test.ts covering the
       default value, createPart with explicit materialType, and round-trip serialization.
     deps: []
-    status: done
+    status: accepted
   - id: 114
     phase: 7
     name: Add material type selector to PropertiesPanel
@@ -1212,7 +1212,7 @@ tasks:
       top-level parts, is absent for child cuts, and clicking a button calls onUpdate with
       the correct materialType value.
     deps: [113]
-    status: done
+    status: accepted
   - id: 115
     phase: 7
     name: Hash-based routing between design and cut list views
@@ -1227,7 +1227,7 @@ tasks:
       tests/routing.browser.test.tsx asserting navigation to #/cutlist renders the cut list
       header and the back link returns to the design view.
     deps: []
-    status: done
+    status: accepted
   - id: 116
     phase: 7
     name: Cut list computation utilities
@@ -1360,8 +1360,7 @@ tasks:
       length × width in that order. Update browser tests in
       tests/cutlist-hardwood.browser.test.tsx to assert the correct column order.
     deps: [119]
-    status: done
-
+    status: accepted
   - id: 125
     phase: 7
     name: Hardwood cut list settings row — Board Length left, Board Width right
@@ -1372,8 +1371,7 @@ tasks:
       in the table. Update browser tests in tests/cutlist-hardwood.browser.test.tsx
       to assert the new label order.
     deps: [119]
-    status: done
-
+    status: accepted
   - id: 126
     phase: 7
     name: Hardwood cut list — bin-pack parts along board length
@@ -1388,5 +1386,19 @@ tasks:
       purchase, not parts count. Update unit tests in tests/cutlist.test.ts and
       browser tests in tests/cutlist-hardwood.browser.test.tsx to cover multi-part
       bin-packing scenarios.
+    deps: [122]
+    status: done
+
+  - id: 127
+    phase: 7
+    name: Hardwood cut list — show decimal boards per row, ceiled total
+    description: >
+      In HardwoodSection in CutListView.tsx, the per-row "Boards" column should display
+      the unceiled decimal value (e.g. 1.5) so the user can see how the parts add up
+      to the total (e.g. 1.5 + 1.5 = 3). The footer total should continue to use
+      Math.ceil so it reflects whole boards to purchase. Format the per-row value to
+      at most 2 decimal places (e.g. 1.5, not 1.50 or 1.333333). Update browser tests
+      in tests/cutlist-hardwood.browser.test.tsx to assert the decimal display in rows
+      and the ceiled total in the footer.
     deps: [122]
     status: done
