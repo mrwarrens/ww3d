@@ -1459,3 +1459,52 @@ tasks:
       fit on one sheet, 48×6 is placed rotated (length=6, width=48 in placement).
     deps: [129]
     status: done
+  - id: 131
+    phase: 7
+    name: Sheet goods packing — additional unit tests (green cases)
+    description: >
+      Add unit tests to tests/cutlist.test.ts covering packSheets edge cases that
+      are expected to pass without any code changes. Do NOT add tests for the
+      edge-fit/gap-boundary bug — those belong in task #130.
+
+      Add all of the following in a new describe block 'packSheets — edge cases':
+
+      5. Square part — rotation not attempted (partLength === partWidth), placement
+         succeeds on one sheet, rotated === false.
+
+      6. Part larger than sheet in both orientations — oversized fallback path is
+         taken; result has 1 sheet, 1 placement, placement x === gap/2 and
+         y === gap/2, rotated === false.
+
+      8. No overlaps between placements — pack 6 varied parts onto a sheet and
+         assert that no two placement rects intersect (x/y/length/width check).
+
+      9. Sort by area descending — given a small part and a large part (small has
+         smaller area), both fit on one sheet; the large part is listed first in
+         placements (placed first due to sort).
+
+      10. Gap between adjacent parts — two parts placed side by side; the right
+          edge of the left part plus gap equals the left edge of the right part
+          (within floating-point tolerance).
+
+      11. Part at sheet edge — first part placed on a fresh sheet; its x and y
+          coordinates equal gap/2.
+
+      12. Exactly two full sheets — parts whose combined area exactly fills two
+          sheets but cannot share; result has exactly 2 sheets.
+
+      13. Oversized part on its own sheet, remaining parts pack together — one part
+          larger than the sheet plus several normal parts; oversized is alone on
+          sheet 1, normals pack onto sheet 2 (not sheet 1).
+
+      14. wastePercent reflects actual unused area — one part covering exactly half
+          the sheet area; wastePercent is approximately 0.5.
+
+      15. wastePercent is clamped to 0 minimum — a part that fills more than the
+          sheet (oversized fallback); wastePercent === 0 (Math.max(0, ...) clamp).
+
+      If any test fails unexpectedly, do not adjust the test to pass — instead
+      leave a TODO comment and skip the test with it.skip() so the suite stays
+      green, and report which tests were skipped in the plan's output.
+    deps: [130]
+    status: done

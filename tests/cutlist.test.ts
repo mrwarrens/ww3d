@@ -353,6 +353,130 @@ describe('packSheets — MAXRECTS improvement', () => {
   })
 })
 
+describe('packSheets — edge cases', () => {
+  // Test 5 — Square part: rotation not attempted
+  it('square part uses only one orientation (rotated === false)', () => {
+    const part = makePart({ id: 'sq', length: 24, width: 24 })
+    const result = packSheets([part], 48, 48, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].placements[0].rotated).toBe(false)
+  })
+
+  // Test 6 — Part larger than sheet in both orientations: oversized fallback
+  it('oversized part fires fallback path and lands at gap/2, gap/2 with rotated false', () => {
+    const gap = 0.125
+    const part = makePart({ id: 'big', length: 60, width: 60 })
+    const result = packSheets([part], 48, 48, gap)
+    expect(result).toHaveLength(1)
+    expect(result[0].placements).toHaveLength(1)
+    const p = result[0].placements[0]
+    expect(p.x).toBeCloseTo(gap / 2, 5)
+    expect(p.y).toBeCloseTo(gap / 2, 5)
+    expect(p.rotated).toBe(false)
+  })
+
+  // Test 8 — No overlaps between any two placements
+  it('no two placements overlap when packing multiple parts onto one large sheet', () => {
+    const parts = [
+      makePart({ id: 'a', length: 30, width: 20 }),
+      makePart({ id: 'b', length: 25, width: 15 }),
+      makePart({ id: 'c', length: 20, width: 10 }),
+      makePart({ id: 'd', length: 18, width: 12 }),
+      makePart({ id: 'e', length: 15, width: 10 }),
+      makePart({ id: 'f', length: 10, width: 8 }),
+    ]
+    const result = packSheets(parts, 96, 96, 0)
+    // All parts should land on one sheet
+    expect(result).toHaveLength(1)
+    const placements = result[0].placements
+    for (let i = 0; i < placements.length; i++) {
+      for (let j = i + 1; j < placements.length; j++) {
+        const a = placements[i]
+        const b = placements[j]
+        const overlaps =
+          a.x < b.x + b.length &&
+          a.x + a.length > b.x &&
+          a.y < b.y + b.width &&
+          a.y + a.width > b.y
+        expect(overlaps).toBe(false)
+      }
+    }
+  })
+
+  // Test 9 — Sort by area descending: large part placed first
+  it('places larger-area part first (placements[0] is the larger part)', () => {
+    const small = makePart({ id: 'small', length: 6, width: 6 })
+    const large = makePart({ id: 'large', length: 36, width: 48 })
+    const result = packSheets([small, large], 48, 96, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].placements[0].partId).toBe('large')
+  })
+
+  // Test 10 — Gap between adjacent parts
+  it('right edge of left part + gap equals left edge of right part when placed side by side', () => {
+    const gap = 0.125
+    const p1 = makePart({ id: 'p1', length: 20, width: 20 })
+    const p2 = makePart({ id: 'p2', length: 20, width: 20 })
+    const result = packSheets([p1, p2], 48, 20, gap)
+    expect(result).toHaveLength(1)
+    const placements = result[0].placements
+    const left = placements.reduce((a, b) => (a.x < b.x ? a : b))
+    const right = placements.reduce((a, b) => (a.x > b.x ? a : b))
+    expect(left.x + left.length + gap).toBeCloseTo(right.x, 2)
+  })
+
+  // Test 11 — First placement coordinates when gap > 0
+  it('first placement on a fresh sheet has x === gap/2 and y === gap/2', () => {
+    const gap = 0.125
+    const part = makePart({ id: 'p', length: 12, width: 8 })
+    const result = packSheets([part], 48, 96, gap)
+    expect(result).toHaveLength(1)
+    const p = result[0].placements[0]
+    expect(p.x).toBeCloseTo(gap / 2, 5)
+    expect(p.y).toBeCloseTo(gap / 2, 5)
+  })
+
+  // Test 12 — Two full-sheet parts yield exactly 2 sheets
+  it('two parts each exactly filling the sheet land on separate sheets', () => {
+    const p1 = makePart({ id: 'p1', length: 48, width: 96 })
+    const p2 = makePart({ id: 'p2', length: 48, width: 96 })
+    const result = packSheets([p1, p2], 48, 96, 0)
+    expect(result).toHaveLength(2)
+  })
+
+  // Test 13 — Oversized part alone; remaining normals pack together
+  it('oversized part lands alone and three normal parts share one other sheet (2 total)', () => {
+    const oversized = makePart({ id: 'big', length: 60, width: 60 })
+    const n1 = makePart({ id: 'n1', length: 20, width: 20 })
+    const n2 = makePart({ id: 'n2', length: 20, width: 20 })
+    const n3 = makePart({ id: 'n3', length: 20, width: 20 })
+    const result = packSheets([oversized, n1, n2, n3], 48, 48, 0)
+    expect(result).toHaveLength(2)
+    // Oversized is placed alone
+    const bigSheet = result.find(s => s.placements.some(p => p.partId === 'big'))!
+    expect(bigSheet.placements).toHaveLength(1)
+    // All three normals share the other sheet
+    const normalSheet = result.find(s => s.placements.some(p => p.partId === 'n1'))!
+    expect(normalSheet.placements).toHaveLength(3)
+  })
+
+  // Test 14 — wastePercent reflects actual unused area
+  it('wastePercent is ~0.5 when part covers half the sheet area', () => {
+    const part = makePart({ id: 'p', length: 48, width: 48 })
+    const result = packSheets([part], 48, 96, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].wastePercent).toBeCloseTo(0.5, 3)
+  })
+
+  // Test 15 — wastePercent clamped to 0 for oversized part
+  it('wastePercent is clamped to 0 when oversized part exceeds sheet area', () => {
+    const part = makePart({ id: 'big', length: 60, width: 60 })
+    const result = packSheets([part], 48, 48, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].wastePercent).toBe(0)
+  })
+})
+
 describe('packHardwood', () => {
   it('single part fitting in one board: 1 strip x 24" in 96" board → 1 board', () => {
     const part = makePart({ id: 'p1', length: 24, width: 4, materialType: 'hardwood' })
