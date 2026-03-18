@@ -89,8 +89,27 @@ describe('CutListView hardwood section', () => {
     })
     await render(<CutListView />)
     await expect.element(page.getByText('Top Rail')).toBeVisible()
-    // 24" × 4" dimensions displayed as fractional inches
-    await expect.element(page.getByText(/24.*×.*4/)).toBeVisible()
+    const rows = document.querySelectorAll('.cutlist-table tbody tr')
+    const cells = rows[0].querySelectorAll('td')
+    expect(cells[1].textContent).toContain('24"')
+    expect(cells[2].textContent).toContain('4"')
+  })
+
+  it('renders separate Length and Width column headers', async () => {
+    act(() => {
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: [makeHardwoodPart({ name: 'Rail' })],
+        },
+      }))
+    })
+    await render(<CutListView />)
+    const headers = document.querySelectorAll('.cutlist-table thead th')
+    const headerTexts = Array.from(headers).map(h => h.textContent)
+    expect(headerTexts).toContain('Length')
+    expect(headerTexts).toContain('Width')
+    expect(headerTexts).not.toContain('L × W')
   })
 
   it('shows correct glue-up board count: width 8 with board width 6, length 24 in 96" board needs 1 board', async () => {
@@ -107,7 +126,7 @@ describe('CutListView hardwood section', () => {
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     expect(rows.length).toBe(1)
     const cells = rows[0].querySelectorAll('td')
-    expect(cells[2].textContent).toBe('1')
+    expect(cells[3].textContent).toBe('1')
   })
 
   it('shows 1 board when part width fits in one board', async () => {
@@ -123,7 +142,7 @@ describe('CutListView hardwood section', () => {
     // glueUpBoardCount(4, 6) = ceil(4/6) = 1
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     const cells = rows[0].querySelectorAll('td')
-    expect(cells[2].textContent).toBe('1')
+    expect(cells[3].textContent).toBe('1')
   })
 
   it('shows warning badge when part length exceeds board length', async () => {
@@ -138,6 +157,10 @@ describe('CutListView hardwood section', () => {
     await render(<CutListView />)
     // default boardLength = 96, part.length = 100 > 96
     await expect.element(page.getByText(/part exceeds board length/)).toBeVisible()
+    // warning should appear in the Length cell (cells[1]), not in a combined cell
+    const rows = document.querySelectorAll('.cutlist-table tbody tr')
+    const cells = rows[0].querySelectorAll('td')
+    expect(cells[1].querySelector('.cutlist-warning')).not.toBeNull()
   })
 
   it('does not show warning badge when part length fits in board', async () => {

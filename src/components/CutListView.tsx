@@ -130,7 +130,8 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
         <thead>
           <tr>
             <th>Name</th>
-            <th>L × W</th>
+            <th>Length</th>
+            <th>Width</th>
             <th>Boards</th>
           </tr>
         </thead>
@@ -142,9 +143,10 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
               <tr key={part.id}>
                 <td>{part.name}</td>
                 <td>
-                  {toFractionalInches(part.length)} × {toFractionalInches(part.width)}
+                  {toFractionalInches(part.length)}
                   {tooLong && <span className="cutlist-warning"> ⚠ part exceeds board length</span>}
                 </td>
+                <td>{toFractionalInches(part.width)}</td>
                 <td>{count}</td>
               </tr>
             )

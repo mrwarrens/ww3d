@@ -1332,7 +1332,7 @@ tasks:
       Remove the "Material:" label text (keep the select with aria-label). Update
       tests/material-type-panel.browser.test.tsx if needed to match the new DOM order.
     deps: [114]
-    status: done
+    status: accepted
   - id: 122
     phase: 7
     name: Fix hardwood cut list board count
@@ -1346,5 +1346,18 @@ tasks:
       and boardLength. Update call sites in HardwoodSection in CutListView.tsx. Update
       unit tests in tests/cutlist.test.ts and browser tests in
       tests/cutlist-hardwood.browser.test.tsx to cover the corrected behavior.
+    deps: [119]
+    status: done
+
+  - id: 124
+    phase: 7
+    name: Hardwood cut list column order — length left, width right
+    description: >
+      In the hardwood cut list table (HardwoodSection in CutListView.tsx), the L × W
+      column must always display length on the left and width on the right, regardless
+      of how the part was modeled. Currently part.length and part.width are displayed
+      as-is; ensure the label is always "L × W" and values are always rendered as
+      length × width in that order. Update browser tests in
+      tests/cutlist-hardwood.browser.test.tsx to assert the correct column order.
     deps: [119]
     status: done
