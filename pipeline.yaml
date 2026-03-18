@@ -1321,3 +1321,19 @@ tasks:
       in the DOM behind the modal.
     deps: [118, 119, 120]
     status: done
+
+  - id: 122
+    phase: 7
+    name: Fix hardwood cut list board count
+    description: >
+      The glueUpBoardCount function in src/utils/cutlist.ts returns the number of
+      glue-up strips (ceil(partWidth / boardWidth)) but the UI labels this "Boards",
+      implying boards to purchase. This is wrong when a single board can yield multiple
+      strips by cross-cutting. Fix the formula: strips = ceil(partWidth / boardWidth),
+      stripsPerBoard = floor(boardLength / partLength), boardsToBuy = ceil(strips /
+      max(stripsPerBoard, 1)). Update glueUpBoardCount signature to accept partLength
+      and boardLength. Update call sites in HardwoodSection in CutListView.tsx. Update
+      unit tests in tests/cutlist.test.ts and browser tests in
+      tests/cutlist-hardwood.browser.test.tsx to cover the corrected behavior.
+    deps: [119]
+    status: done

@@ -95,10 +95,10 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
 
   const quarterKey = toQuarterNotation(thickness)
 
-  const totalBoards = parts.reduce((sum, p) => sum + glueUpBoardCount(p.width, boardWidth), 0)
+  const totalBoards = parts.reduce((sum, p) => sum + glueUpBoardCount(p.width, boardWidth, p.length, boardLength), 0)
   const totalBoardFeet = parts.reduce((sum, p) => {
-    const count = glueUpBoardCount(p.width, boardWidth)
-    return sum + boardFeet(p.length, boardWidth * count, thickness)
+    const count = glueUpBoardCount(p.width, boardWidth, p.length, boardLength)
+    return sum + count * boardFeet(boardLength, boardWidth, thickness)
   }, 0)
 
   return (
@@ -136,7 +136,7 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
         </thead>
         <tbody>
           {parts.map((part) => {
-            const count = glueUpBoardCount(part.width, boardWidth)
+            const count = glueUpBoardCount(part.width, boardWidth, part.length, boardLength)
             const tooLong = part.length > boardLength
             return (
               <tr key={part.id}>

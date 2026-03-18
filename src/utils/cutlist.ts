@@ -68,8 +68,10 @@ export function boardFeet(length: number, width: number, thickness: number): num
   return (length * width * thickness) / 144
 }
 
-export function glueUpBoardCount(partWidth: number, availableBoardWidth: number): number {
-  return Math.ceil(partWidth / availableBoardWidth)
+export function glueUpBoardCount(partWidth: number, availableBoardWidth: number, partLength: number, boardLength: number): number {
+  const strips = Math.ceil(partWidth / availableBoardWidth)
+  const stripsPerBoard = Math.floor(boardLength / partLength)
+  return Math.ceil(strips / Math.max(stripsPerBoard, 1))
 }
 
 const NOMINAL_LOOKUP: Array<{ thickness: number; width: number; nominal: string }> = [

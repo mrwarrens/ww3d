@@ -93,7 +93,7 @@ describe('CutListView hardwood section', () => {
     await expect.element(page.getByText(/24.*×.*4/)).toBeVisible()
   })
 
-  it('shows correct glue-up board count: width 8 with board width 6 needs 2 boards', async () => {
+  it('shows correct glue-up board count: width 8 with board width 6, length 24 in 96" board needs 1 board', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
@@ -103,11 +103,11 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // glueUpBoardCount(8, 6) = ceil(8/6) = 2
+    // strips=ceil(8/6)=2, stripsPerBoard=floor(96/24)=4, boardsToBuy=ceil(2/4)=1
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     expect(rows.length).toBe(1)
     const cells = rows[0].querySelectorAll('td')
-    expect(cells[2].textContent).toBe('2')
+    expect(cells[2].textContent).toBe('1')
   })
 
   it('shows 1 board when part width fits in one board', async () => {
@@ -160,16 +160,16 @@ describe('CutListView hardwood section', () => {
         project: {
           ...state.project,
           parts: [
-            // glueUpBoardCount(8, 6) = 2, boardFeet(24, 12, 0.75) = 1.5
+            // strips=2, stripsPerBoard=4, boardsToBuy=1, boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Wide Shelf', length: 24, width: 8, thickness: 0.75 }),
           ],
         },
       }))
     })
     await render(<CutListView />)
-    // Total: 2 boards, 1.50 board-feet
-    await expect.element(page.getByText(/Total: 2 boards/)).toBeVisible()
-    await expect.element(page.getByText(/1\.50 board-feet/)).toBeVisible()
+    // Total: 1 board, 3.00 board-feet
+    await expect.element(page.getByText(/Total: 1 board,/)).toBeVisible()
+    await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
   })
 
   it('sums boards and board-feet across multiple parts in a group', async () => {
@@ -178,18 +178,18 @@ describe('CutListView hardwood section', () => {
         project: {
           ...state.project,
           parts: [
-            // glueUpBoardCount(8, 6)=2, boardFeet(24, 12, 0.75)=1.5
+            // strips=2, stripsPerBoard=4, boardsToBuy=1, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Wide Shelf', length: 24, width: 8, thickness: 0.75 }),
-            // glueUpBoardCount(4, 6)=1, boardFeet(24, 6, 0.75)=0.75
+            // strips=1, stripsPerBoard=4, boardsToBuy=1, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Narrow', length: 24, width: 4, thickness: 0.75 }),
           ],
         },
       }))
     })
     await render(<CutListView />)
-    // Total: 3 boards, 2.25 board-feet
-    await expect.element(page.getByText(/Total: 3 boards/)).toBeVisible()
-    await expect.element(page.getByText(/2\.25 board-feet/)).toBeVisible()
+    // Total: 2 boards, 6.00 board-feet
+    await expect.element(page.getByText(/Total: 2 boards/)).toBeVisible()
+    await expect.element(page.getByText(/6\.00 board-feet/)).toBeVisible()
   })
 
   it('shows singular "board" when total is 1', async () => {

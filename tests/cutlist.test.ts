@@ -126,20 +126,32 @@ describe('boardFeet', () => {
 })
 
 describe('glueUpBoardCount', () => {
-  it('returns 1 when part width equals board width', () => {
-    expect(glueUpBoardCount(6, 6)).toBe(1)
+  it('returns 1 when part width equals board width and fits once per board', () => {
+    expect(glueUpBoardCount(6, 6, 24, 96)).toBe(1)
   })
 
-  it('returns 2 when part width is just over one board', () => {
-    expect(glueUpBoardCount(7, 6)).toBe(2)
-  })
-
-  it('rounds up correctly', () => {
-    expect(glueUpBoardCount(13, 6)).toBe(3)
+  it('returns 2 when strips exceed stripsPerBoard', () => {
+    // strips=2, stripsPerBoard=floor(96/60)=1, boardsToBuy=2
+    expect(glueUpBoardCount(8, 6, 60, 96)).toBe(2)
   })
 
   it('returns 1 for part narrower than board', () => {
-    expect(glueUpBoardCount(3, 6)).toBe(1)
+    expect(glueUpBoardCount(3, 6, 24, 96)).toBe(1)
+  })
+
+  it('uses cross-cutting: wide part but short length yields 1 board', () => {
+    // strips=2, stripsPerBoard=floor(96/24)=4, boardsToBuy=ceil(2/4)=1
+    expect(glueUpBoardCount(8, 6, 24, 96)).toBe(1)
+  })
+
+  it('accounts for partial strip sets across boards', () => {
+    // strips=2, stripsPerBoard=floor(48/24)=2, boardsToBuy=ceil(2/2)=1
+    expect(glueUpBoardCount(7, 6, 24, 48)).toBe(1)
+  })
+
+  it('handles 3 strips needing 1 board via cross-cutting', () => {
+    // strips=3, stripsPerBoard=floor(96/24)=4, boardsToBuy=ceil(3/4)=1
+    expect(glueUpBoardCount(13, 6, 24, 96)).toBe(1)
   })
 })
 
