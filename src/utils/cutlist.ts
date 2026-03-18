@@ -212,45 +212,30 @@ export function packSheets(
     return best
   }
 
-  function guillotineSplit(freeRects: Rect[], used: Rect, placedW: number, placedH: number): Rect[] {
-    const remaining: Rect[] = []
+  function maxRectsClip(freeRects: Rect[], px: number, py: number, pw: number, ph: number): Rect[] {
+    const result: Rect[] = []
     for (const rect of freeRects) {
-      // Check if this rect intersects the placed area
-      if (
-        used.x + placedW <= rect.x ||
-        used.x >= rect.x + rect.w ||
-        used.y + placedH <= rect.y ||
-        used.y >= rect.y + rect.h
-      ) {
-        remaining.push(rect)
+      // No intersection — keep as-is
+      if (px + pw <= rect.x || px >= rect.x + rect.w || py + ph <= rect.y || py >= rect.y + rect.h) {
+        result.push(rect)
         continue
       }
-
-      // Guillotine split: try both axes, pick the one leaving the larger area
-      const rightW = rect.x + rect.w - (used.x + placedW)
-      const topH = rect.y + rect.h - (used.y + placedH)
-      const splitHoriz = rightW * rect.h + (used.x - rect.x + placedW) * topH
-      const splitVert = (used.y - rect.y + placedH) * rightW + rect.h * (used.x - rect.x)
-
-      if (splitHoriz >= splitVert) {
-        // Horizontal cut: right rectangle + top rectangle
-        if (rightW > 0) {
-          remaining.push({ x: used.x + placedW, y: rect.y, w: rightW, h: rect.h })
-        }
-        if (topH > 0) {
-          remaining.push({ x: rect.x, y: used.y + placedH, w: used.x - rect.x + placedW, h: topH })
-        }
-      } else {
-        // Vertical cut: top rectangle + right rectangle
-        if (topH > 0) {
-          remaining.push({ x: rect.x, y: used.y + placedH, w: rect.w, h: topH })
-        }
-        if (rightW > 0) {
-          remaining.push({ x: used.x + placedW, y: rect.y, w: rightW, h: used.y - rect.y + placedH })
-        }
-      }
+      // Left portion
+      if (rect.x < px) result.push({ x: rect.x, y: rect.y, w: px - rect.x, h: rect.h })
+      // Right portion
+      if (rect.x + rect.w > px + pw) result.push({ x: px + pw, y: rect.y, w: rect.x + rect.w - (px + pw), h: rect.h })
+      // Bottom portion
+      if (rect.y < py) result.push({ x: rect.x, y: rect.y, w: rect.w, h: py - rect.y })
+      // Top portion
+      if (rect.y + rect.h > py + ph) result.push({ x: rect.x, y: py + ph, w: rect.w, h: rect.y + rect.h - (py + ph) })
     }
-    return remaining
+    return result
+  }
+
+  function pruneContained(rects: Rect[]): Rect[] {
+    return rects.filter((a, i) =>
+      !rects.some((b, j) => i !== j && b.x <= a.x && b.y <= a.y && b.x + b.w >= a.x + a.w && b.y + b.h >= a.y + a.h)
+    )
   }
 
   for (const part of sorted) {
@@ -274,7 +259,7 @@ export function packSheets(
           rotated,
         })
         sheet.usedArea += part.length * part.width
-        sheet.freeRects = guillotineSplit(sheet.freeRects, rect, effectiveL, effectiveW)
+        sheet.freeRects = pruneContained(maxRectsClip(sheet.freeRects, rect.x, rect.y, effectiveL, effectiveW))
         placed = true
         break
       }
@@ -304,7 +289,7 @@ export function packSheets(
           rotated,
         })
         newSheet.usedArea += part.length * part.width
-        newSheet.freeRects = guillotineSplit(newSheet.freeRects, rect, effectiveL, effectiveW)
+        newSheet.freeRects = pruneContained(maxRectsClip(newSheet.freeRects, rect.x, rect.y, effectiveL, effectiveW))
       } else {
         // Part doesn't fit in any orientation — place it alone on an oversized sheet
         newSheet.placements.push({

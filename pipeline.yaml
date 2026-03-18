@@ -1244,7 +1244,7 @@ tasks:
       algorithm detail. Unit tests in tests/cutlist.test.ts covering all functions
       including packing edge cases.
     deps: [113]
-    status: done
+    status: accepted
   - id: 117
     phase: 7
     name: Cut list settings persistence
@@ -1257,7 +1257,7 @@ tasks:
       Unit tests covering settings round-trip serialization and the store action.
       See cut-list-spec.md section 3.2 for the full interface definition.
     deps: [113]
-    status: done
+    status: accepted
   - id: 118
     phase: 7
     name: Sheet goods section with nesting diagram
@@ -1286,7 +1286,7 @@ tasks:
       and .cutlist-warning CSS. Browser tests in tests/cutlist-hardwood.browser.test.tsx
       asserting board counts, warnings, and board-feet totals.
     deps: [115, 116, 117]
-    status: done
+    status: accepted
   - id: 120
     phase: 7
     name: Dimensional lumber section
@@ -1320,8 +1320,7 @@ tasks:
       renders the modal overlay; Escape dismisses it; the 3D canvas is still present
       in the DOM behind the modal.
     deps: [118, 119, 120]
-    status: done
-
+    status: accepted
   - id: 123
     phase: 7
     name: "UX: Move material dropdown between color picker and shape buttons in PropertiesPanel"
@@ -1347,8 +1346,7 @@ tasks:
       unit tests in tests/cutlist.test.ts and browser tests in
       tests/cutlist-hardwood.browser.test.tsx to cover the corrected behavior.
     deps: [119]
-    status: done
-
+    status: accepted
   - id: 124
     phase: 7
     name: Hardwood cut list column order — length left, width right
@@ -1387,8 +1385,7 @@ tasks:
       browser tests in tests/cutlist-hardwood.browser.test.tsx to cover multi-part
       bin-packing scenarios.
     deps: [122]
-    status: done
-
+    status: accepted
   - id: 127
     phase: 7
     name: Hardwood cut list — show decimal boards per row, ceiled total
@@ -1401,8 +1398,7 @@ tasks:
       in tests/cutlist-hardwood.browser.test.tsx to assert the decimal display in rows
       and the ceiled total in the footer.
     deps: [122]
-    status: done
-
+    status: accepted
   - id: 128
     phase: 7
     name: Fix hardwood strips-per-board uses floor not raw ratio
@@ -1418,4 +1414,24 @@ tasks:
       browser tests in tests/cutlist-hardwood.browser.test.tsx to assert the correct
       values (e.g. part 24x6, board 36x2 → 3 boards per row, not 2).
     deps: [122, 127]
+    status: accepted
+  - id: 129
+    phase: 7
+    name: Sheet goods packing — replace Guillotine with MAXRECTS
+    description: >
+      The current Guillotine BSSF algorithm in packSheets() (src/utils/cutlist.ts)
+      fragments free space into disjoint strips after each placement. For example,
+      three 6×36 boards on a 24×48 sheet leaves three separate 6.5×11.5 free rects
+      at the top rather than one contiguous 24×11.5 rect — so a 12×6 part that
+      physically fits is incorrectly placed on a second sheet.
+
+      Replace the guillotineSplit() function and freeRects management with the
+      Maximal Rectangles algorithm (MAXRECTS-BSSF). After each placement, generate
+      all maximal free rectangles that contain the remaining space (overlapping is
+      allowed), then prune any rect that is fully contained within another.
+      The tryPlace() scoring (BSSF) stays the same.
+
+      Update unit tests in tests/cutlist.test.ts to cover the case described above
+      (three 6×36 boards + one 12×6 on a 24×48 sheet → all four fit on one sheet).
+    deps: [128]
     status: done

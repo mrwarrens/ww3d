@@ -313,6 +313,28 @@ describe('packSheets', () => {
   })
 })
 
+describe('packSheets — MAXRECTS improvement', () => {
+  it('L-shaped residual: large + two medium parts all fit on one sheet', () => {
+    // Sheet 48×96. Place a 36×96 part — fills left 36" leaving a 12×96 strip on the right.
+    // Two 12×48 parts should both fit in that right strip.
+    const p1 = makePart({ id: 'p1', length: 36, width: 96 })
+    const p2 = makePart({ id: 'p2', length: 12, width: 48 })
+    const p3 = makePart({ id: 'p3', length: 12, width: 48 })
+    const result = packSheets([p1, p2, p3], 48, 96, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].placements).toHaveLength(3)
+  })
+
+  it('corner packing: three 24×48 parts fit on a 48×96 sheet', () => {
+    const p1 = makePart({ id: 'p1', length: 24, width: 48 })
+    const p2 = makePart({ id: 'p2', length: 24, width: 48 })
+    const p3 = makePart({ id: 'p3', length: 24, width: 48 })
+    const result = packSheets([p1, p2, p3], 48, 96, 0)
+    expect(result).toHaveLength(1)
+    expect(result[0].placements).toHaveLength(3)
+  })
+})
+
 describe('packHardwood', () => {
   it('single part fitting in one board: 1 strip x 24" in 96" board → 1 board', () => {
     const part = makePart({ id: 'p1', length: 24, width: 4, materialType: 'hardwood' })
