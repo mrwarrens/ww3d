@@ -239,8 +239,8 @@ describe('CutListView hardwood section', () => {
       }))
     })
     const screen = await render(<CutListView />)
-    // Board Width is the first spinbutton in the settings row
-    const widthInput = screen.getByRole('spinbutton').first()
+    // Board Length is the first spinbutton in the settings row; Board Width is the second
+    const widthInput = screen.getByRole('spinbutton').nth(1)
     await widthInput.fill('8')
     await userEvent.keyboard('{Tab}')
     const settings = useProjectStore.getState().project.cutListSettings
@@ -263,7 +263,7 @@ describe('CutListView hardwood section', () => {
     })
     await render(<CutListView />)
     const inputs = document.querySelectorAll<HTMLInputElement>('.cutlist-settings-row input[type="number"]')
-    expect(inputs[0]?.value).toBe('10')
-    expect(inputs[1]?.value).toBe('120')
+    expect(inputs[0]?.value).toBe('120')
+    expect(inputs[1]?.value).toBe('10')
   })
 })

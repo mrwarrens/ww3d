@@ -1361,3 +1361,15 @@ tasks:
       tests/cutlist-hardwood.browser.test.tsx to assert the correct column order.
     deps: [119]
     status: done
+
+  - id: 125
+    phase: 7
+    name: Hardwood cut list settings row — Board Length left, Board Width right
+    description: >
+      In HardwoodSection in CutListView.tsx, the settings row renders "Board Width"
+      before "Board Length". Swap the order so "Board Length" appears on the left and
+      "Board Width" appears on the right, consistent with the L × W convention used
+      in the table. Update browser tests in tests/cutlist-hardwood.browser.test.tsx
+      to assert the new label order.
+    deps: [119]
+    status: done

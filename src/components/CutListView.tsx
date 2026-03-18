@@ -106,21 +106,21 @@ function HardwoodSection({ thickness, parts, initialBoardWidth, initialBoardLeng
       <h2 className="cutlist-section-header">{quarterKey} stock</h2>
       <div className="cutlist-settings-row">
         <label>
-          Board Width&nbsp;
-          <input
-            type="number"
-            value={boardWidth}
-            onChange={(e) => setBoardWidth(Number(e.target.value))}
-            onBlur={() => onSettingsChange(thickness, boardWidth, boardLength)}
-            min={1}
-          />
-        </label>
-        <label>
           Board Length&nbsp;
           <input
             type="number"
             value={boardLength}
             onChange={(e) => setBoardLength(Number(e.target.value))}
+            onBlur={() => onSettingsChange(thickness, boardWidth, boardLength)}
+            min={1}
+          />
+        </label>
+        <label>
+          Board Width&nbsp;
+          <input
+            type="number"
+            value={boardWidth}
+            onChange={(e) => setBoardWidth(Number(e.target.value))}
             onBlur={() => onSettingsChange(thickness, boardWidth, boardLength)}
             min={1}
           />
