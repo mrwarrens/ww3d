@@ -1435,3 +1435,27 @@ tasks:
       (three 6×36 boards + one 12×6 on a 24×48 sheet → all four fit on one sheet).
     deps: [128]
     status: done
+  - id: 130
+    phase: 7
+    name: Sheet goods packing — fix edge-fit gap causing oversized fallback
+    description: >
+      packSheets() adds `gap` to both piece dimensions when checking fit against a
+      free rect. This means a piece that exactly fills a sheet dimension (e.g. a 48"
+      piece on a 48"-tall sheet) fails the fit check (48 + 0.5 > 48) and falls
+      through to the oversized fallback path, which places it unrotated and on its
+      own sheet even though it physically fits.
+
+      Two visible symptoms on a 24×48 sheet with a 48×6 part plus three 6×36 parts:
+      1. The 48×6 board is placed horizontally (unrotated) instead of vertically.
+      2. All four parts end up on two sheets instead of one.
+
+      Fix: expand the initial free rect for each new sheet by gap in both dimensions:
+        freeRects: [{ x: 0, y: 0, w: sheetWidth + gap, h: sheetHeight + gap }]
+      This absorbs the trailing gap at the sheet boundary so pieces that exactly
+      fill a dimension are not penalized. Interior gap between adjacent pieces is
+      unaffected.
+
+      Add a unit test: 48×6 part + three 6×36 parts on a 24×48 sheet → all four
+      fit on one sheet, 48×6 is placed rotated (length=6, width=48 in placement).
+    deps: [129]
+    status: done

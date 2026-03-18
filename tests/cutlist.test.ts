@@ -304,12 +304,17 @@ describe('packSheets', () => {
   })
 
   it('accounts for gap/kerf between parts', () => {
-    // With gap=0.125, two 23.9375" parts should NOT fit in a 48" wide sheet
-    // but two 23.875" parts should fit (23.875 + 0.125 + 23.875 + 0.125 = 48)
-    const p1 = makePart({ id: 'p1', length: 23.875, width: 10 })
-    const p2 = makePart({ id: 'p2', length: 23.875, width: 10 })
+    // With gap=0.125, two 23.9375" parts fit: 23.9375 + 0.125 + 23.9375 = 48.0 ≤ 48
+    const p1 = makePart({ id: 'p1', length: 23.9375, width: 10 })
+    const p2 = makePart({ id: 'p2', length: 23.9375, width: 10 })
     const result = packSheets([p1, p2], 48, 20, 0.125)
     expect(result).toHaveLength(1)
+
+    // Two 24.001" parts should NOT fit: 24.001 + 0.125 + 24.001 = 48.127 > 48
+    const q1 = makePart({ id: 'q1', length: 24.001, width: 10 })
+    const q2 = makePart({ id: 'q2', length: 24.001, width: 10 })
+    const result2 = packSheets([q1, q2], 48, 20, 0.125)
+    expect(result2).toHaveLength(2)
   })
 })
 
@@ -332,6 +337,19 @@ describe('packSheets — MAXRECTS improvement', () => {
     const result = packSheets([p1, p2, p3], 48, 96, 0)
     expect(result).toHaveLength(1)
     expect(result[0].placements).toHaveLength(3)
+  })
+
+  it('part exactly filling sheet height fits rotated instead of falling back to unrotated', () => {
+    // A 48×6 part on a 24×48 sheet with gap=0.125: rotated it needs 48+gap=48.125 in the height
+    // dimension. Before the fix, 48.125 > 48 failed the check, causing an unrotated fallback.
+    // After the fix (freeRect height = sheetHeight + gap = 48.125), the check passes.
+    const big = makePart({ id: 'big', length: 48, width: 6 })
+    const result = packSheets([big], 24, 48, 0.125)
+    expect(result).toHaveLength(1)
+    const placement = result[0].placements[0]
+    expect(placement.rotated).toBe(true)
+    expect(placement.length).toBe(6)
+    expect(placement.width).toBe(48)
   })
 })
 

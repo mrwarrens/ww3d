@@ -269,7 +269,7 @@ export function packSheets(
       // Open a new sheet
       const newSheet = {
         placements: [] as Placement[],
-        freeRects: [{ x: 0, y: 0, w: sheetWidth, h: sheetHeight }],
+        freeRects: [{ x: 0, y: 0, w: sheetWidth + gap, h: sheetHeight + gap }],
         usedArea: 0,
       }
       const result = tryPlace(part.length, part.width, newSheet.freeRects)
