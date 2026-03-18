@@ -1402,3 +1402,20 @@ tasks:
       and the ceiled total in the footer.
     deps: [122]
     status: done
+
+  - id: 128
+    phase: 7
+    name: Fix hardwood strips-per-board uses floor not raw ratio
+    description: >
+      Task #122 introduced stripsPerBoard = boardLength / partLength but failed to
+      floor it. A 36" board yields floor(36/24) = 1 strip of 24", not 1.5 — the
+      12" offcut is wasted. The correct formula is:
+        strips = ceil(partWidth / boardWidth)
+        stripsPerBoard = max(floor(boardLength / partLength), 1)
+        boardsToBuy = strips / stripsPerBoard  (decimal for per-row display, ceiled for total)
+      Fix glueUpBoardCount (or its replacement) in src/utils/cutlist.ts to use
+      Math.floor for stripsPerBoard. Update unit tests in tests/cutlist.test.ts and
+      browser tests in tests/cutlist-hardwood.browser.test.tsx to assert the correct
+      values (e.g. part 24x6, board 36x2 → 3 boards per row, not 2).
+    deps: [122, 127]
+    status: done

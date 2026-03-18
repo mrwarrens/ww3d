@@ -70,7 +70,8 @@ export function boardFeet(length: number, width: number, thickness: number): num
 
 export function decimalBoardsForPart(part: Part, boardWidth: number, boardLength: number): number {
   const strips = Math.ceil(part.width / boardWidth)
-  return strips * (part.length / boardLength)
+  const stripsPerBoard = Math.max(Math.floor(boardLength / part.length), 1)
+  return strips / stripsPerBoard
 }
 
 export function glueUpBoardCount(partWidth: number, availableBoardWidth: number, partLength: number, boardLength: number): number {

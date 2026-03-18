@@ -122,7 +122,7 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // strips=ceil(8/6)=2, decimal=2*(24/96)=0.50
+    // strips=ceil(8/6)=2, stripsPerBoard=floor(96/24)=4, decimal=2/4=0.50
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     expect(rows.length).toBe(1)
     const cells = rows[0].querySelectorAll('td')
@@ -139,7 +139,7 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // strips=ceil(4/6)=1, decimal=1*(24/96)=0.25
+    // strips=ceil(4/6)=1, stripsPerBoard=floor(96/24)=4, decimal=1/4=0.25
     const rows = document.querySelectorAll('.cutlist-table tbody tr')
     const cells = rows[0].querySelectorAll('td')
     expect(cells[3].textContent).toBe('0.25')
@@ -201,8 +201,8 @@ describe('CutListView hardwood section', () => {
         project: {
           ...state.project,
           parts: [
-            // Wide Shelf: strips=ceil(8/6)=2, decimal=2*(24/96)=0.50
-            // Narrow: strips=ceil(4/6)=1, decimal=1*(24/96)=0.25
+            // Wide Shelf: strips=ceil(8/6)=2, stripsPerBoard=floor(96/24)=4, decimal=2/4=0.50
+            // Narrow: strips=ceil(4/6)=1, stripsPerBoard=floor(96/24)=4, decimal=1/4=0.25
             // sum=0.75, ceil=1 board, BF=1*boardFeet(96,6,0.75)=3.0
             makeHardwoodPart({ name: 'Wide Shelf', length: 24, width: 8, thickness: 0.75 }),
             makeHardwoodPart({ name: 'Narrow', length: 24, width: 4, thickness: 0.75 }),
@@ -215,13 +215,13 @@ describe('CutListView hardwood section', () => {
     await expect.element(page.getByText(/3\.00 board-feet/)).toBeVisible()
   })
 
-  it('ceils decimal sum: two parts each 0.75 boards → sum 1.50 → total 2 boards', async () => {
+  it('two parts each needing 1 full board → sum 2.0 → total 2 boards', async () => {
     act(() => {
       useProjectStore.setState((state) => ({
         project: {
           ...state.project,
           parts: [
-            // strips=ceil(8/6)=2, length=36, boardLength=96: decimal=2*(36/96)=0.75
+            // strips=ceil(8/6)=2, stripsPerBoard=floor(96/36)=2, decimal=2/2=1.0
             makeHardwoodPart({ name: 'Part A', length: 36, width: 8, thickness: 0.75 }),
             makeHardwoodPart({ name: 'Part B', length: 36, width: 8, thickness: 0.75 }),
           ],
@@ -229,7 +229,7 @@ describe('CutListView hardwood section', () => {
       }))
     })
     await render(<CutListView />)
-    // sum=1.50, ceil=2
+    // sum=2.0, ceil=2
     await expect.element(page.getByText(/Total: 2 boards/)).toBeVisible()
   })
 
@@ -239,7 +239,7 @@ describe('CutListView hardwood section', () => {
         project: {
           ...state.project,
           parts: [
-            // Each part: strips=ceil(4/6)=1, decimal=1*(60/96)=0.625; sum=1.25, ceil=2
+            // Each part: strips=ceil(4/6)=1, stripsPerBoard=floor(96/60)=1, decimal=1/1=1.0; sum=2.0, ceil=2
             makeHardwoodPart({ name: 'Part A', length: 60, width: 4, thickness: 0.75 }),
             makeHardwoodPart({ name: 'Part B', length: 60, width: 4, thickness: 0.75 }),
           ],
@@ -262,6 +262,28 @@ describe('CutListView hardwood section', () => {
     await render(<CutListView />)
     // glueUpBoardCount(4, 6) = 1
     await expect.element(page.getByText(/Total: 1 board,/)).toBeVisible()
+  })
+
+  it('bug-report case: part 24x6, boardWidth=2, boardLength=36 → per-row Boards shows 3.00', async () => {
+    act(() => {
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: [makeHardwoodPart({ name: 'Wide Short', length: 24, width: 6, thickness: 0.75 })],
+          cutListSettings: {
+            sheetGoods: {},
+            hardwood: { '4/4': { boardWidth: 2, boardLength: 36 } },
+            dimensional: {},
+          },
+        },
+      }))
+    })
+    await render(<CutListView />)
+    // strips=ceil(6/2)=3, stripsPerBoard=floor(36/24)=1, decimal=3/1=3.00
+    const rows = document.querySelectorAll('.cutlist-table tbody tr')
+    expect(rows.length).toBe(1)
+    const cells = rows[0].querySelectorAll('td')
+    expect(cells[3].textContent).toBe('3.00')
   })
 
   it('persists hardwood settings to store on blur', async () => {

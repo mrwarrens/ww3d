@@ -146,10 +146,16 @@ describe('decimalBoardsForPart', () => {
     expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(1.0)
   })
 
-  it('returns value greater than 1 when part exceeds one board', () => {
-    // strips=ceil(6/6)=1, decimal=1*(60/96)=0.625 each
+  it('returns 1.0 when part length requires full board (no cross-cutting benefit)', () => {
+    // strips=ceil(4/6)=1, stripsPerBoard=floor(96/60)=1, decimal=1/1=1.0
     const part = makePart({ length: 60, width: 4 })
-    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(60 / 96)
+    expect(decimalBoardsForPart(part, 6, 96)).toBeCloseTo(1.0)
+  })
+
+  it('returns 3.0 for bug-report case: part 24x6 with boardWidth=2, boardLength=36', () => {
+    // strips=ceil(6/2)=3, stripsPerBoard=floor(36/24)=1, decimal=3/1=3.0
+    const part = makePart({ length: 24, width: 6 })
+    expect(decimalBoardsForPart(part, 2, 36)).toBeCloseTo(3.0)
   })
 })
 
