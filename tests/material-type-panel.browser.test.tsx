@@ -106,4 +106,16 @@ describe('Material type selector', () => {
     await select.selectOptions('dimensional')
     expect(onUpdate).toHaveBeenCalledWith({ materialType: 'dimensional' })
   })
+
+  it('material selector appears between color and shape buttons in DOM order', async () => {
+    const screen = await render(<PartPanel part={hardwoodPart} onUpdate={vi.fn()} />)
+    const colorInput = screen.container.querySelector('input[type="color"]')!
+    const materialSelect = screen.container.querySelector('[aria-label="Material type"]')!
+    const shapeContainer = screen.container.querySelector('[aria-label="Shape"]')!
+    const colorDiv = colorInput.closest('.part-panel-color')!
+    const materialDiv = materialSelect.closest('.part-panel-material')!
+    // color < material < shape in DOM order
+    expect(colorDiv.compareDocumentPosition(materialDiv) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(materialDiv.compareDocumentPosition(shapeContainer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })

@@ -1322,6 +1322,17 @@ tasks:
     deps: [118, 119, 120]
     status: done
 
+  - id: 123
+    phase: 7
+    name: "UX: Move material dropdown between color picker and shape buttons in PropertiesPanel"
+    description: >
+      In PropertiesPanel.tsx, the material type dropdown currently appears below the
+      color/shape row. Move it so it sits between the color picker (with eyedropper) and
+      the Box/Ellipse shape buttons, all within the same part-panel-color-shape-row div.
+      Remove the "Material:" label text (keep the select with aria-label). Update
+      tests/material-type-panel.browser.test.tsx if needed to match the new DOM order.
+    deps: [114]
+    status: done
   - id: 122
     phase: 7
     name: Fix hardwood cut list board count

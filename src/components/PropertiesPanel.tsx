@@ -235,26 +235,24 @@ export default function PropertiesPanel({
                   </button>
                 )}
               </div>
+              <div className="part-panel-material">
+                <label>
+                  Material:&nbsp;
+                  <select
+                    value={part.materialType ?? 'hardwood'}
+                    onChange={(e) => onUpdate({ materialType: e.target.value as Part['materialType'] })}
+                    aria-label="Material type"
+                  >
+                    <option value="hardwood">Hardwood</option>
+                    <option value="sheet">Sheet</option>
+                    <option value="dimensional">Dimensional</option>
+                  </select>
+                </label>
+              </div>
               <div className="part-panel-shape" aria-label="Shape">
                 <button type="button" className={!isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'box' })} aria-label="Box shape">Box</button>
                 <button type="button" className={isEllipse ? 'active' : ''} onClick={() => onUpdate({ shape: 'ellipse' })} aria-label="Ellipse shape">Ellipse</button>
               </div>
-            </div>
-          )}
-          {!isCutMode && (
-            <div className="part-panel-material">
-              <label>
-                Material:&nbsp;
-                <select
-                  value={part.materialType ?? 'hardwood'}
-                  onChange={(e) => onUpdate({ materialType: e.target.value as Part['materialType'] })}
-                  aria-label="Material type"
-                >
-                  <option value="hardwood">Hardwood</option>
-                  <option value="sheet">Sheet</option>
-                  <option value="dimensional">Dimensional</option>
-                </select>
-              </label>
             </div>
           )}
         </>
