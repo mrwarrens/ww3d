@@ -1,0 +1,43 @@
+{
+  "id": "fixture-exact-edge-overflow",
+  "name": "Exact Edge Overflow",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {
+      "0.75": { "sheetWidth": 48, "sheetHeight": 48 }
+    },
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "ee-01", "name": "Main Panel",
+      "length": 35.5, "width": 35.5, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ee-02", "name": "Right Strip",
+      "length": 12, "width": 35.5, "thickness": 0.75,
+      "position": { "x": 37, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#d94f4f", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ee-03", "name": "Bottom Strip",
+      "length": 35.5, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 37 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ee-04", "name": "Corner Piece",
+      "length": 12, "width": 12, "thickness": 0.75,
+      "position": { "x": 37, "y": 0, "z": 37 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    }
+  ]
+}

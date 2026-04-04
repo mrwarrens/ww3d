@@ -3,3 +3,5 @@ dist/
 .claude/settings.local.json
 .claude/plans/
 tests/__screenshots__/
+.playwright-mcp/
+tests/fixtures/*.png

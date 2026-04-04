@@ -1,0 +1,78 @@
+{
+  "id": "fixture-three-sheets",
+  "name": "Three Sheets",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {
+      "0.75": { "sheetWidth": 48, "sheetHeight": 96 }
+    },
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "ts-01", "name": "Panel 1",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-02", "name": "Panel 2",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 32, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-03", "name": "Panel 3",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 64, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-04", "name": "Panel 4",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 42 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-05", "name": "Panel 5",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 32, "y": 0, "z": 42 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-06", "name": "Panel 6",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 64, "y": 0, "z": 42 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-07", "name": "Panel 7",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 84 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-08", "name": "Panel 8",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 32, "y": 0, "z": 84 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ts-09", "name": "Panel 9",
+      "length": 30, "width": 40, "thickness": 0.75,
+      "position": { "x": 64, "y": 0, "z": 84 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    }
+  ]
+}

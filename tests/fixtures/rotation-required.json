@@ -1,0 +1,50 @@
+{
+  "id": "fixture-rotation-required",
+  "name": "Rotation Required",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {
+      "0.75": { "sheetWidth": 14, "sheetHeight": 96 }
+    },
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "rr-01", "name": "Panel A",
+      "length": 40, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "rr-02", "name": "Panel B",
+      "length": 40, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 14 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "rr-03", "name": "Panel C",
+      "length": 40, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 28 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "rr-04", "name": "Panel D",
+      "length": 40, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 42 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#d94f4f", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "rr-05", "name": "Panel E",
+      "length": 40, "width": 12, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 56 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#9b7bb5", "visible": true, "shape": "box", "materialType": "sheet"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "fixture-uniform-grid",
+  "name": "Uniform Grid",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {
+      "0.75": { "sheetWidth": 48, "sheetHeight": 96 }
+    },
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "ug-01", "name": "Shelf A1",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ug-02", "name": "Shelf A2",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 25, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ug-03", "name": "Shelf B1",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 17 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ug-04", "name": "Shelf B2",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 25, "y": 0, "z": 17 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ug-05", "name": "Shelf C1",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 34 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ug-06", "name": "Shelf C2",
+      "length": 23, "width": 15, "thickness": 0.75,
+      "position": { "x": 25, "y": 0, "z": 34 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "sheet"
+    }
+  ]
+}

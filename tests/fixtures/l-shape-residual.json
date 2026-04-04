@@ -1,0 +1,36 @@
+{
+  "id": "fixture-l-shape-residual",
+  "name": "L-Shape Residual",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {
+      "0.75": { "sheetWidth": 48, "sheetHeight": 96 }
+    },
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "ls-01", "name": "Back Panel",
+      "length": 35, "width": 96, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#9b7bb5", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ls-02", "name": "Side A",
+      "length": 12, "width": 47, "thickness": 0.75,
+      "position": { "x": 38, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    },
+    {
+      "id": "ls-03", "name": "Side B",
+      "length": 12, "width": 47, "thickness": 0.75,
+      "position": { "x": 38, "y": 0, "z": 50 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "sheet"
+    }
+  ]
+}
