@@ -363,15 +363,15 @@ describe('packSheets — edge cases', () => {
   })
 
   // Test 6 — Part larger than sheet in both orientations: oversized fallback
-  it('oversized part fires fallback path and lands at gap/2, gap/2 with rotated false', () => {
+  it('oversized part fires fallback path and lands at x=0, y=0 with rotated false', () => {
     const gap = 0.125
     const part = makePart({ id: 'big', length: 60, width: 60 })
     const result = packSheets([part], 48, 48, gap)
     expect(result).toHaveLength(1)
     expect(result[0].placements).toHaveLength(1)
     const p = result[0].placements[0]
-    expect(p.x).toBeCloseTo(gap / 2, 5)
-    expect(p.y).toBeCloseTo(gap / 2, 5)
+    expect(p.x).toBe(0)
+    expect(p.y).toBe(0)
     expect(p.rotated).toBe(false)
   })
 
@@ -426,14 +426,14 @@ describe('packSheets — edge cases', () => {
   })
 
   // Test 11 — First placement coordinates when gap > 0
-  it('first placement on a fresh sheet has x === gap/2 and y === gap/2', () => {
+  it('first placement on a fresh sheet has x === 0 and y === 0', () => {
     const gap = 0.125
     const part = makePart({ id: 'p', length: 12, width: 8 })
     const result = packSheets([part], 48, 96, gap)
     expect(result).toHaveLength(1)
     const p = result[0].placements[0]
-    expect(p.x).toBeCloseTo(gap / 2, 5)
-    expect(p.y).toBeCloseTo(gap / 2, 5)
+    expect(p.x).toBe(0)
+    expect(p.y).toBe(0)
   })
 
   // Test 12 — Two full-sheet parts yield exactly 2 sheets
@@ -474,6 +474,58 @@ describe('packSheets — edge cases', () => {
     const result = packSheets([part], 48, 48, 0)
     expect(result).toHaveLength(1)
     expect(result[0].wastePercent).toBe(0)
+  })
+})
+
+describe('packSheets -- boundary overflow regression', () => {
+  // Two near-full-width parts must not overflow the sheet
+  it('two exact-fit parts stay within sheet boundary', () => {
+    const gap = 0.125
+    const sheetWidth = 48
+    const sheetHeight = 20
+    const p1 = makePart({ id: 'p1', length: 23.9375, width: 10 })
+    const p2 = makePart({ id: 'p2', length: 23.9375, width: 10 })
+    const result = packSheets([p1, p2], sheetWidth, sheetHeight, gap)
+    expect(result).toHaveLength(1)
+    for (const sheet of result) {
+      for (const p of sheet.placements) {
+        expect(p.x + p.length).toBeLessThanOrEqual(sheetWidth)
+        expect(p.y + p.width).toBeLessThanOrEqual(sheetHeight)
+      }
+    }
+  })
+
+  // First part starts at origin even when gap > 0
+  it('first part starts at x=0, y=0 when gap is non-zero', () => {
+    const gap = 0.25
+    const part = makePart({ id: 'p', length: 12, width: 8 })
+    const result = packSheets([part], 48, 96, gap)
+    expect(result).toHaveLength(1)
+    const p = result[0].placements[0]
+    expect(p.x).toBe(0)
+    expect(p.y).toBe(0)
+  })
+
+  // No placement overflows sheet boundary with multiple parts
+  it('no placement overflows sheet boundary when packing 6 varied parts', () => {
+    const gap = 0.125
+    const sheetWidth = 96
+    const sheetHeight = 48
+    const parts = [
+      makePart({ id: 'a', length: 30, width: 20 }),
+      makePart({ id: 'b', length: 25, width: 15 }),
+      makePart({ id: 'c', length: 40, width: 10 }),
+      makePart({ id: 'd', length: 18, width: 18 }),
+      makePart({ id: 'e', length: 50, width: 12 }),
+      makePart({ id: 'f', length: 22, width: 30 }),
+    ]
+    const result = packSheets(parts, sheetWidth, sheetHeight, gap)
+    for (const sheet of result) {
+      for (const p of sheet.placements) {
+        expect(p.x + p.length).toBeLessThanOrEqual(sheetWidth)
+        expect(p.y + p.width).toBeLessThanOrEqual(sheetHeight)
+      }
+    }
   })
 })
 

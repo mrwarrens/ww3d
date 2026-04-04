@@ -252,8 +252,8 @@ export function packSheets(
 
         sheet.placements.push({
           partId: part.id,
-          x: rect.x + gap / 2,
-          y: rect.y + gap / 2,
+          x: rect.x,
+          y: rect.y,
           length: placedL,
           width: placedW,
           rotated,
@@ -282,8 +282,8 @@ export function packSheets(
 
         newSheet.placements.push({
           partId: part.id,
-          x: rect.x + gap / 2,
-          y: rect.y + gap / 2,
+          x: rect.x,
+          y: rect.y,
           length: placedL,
           width: placedW,
           rotated,
@@ -294,8 +294,8 @@ export function packSheets(
         // Part doesn't fit in any orientation — place it alone on an oversized sheet
         newSheet.placements.push({
           partId: part.id,
-          x: gap / 2,
-          y: gap / 2,
+          x: 0,
+          y: 0,
           length: part.length,
           width: part.width,
           rotated: false,

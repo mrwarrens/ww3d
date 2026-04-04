@@ -1508,3 +1508,16 @@ tasks:
       green, and report which tests were skipped in the plan's output.
     deps: [130]
     status: done
+
+  - id: 132
+    phase: 7
+    name: Fix sheet goods packing gap/2 boundary overflow bug
+    description: >
+      Fix packSheets in src/utils/cutlist.ts: the initial free rect uses
+      sheetWidth + gap (should be sheetWidth), and placements use rect.x +
+      gap/2 (should be rect.x). Parts placed at the sheet edge overshoot by
+      gap/2. Also fix the oversized fallback (x: gap/2 → x: 0). Add
+      regression tests; update the task #131 test that asserts x === gap/2
+      to assert x === 0.
+    deps: [131]
+    status: done
