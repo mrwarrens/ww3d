@@ -1,0 +1,50 @@
+{
+  "id": "fixture-dim-2x4-basic",
+  "name": "Dim 2x4 Basic",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {},
+    "hardwood": {},
+    "dimensional": {
+      "2x4": { "availableLengths": [96, 120, 144] }
+    }
+  },
+  "parts": [
+    {
+      "id": "d1", "name": "Short Stud",
+      "length": 24, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "d2", "name": "Mid Stud",
+      "length": 60, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 30, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "d3", "name": "Full Stud",
+      "length": 92.625, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 60, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "d4", "name": "Long Rail",
+      "length": 110, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "d5", "name": "Beam",
+      "length": 140, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "dimensional"
+    }
+  ]
+}

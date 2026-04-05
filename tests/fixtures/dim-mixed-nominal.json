@@ -1,0 +1,59 @@
+{
+  "id": "fixture-dim-mixed-nominal",
+  "name": "Dim Mixed Nominal",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {},
+    "hardwood": {},
+    "dimensional": {
+      "2x4": { "availableLengths": [96, 120, 144] },
+      "2x6": { "availableLengths": [96, 120, 144] },
+      "1x4": { "availableLengths": [96, 120, 144] }
+    }
+  },
+  "parts": [
+    {
+      "id": "m1", "name": "2x4 Stud A",
+      "length": 36, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "m2", "name": "2x4 Stud B",
+      "length": 84, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 40, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "m3", "name": "2x6 Joist A",
+      "length": 48, "width": 5.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "m4", "name": "2x6 Joist B",
+      "length": 115, "width": 5.5, "thickness": 1.5,
+      "position": { "x": 55, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "m5", "name": "1x4 Trim A",
+      "length": 30, "width": 3.5, "thickness": 0.75,
+      "position": { "x": 0, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "m6", "name": "1x4 Trim B",
+      "length": 72, "width": 3.5, "thickness": 0.75,
+      "position": { "x": 35, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "dimensional"
+    }
+  ]
+}

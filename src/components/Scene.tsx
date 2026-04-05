@@ -16,6 +16,7 @@ interface SceneProps {
   onSelectIds: (ids: string[]) => void
   onSelectAssembly?: (assemblyId: string) => void
   cameraPresetRef?: React.MutableRefObject<((name: keyof typeof CAMERA_PRESETS) => void) | null>
+  frameAllRef?: React.MutableRefObject<(() => void) | null>
   isAssemblySelected?: boolean
   eyedropperActive?: boolean
   onColorSample?: (color: string) => void
@@ -94,7 +95,7 @@ function getDragPlaneNormal(camera: THREE.Camera): 'x' | 'y' | 'z' {
   return 'x'
 }
 
-export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, cameraPresetRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes, modifyingPartId, onExitModifyMode }: SceneProps) {
+export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, cameraPresetRef, frameAllRef, isAssemblySelected, eyedropperActive, onColorSample, onEyedropperCancel, showAxes, modifyingPartId, onExitModifyMode }: SceneProps) {
   const parts = useProjectStore((s) => s.project.parts)
   const assemblies = useProjectStore((s) => s.project.assemblies)
   const gridSize = useProjectStore((s) => s.project.gridSize)
@@ -107,11 +108,12 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   const camera = useThree((s) => s.camera)
   const raycaster = useThree((s) => s.raycaster)
 
-  const goToPreset = useCameraPreset(camera, controls)
+  const { goToPreset, frameAll } = useCameraPreset(camera, controls, parts)
 
   useEffect(() => {
     if (cameraPresetRef) cameraPresetRef.current = goToPreset
-  }, [cameraPresetRef, goToPreset])
+    if (frameAllRef) frameAllRef.current = frameAll
+  }, [cameraPresetRef, frameAllRef, goToPreset, frameAll])
 
   useEffect(() => {
     gl.domElement.style.cursor = eyedropperActive ? 'crosshair' : ''
@@ -172,7 +174,8 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
         if (newIds.length > 0) onSelectIds(newIds)
       }
       if (isTyping) return
-      if (e.key === '1') goToPreset('front')
+      if (e.key === 'f' || e.key === 'F') frameAll()
+      else if (e.key === '1') goToPreset('front')
       else if (e.key === '2') goToPreset('right')
       else if (e.key === '3') goToPreset('top')
       else if (e.key === '4') goToPreset('iso')
@@ -213,7 +216,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     return () => document.removeEventListener('keydown', handleKeyDown)
     // selectedIds and parts are read via refs — excluded from deps intentionally
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAssemblySelected, removeParts, removeChildPart, duplicateParts, onSelectIds, goToPreset, onEyedropperCancel, onExitModifyMode, camera, controls])
+  }, [isAssemblySelected, removeParts, removeChildPart, duplicateParts, onSelectIds, goToPreset, frameAll, onEyedropperCancel, onExitModifyMode, camera, controls])
 
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)

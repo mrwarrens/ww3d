@@ -63,7 +63,7 @@ src/
     manifold.ts         # Manifold-3d CSG utilities: getManifold, manifoldEllipse, manifoldMeshToThreeGeometry
     cutlist.ts          # Pure cut list computation utilities: getCutListParts, groupByMaterialType, groupByThickness, toQuarterNotation, boardFeet, glueUpBoardCount, toNominalSize, assignBoardLength, packSheets (Guillotine BSSF)
   hooks/
-    useCameraPreset.ts  # Hook: animates camera to a named preset position
+    useCameraPreset.ts  # Hook: goToPreset (named preset in scene-centroid direction) and frameAll (fit all visible parts)
     useEditableInput.ts # Hook: draft state, commit, reset, and keydown logic for numeric editable inputs
   stores/
     projectStore.ts     # Zustand store: project, history/future stacks; addPart, removePart, duplicatePart, movePart, updatePart, togglePartVisibility, addAssembly, removeAssembly, renameAssembly, moveAssembly, assignPartToAssembly, removePartFromAssembly, groupPartsIntoAssembly, duplicateAssembly, toggleAssemblyVisibility, setProjectName, setGridSize, loadProject, undo, redo
@@ -74,7 +74,7 @@ tests/
   app.browser.test.tsx                      # Browser-mode tests for App-level features (save)
   help-panel.browser.test.tsx               # Browser-mode tests for help panel shortcut entries
   camera-pan.browser.test.tsx               # Browser-mode tests for camera pan configuration
-  camera-presets.browser.test.tsx           # Browser-mode tests for camera preset views
+  camera-presets.browser.test.tsx           # Browser-mode tests for camera preset views and Frame All (F key)
   move-part.browser.test.tsx                # Browser-mode tests for drag-to-move
   duplicate-part.browser.test.tsx           # Browser-mode tests for Cmd+D duplicate part
   assembly.test.ts                          # Unit tests for Assembly model and store actions

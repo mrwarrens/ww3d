@@ -1,0 +1,43 @@
+{
+  "id": "fixture-dim-exact-boundary",
+  "name": "Dim Exact Boundary",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {},
+    "hardwood": {},
+    "dimensional": {
+      "2x4": { "availableLengths": [96, 120, 144] }
+    }
+  },
+  "parts": [
+    {
+      "id": "eb1", "name": "Exactly 8ft",
+      "length": 96, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "eb2", "name": "One Inch Over 8ft",
+      "length": 97, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#e07b39", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "eb3", "name": "Exactly 10ft",
+      "length": 120, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "eb4", "name": "Exactly 12ft",
+      "length": 144, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 30 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#9b7bb5", "visible": true, "shape": "box", "materialType": "dimensional"
+    }
+  ]
+}

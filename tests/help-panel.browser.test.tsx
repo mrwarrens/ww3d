@@ -53,6 +53,12 @@ describe('Help Panel', () => {
     expect(pane.textContent).toContain('Cmd+Z')
   })
 
+  it('shows "F" frame all entry', async () => {
+    const pane = await openHelp()
+    expect(pane.textContent).toContain('F')
+    expect(pane.textContent).toContain('Frame all parts')
+  })
+
   it('shows "1 / 2 / 3 / 4" camera preset entry', async () => {
     const pane = await openHelp()
     expect(pane.textContent).toContain('1 / 2 / 3 / 4')

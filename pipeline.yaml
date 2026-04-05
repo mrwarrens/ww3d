@@ -1272,7 +1272,7 @@ tasks:
       Persists input changes via updateCutListSettings. Add CSS .cutlist-section and
       .cutlist-sheet-svg in index.html. Browser tests in tests/cutlist-sheet.browser.test.tsx.
     deps: [115, 116, 117]
-    status: done
+    status: accepted
   - id: 119
     phase: 7
     name: Hardwood lumber section
@@ -1434,7 +1434,7 @@ tasks:
       Update unit tests in tests/cutlist.test.ts to cover the case described above
       (three 6×36 boards + one 12×6 on a 24×48 sheet → all four fit on one sheet).
     deps: [128]
-    status: done
+    status: accepted
   - id: 130
     phase: 7
     name: Sheet goods packing — fix edge-fit gap causing oversized fallback
@@ -1458,7 +1458,7 @@ tasks:
       Add a unit test: 48×6 part + three 6×36 parts on a 24×48 sheet → all four
       fit on one sheet, 48×6 is placed rotated (length=6, width=48 in placement).
     deps: [129]
-    status: done
+    status: accepted
   - id: 131
     phase: 7
     name: Sheet goods packing — additional unit tests (green cases)
@@ -1507,8 +1507,7 @@ tasks:
       leave a TODO comment and skip the test with it.skip() so the suite stays
       green, and report which tests were skipped in the plan's output.
     deps: [130]
-    status: done
-
+    status: accepted
   - id: 132
     phase: 7
     name: Fix sheet goods packing gap/2 boundary overflow bug
@@ -1520,4 +1519,31 @@ tasks:
       regression tests; update the task #131 test that asserts x === gap/2
       to assert x === 0.
     deps: [131]
+    status: accepted
+  - id: 133
+    phase: 7
+    name: Frame All camera control — F key + centroid-aware presets
+    description: >
+      Add Frame All (F key / Camera > Frame All menu): computes axis-aligned
+      bounding box of all visible top-level parts, derives centroid and bounding
+      sphere radius, positions camera to fit scene in view while preserving
+      current orbit direction. All numbered presets (1–4) now point at the scene
+      centroid instead of the hardcoded origin. frameAllRef prop added to Scene
+      for Camera dropdown wiring. Help panel updated with F shortcut.
+    deps: [132]
+    status: accepted
+  - id: 134
+    phase: 7
+    name: Auto-frame camera after project load
+    description: >
+      After a project is loaded via the Load button (file picker), automatically
+      call frameAll() to fit the camera to all visible parts in the loaded
+      project. Use the existing frameAllRef pattern from task #133 — App.tsx
+      already holds frameAllRef; call frameAllRef.current?.() inside the
+      handleLoad callback after loadProject() completes. If the loaded project
+      has no parts, frameAll() already handles that gracefully (falls back to
+      default distance). Add a browser test verifying that after loading a
+      project with off-origin parts, the camera target is near the scene
+      centroid rather than [0,0,0].
+    deps: [133]
     status: done

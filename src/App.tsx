@@ -44,6 +44,7 @@ export default function App() {
   const childParts = parts.filter((p) => p.parentId === (modifyingPartId ?? selectedId ?? ''))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraPresetRef = useRef<((name: keyof typeof CAMERA_PRESETS) => void) | null>(null)
+  const frameAllRef = useRef<(() => void) | null>(null)
 
   const handleSelectIds = useCallback((ids: string[]) => {
     setSelectedIds(ids)
@@ -103,6 +104,7 @@ export default function App() {
       loadProject(deserializeProject(text))
       setSelectedIds([])
       setSelectedAssemblyId(null)
+      requestAnimationFrame(() => { frameAllRef.current?.() })
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -192,6 +194,9 @@ export default function App() {
             <>
               <div className="dropdown-backdrop" onClick={() => setCameraOpen(false)} />
               <div id="camera-dropdown" className="dropdown-menu">
+                <button className="dropdown-item" onClick={() => { frameAllRef.current?.(); setCameraOpen(false) }}>
+                  <span>Frame All</span><span>F</span>
+                </button>
                 <button className="dropdown-item" onClick={() => { cameraPresetRef.current?.('front'); setCameraOpen(false) }}>
                   <span>Front</span><span>1</span>
                 </button>
@@ -237,6 +242,7 @@ export default function App() {
           <div className="help-row"><span>● / ○ button</span><span>Toggle visibility</span></div>
           <div className="help-row"><span>New Assembly button</span><span>Create empty assembly</span></div>
           <div className="help-section">View</div>
+          <div className="help-row"><span>F</span><span>Frame all parts</span></div>
           <div className="help-row"><span>1 / 2 / 3 / 4</span><span>Front / Right / Top / Iso view</span></div>
           <div className="help-row"><span>Arrow keys</span><span>Orbit camera</span></div>
           <div className="help-row"><span>Shift+Arrow keys</span><span>Pan camera</span></div>
@@ -302,6 +308,7 @@ export default function App() {
           onSelectIds={handleSelectIds}
           onSelectAssembly={handleSelectAssembly}
           cameraPresetRef={cameraPresetRef}
+          frameAllRef={frameAllRef}
           isAssemblySelected={!!selectedAssemblyId}
           eyedropperActive={eyedropperActive}
           onColorSample={(color) => { if (selectedId) updatePart(selectedId, { color }); setEyedropperActive(false) }}

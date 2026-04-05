@@ -1,0 +1,34 @@
+{
+  "id": "fixture-dim-unknown-nominal",
+  "name": "Dim Unknown Nominal",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {},
+    "hardwood": {},
+    "dimensional": {}
+  },
+  "parts": [
+    {
+      "id": "un1", "name": "Custom Section A",
+      "length": 48, "width": 4.0, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "un2", "name": "Custom Section B",
+      "length": 72, "width": 4.0, "thickness": 1.5,
+      "position": { "x": 55, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "un3", "name": "Near-Nominal 2x4",
+      "length": 60, "width": 3.52, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#4aaa6e", "visible": true, "shape": "box", "materialType": "dimensional"
+    }
+  ]
+}

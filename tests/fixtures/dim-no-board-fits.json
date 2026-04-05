@@ -1,0 +1,36 @@
+{
+  "id": "fixture-dim-no-board-fits",
+  "name": "Dim No Board Fits",
+  "gridSize": 10,
+  "assemblies": [],
+  "cutListSettings": {
+    "sheetGoods": {},
+    "hardwood": {},
+    "dimensional": {
+      "2x4": { "availableLengths": [96, 120, 144] }
+    }
+  },
+  "parts": [
+    {
+      "id": "nb1", "name": "Normal Part",
+      "length": 72, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "nb2", "name": "Oversized Part",
+      "length": 150, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 10 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#d94f4f", "visible": true, "shape": "box", "materialType": "dimensional"
+    },
+    {
+      "id": "nb3", "name": "Another Normal",
+      "length": 48, "width": 3.5, "thickness": 1.5,
+      "position": { "x": 0, "y": 0, "z": 20 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "color": "#5b8dd9", "visible": true, "shape": "box", "materialType": "dimensional"
+    }
+  ]
+}
