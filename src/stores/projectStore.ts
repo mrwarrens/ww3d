@@ -123,13 +123,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   duplicateAssembly: (id) => {
     const source = get().project.assemblies.find((a) => a.id === id)
     if (!source) return null
-    const newAssembly = createAssembly(source.name)
+    const newAssembly = {
+      ...createAssembly(source.name),
+      position: { x: source.position.x + 1, y: source.position.y, z: source.position.z + 1 },
+    }
     const memberParts = get().project.parts.filter((p) => p.assemblyId === id)
     const newParts = memberParts.map((p) => ({
       ...p,
       id: crypto.randomUUID(),
       assemblyId: newAssembly.id,
-      position: { ...p.position, x: p.position.x + 1, z: p.position.z + 1 },
+      position: { ...p.position },
     }))
     const current = get().project
     set((state) => ({
@@ -170,7 +173,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   movePart: (id, position) => {
     const current = get().project
     set((state) => {
-      const parts = state.project.parts.map((p) => p.id === id ? { ...p, position } : p)
+      const part = state.project.parts.find((p) => p.id === id)
+      const assembly = part?.assemblyId
+        ? state.project.assemblies.find((a) => a.id === part.assemblyId)
+        : null
+      const storedPos = assembly
+        ? {
+            x: position.x - assembly.position.x,
+            y: position.y - assembly.position.y,
+            z: position.z - assembly.position.z,
+          }
+        : position
+      const parts = state.project.parts.map((p) => p.id === id ? { ...p, position: storedPos } : p)
       return {
         history: [...state.history, current],
         future: [],
@@ -230,27 +244,48 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
   assignPartToAssembly: (partId, assemblyId) => {
     const current = get().project
+    const assembly = current.assemblies.find((a) => a.id === assemblyId)
     set((state) => ({
       history: [...state.history, current],
       future: [],
       project: {
         ...state.project,
-        parts: state.project.parts.map((p) =>
-          p.id === partId ? { ...p, assemblyId } : p
-        ),
+        parts: state.project.parts.map((p) => {
+          if (p.id !== partId) return p
+          const localPos = assembly
+            ? {
+                x: p.position.x - assembly.position.x,
+                y: p.position.y - assembly.position.y,
+                z: p.position.z - assembly.position.z,
+              }
+            : p.position
+          return { ...p, assemblyId, position: localPos }
+        }),
       },
     }))
   },
   removePartFromAssembly: (partId) => {
     const current = get().project
+    const part = current.parts.find((p) => p.id === partId)
+    const assembly = part?.assemblyId
+      ? current.assemblies.find((a) => a.id === part.assemblyId)
+      : null
     set((state) => ({
       history: [...state.history, current],
       future: [],
       project: {
         ...state.project,
-        parts: state.project.parts.map((p) =>
-          p.id === partId ? { ...p, assemblyId: undefined } : p
-        ),
+        parts: state.project.parts.map((p) => {
+          if (p.id !== partId) return p
+          const worldPos = assembly
+            ? {
+                x: p.position.x + assembly.position.x,
+                y: p.position.y + assembly.position.y,
+                z: p.position.z + assembly.position.z,
+              }
+            : p.position
+          return { ...p, assemblyId: undefined, position: worldPos }
+        }),
       },
     }))
   },
@@ -297,11 +332,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
   moveAssembly: (id, position) => {
     const current = get().project
-    const assembly = current.assemblies.find((a) => a.id === id)
-    if (!assembly) return
-    const dx = position.x - assembly.position.x
-    const dy = position.y - assembly.position.y
-    const dz = position.z - assembly.position.z
     set((state) => ({
       history: [...state.history, current],
       future: [],
@@ -309,11 +339,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         ...state.project,
         assemblies: state.project.assemblies.map((a) =>
           a.id === id ? { ...a, position } : a
-        ),
-        parts: state.project.parts.map((p) =>
-          p.assemblyId === id
-            ? { ...p, position: { x: p.position.x + dx, y: p.position.y + dy, z: p.position.z + dz } }
-            : p
         ),
       },
     }))

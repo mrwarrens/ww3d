@@ -108,7 +108,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   const camera = useThree((s) => s.camera)
   const raycaster = useThree((s) => s.raycaster)
 
-  const { goToPreset, frameAll } = useCameraPreset(camera, controls, parts)
+  const { goToPreset, frameAll } = useCameraPreset(camera, controls, parts, assemblies)
 
   useEffect(() => {
     if (cameraPresetRef) cameraPresetRef.current = goToPreset
@@ -127,6 +127,14 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     if (mesh) childMeshRefs.current.set(childId, mesh)
     else childMeshRefs.current.delete(childId)
   }, [])
+
+  const assemblyPositionMap = useMemo(() => {
+    const map = new Map<string, { x: number; y: number; z: number }>()
+    for (const a of assemblies) map.set(a.id, a.position)
+    return map
+  }, [assemblies])
+  const assemblyPositionMapRef = useRef(assemblyPositionMap)
+  assemblyPositionMapRef.current = assemblyPositionMap
 
   // Refs for values used in the keydown handler so it never reads stale closures.
   // The handler is registered once (or when stable deps change), but always reads
@@ -221,13 +229,19 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   const handleDragStart = useCallback((e: ThreeEvent<PointerEvent>, part: Part) => {
     const planeNormal = getDragPlaneNormal(camera)
 
+    // Compute world position — part.position is local when part belongs to an assembly
+    const asmPos = part.assemblyId ? assemblyPositionMapRef.current.get(part.assemblyId) : null
+    const partWorldPos = asmPos
+      ? { x: part.position.x + asmPos.x, y: part.position.y + asmPos.y, z: part.position.z + asmPos.z }
+      : part.position
+
     // Build the THREE.Plane through the board's center with the chosen normal
     const normalVec = new THREE.Vector3(
       planeNormal === 'x' ? 1 : 0,
       planeNormal === 'y' ? 1 : 0,
       planeNormal === 'z' ? 1 : 0,
     )
-    const boardCenter = new THREE.Vector3(part.position.x, part.position.y, part.position.z)
+    const boardCenter = new THREE.Vector3(partWorldPos.x, partWorldPos.y, partWorldPos.z)
     dragPlaneRef.current = new THREE.Plane().setFromNormalAndCoplanarPoint(normalVec, boardCenter)
 
     // Project the initial click ray onto the drag plane so that the grab
@@ -240,12 +254,12 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     draggingRef.current = {
       partId: part.id,
       planeNormal,
-      boardStartPos: { ...part.position },
-      offsetX: grabHit.x - part.position.x,
-      offsetY: grabHit.y - part.position.y,
-      offsetZ: grabHit.z - part.position.z,
+      boardStartPos: { ...partWorldPos },
+      offsetX: grabHit.x - partWorldPos.x,
+      offsetY: grabHit.y - partWorldPos.y,
+      offsetZ: grabHit.z - partWorldPos.z,
     }
-    setLivePos({ x: part.position.x, y: part.position.y, z: part.position.z })
+    setLivePos({ ...partWorldPos })
 
     // DOM-level handlers: raycasting against the THREE.Plane bypasses any
     // mesh-occlusion issues that arise with the invisible-plane approach.
@@ -324,23 +338,29 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
 
       {showAxes && <AxisLines length={gridSize / 2} />}
 
-      {parts.filter((p) => p.visible !== false && p.parentId == null && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => (
-        <Board
-          key={p.id}
-          ref={(mesh) => { if (mesh) meshRefs.current.set(p.id, mesh); else meshRefs.current.delete(p.id) }}
-          {...p}
-          position={draggingRef.current?.partId === p.id && livePos ? livePos : p.position}
-          isSelected={selectedIds.includes(p.id)}
-          onSelect={() => onSelectIds([p.id])}
-          onDragStart={(e) => handleDragStart(e, p)}
-          onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
-          onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
-          dimmed={modifyingPartId != null && p.id !== modifyingPartId}
-          isModifying={modifyingPartId === p.id}
-          onChildSelect={(childId) => onSelectIds([childId])}
-          onChildMeshRef={handleChildMeshRef}
-        />
-      ))}
+      {parts.filter((p) => p.visible !== false && p.parentId == null && (p.assemblyId == null || assemblies.find((a) => a.id === p.assemblyId)?.visible !== false)).map((p) => {
+        const asmPos = p.assemblyId ? assemblyPositionMap.get(p.assemblyId) : null
+        const worldPos = asmPos
+          ? { x: p.position.x + asmPos.x, y: p.position.y + asmPos.y, z: p.position.z + asmPos.z }
+          : p.position
+        return (
+          <Board
+            key={p.id}
+            ref={(mesh) => { if (mesh) meshRefs.current.set(p.id, mesh); else meshRefs.current.delete(p.id) }}
+            {...p}
+            position={draggingRef.current?.partId === p.id && livePos ? livePos : worldPos}
+            isSelected={selectedIds.includes(p.id)}
+            onSelect={() => onSelectIds([p.id])}
+            onDragStart={(e) => handleDragStart(e, p)}
+            onDoubleClick={() => { if (p.assemblyId) onSelectAssembly?.(p.assemblyId) }}
+            onEyedropperClick={eyedropperActive && onColorSample ? (c) => { onColorSample(c); onEyedropperCancel?.() } : undefined}
+            dimmed={modifyingPartId != null && p.id !== modifyingPartId}
+            isModifying={modifyingPartId === p.id}
+            onChildSelect={(childId) => onSelectIds([childId])}
+            onChildMeshRef={handleChildMeshRef}
+          />
+        )
+      })}
 
       <EffectComposer autoClear={false}>
         <Outline selection={selectedIds.flatMap((id) => { const m = meshRefs.current.get(id) ?? childMeshRefs.current.get(id); return m ? [m] : [] })} edgeStrength={5} />

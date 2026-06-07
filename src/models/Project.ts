@@ -13,6 +13,7 @@ export interface Project {
   parts: Part[]
   assemblies: Assembly[]
   gridSize: number
+  schemaVersion?: number
   cutListSettings?: CutListSettings
 }
 
@@ -23,6 +24,7 @@ export function createProject(name = 'Untitled Project'): Project {
     parts: [],
     assemblies: [],
     gridSize: 10,
+    schemaVersion: 1,
     cutListSettings: { sheetGoods: {}, hardwood: {}, dimensional: {} },
   }
 }
@@ -33,10 +35,37 @@ export function serializeProject(project: Project): string {
 
 export function deserializeProject(json: string): Project {
   const parsed = JSON.parse(json)
+  const assemblies = (parsed.assemblies ?? []).map((a: any) => ({ ...a, visible: a.visible ?? true }))
+  let parts = (parsed.parts ?? []).map((p: any) => ({ materialType: 'hardwood', ...p }))
+
+  if (!parsed.schemaVersion) {
+    // Old projects stored part positions as world-absolute. Convert member parts to local.
+    const assemblyPosMap = new Map<string, { x: number; y: number; z: number }>(
+      assemblies.map((a: any) => [a.id, a.position])
+    )
+    parts = parts.map((p: any) => {
+      if (p.assemblyId) {
+        const asmPos = assemblyPosMap.get(p.assemblyId)
+        if (asmPos) {
+          return {
+            ...p,
+            position: {
+              x: p.position.x - asmPos.x,
+              y: p.position.y - asmPos.y,
+              z: p.position.z - asmPos.z,
+            },
+          }
+        }
+      }
+      return p
+    })
+  }
+
   return {
     ...parsed,
-    parts: (parsed.parts ?? []).map((p: any) => ({ materialType: 'hardwood', ...p })),
-    assemblies: (parsed.assemblies ?? []).map((a: any) => ({ ...a, visible: a.visible ?? true })),
+    schemaVersion: 1,
+    parts,
+    assemblies,
     cutListSettings: parsed.cutListSettings ?? { sheetGoods: {}, hardwood: {}, dimensional: {} },
   } as Project
 }

@@ -2,21 +2,28 @@ import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { CAMERA_PRESETS } from '../utils/constants'
 import type { Part } from '../models/Part'
+import type { Assembly } from '../models/Assembly'
 
-function computeSceneBounds(parts: Part[]): { center: THREE.Vector3; radius: number } | null {
+function computeSceneBounds(parts: Part[], assemblies: Assembly[]): { center: THREE.Vector3; radius: number } | null {
   const visible = parts.filter((p) => p.visible !== false && p.parentId == null)
   if (visible.length === 0) return null
+
+  const assemblyPosMap = new Map(assemblies.map((a) => [a.id, a.position]))
 
   let minX = Infinity, minY = Infinity, minZ = Infinity
   let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity
 
   for (const p of visible) {
-    minX = Math.min(minX, p.position.x - p.length / 2)
-    maxX = Math.max(maxX, p.position.x + p.length / 2)
-    minY = Math.min(minY, p.position.y - p.thickness / 2)
-    maxY = Math.max(maxY, p.position.y + p.thickness / 2)
-    minZ = Math.min(minZ, p.position.z - p.width / 2)
-    maxZ = Math.max(maxZ, p.position.z + p.width / 2)
+    const asmPos = p.assemblyId ? assemblyPosMap.get(p.assemblyId) : null
+    const wx = asmPos ? p.position.x + asmPos.x : p.position.x
+    const wy = asmPos ? p.position.y + asmPos.y : p.position.y
+    const wz = asmPos ? p.position.z + asmPos.z : p.position.z
+    minX = Math.min(minX, wx - p.length / 2)
+    maxX = Math.max(maxX, wx + p.length / 2)
+    minY = Math.min(minY, wy - p.thickness / 2)
+    maxY = Math.max(maxY, wy + p.thickness / 2)
+    minZ = Math.min(minZ, wz - p.width / 2)
+    maxZ = Math.max(maxZ, wz + p.width / 2)
   }
 
   const center = new THREE.Vector3(
@@ -46,9 +53,10 @@ export function useCameraPreset(
   camera: THREE.Camera,
   controls: OrbitControlsImpl | null,
   parts: Part[],
+  assemblies: Assembly[],
 ) {
   function getBounds() {
-    const bounds = computeSceneBounds(parts)
+    const bounds = computeSceneBounds(parts, assemblies)
     if (!bounds) return { target: new THREE.Vector3(0, 0, 0), distance: 20 }
     return { target: bounds.center, distance: cameraDistanceForRadius(bounds.radius, camera) }
   }

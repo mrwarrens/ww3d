@@ -47,4 +47,28 @@ describe('deserializeProject', () => {
     expect(project.assemblies).toHaveLength(1)
     expect(project.assemblies[0].name).toBe('Frame')
   })
+
+  it('migrates old project (no schemaVersion): member part positions become local', () => {
+    const assembly = { id: 'a1', name: 'Cabinet', position: { x: 3, y: 0, z: 4 }, visible: true }
+    const part = {
+      id: 'p1', name: 'Shelf', length: 12, width: 6, thickness: 0.75,
+      position: { x: 5, y: 0.375, z: 7 }, rotation: { x: 0, y: 0, z: 0 },
+      color: '#fff', visible: true, assemblyId: 'a1',
+    }
+    const json = JSON.stringify({ id: 'proj', name: 'Old Project', parts: [part], assemblies: [assembly], gridSize: 10 })
+    const project = deserializeProject(json)
+    expect(project.parts[0].position).toEqual({ x: 2, y: 0.375, z: 3 }) // {5,0.375,7} - {3,0,4}
+  })
+
+  it('does not re-migrate a project with schemaVersion: 1', () => {
+    const assembly = { id: 'a1', name: 'Cabinet', position: { x: 3, y: 0, z: 4 }, visible: true }
+    const part = {
+      id: 'p1', name: 'Shelf', length: 12, width: 6, thickness: 0.75,
+      position: { x: 2, y: 0.375, z: 3 }, rotation: { x: 0, y: 0, z: 0 },
+      color: '#fff', visible: true, assemblyId: 'a1',
+    }
+    const json = JSON.stringify({ id: 'proj', name: 'New Project', schemaVersion: 1, parts: [part], assemblies: [assembly], gridSize: 10 })
+    const project = deserializeProject(json)
+    expect(project.parts[0].position).toEqual({ x: 2, y: 0.375, z: 3 }) // unchanged
+  })
 })

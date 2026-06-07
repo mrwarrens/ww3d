@@ -1300,8 +1300,7 @@ tasks:
       tests/cutlist-dimensional.browser.test.tsx asserting length assignments, warnings,
       and summary counts.
     deps: [115, 116, 117]
-    status: done
-
+    status: accepted
   - id: 121
     phase: 7
     name: Cut list modal overlay in design view
@@ -1532,6 +1531,59 @@ tasks:
       for Camera dropdown wiring. Help panel updated with F shortcut.
     deps: [132]
     status: accepted
+  - id: 135
+    phase: 7
+    name: Part positions relative to assembly
+    description: >
+      Change Part.position to be local (relative to its assembly's position)
+      instead of world-absolute. Assembly.position remains world-absolute and
+      acts as the parent transform. Rendering in Scene.tsx must add the
+      assembly's position to the part's local position to get the world
+      position. When a part is assigned to an assembly, convert its world
+      position to local (subtract assembly position). When removed from an
+      assembly, convert back to world (add assembly position). moveAssembly
+      should update only the assembly's position, not touch part positions.
+      movePart should store the local offset when the part is in an assembly.
+      PartPanel Px/Py/Pz should display and edit local position when in an
+      assembly. Existing saved projects store world-absolute positions;
+      deserializeProject must migrate them by subtracting the assembly
+      position from each member part on load (detect via a schema version
+      field or by the absence of a migration flag). Add unit tests for
+      assign/remove coordinate conversion and moveAssembly no longer mutating
+      parts.
+    deps: [134]
+    status: done
+  - id: 136
+    phase: 7
+    name: Duplicate assembly copies positions exactly with no offset
+    description: >
+      In duplicateAssembly (projectStore.ts), the new assembly's position
+      should be an exact copy of the source assembly position, and each
+      duplicated part's local position should be an exact copy of the source
+      part's local position. Remove the current x+1/z+1 offset applied to
+      part positions (projectStore.ts line 132). After task 135, parts store
+      local positions so no coordinate conversion is needed — just copy as-is.
+      Update the duplicate-assembly browser test to assert that the duplicated
+      assembly position and each part's position exactly match the originals.
+    deps: [135]
+    status: pending
+
+  - id: 137
+    phase: 7
+    name: Drag a part drags the whole assembly when assembly is selected
+    description: >
+      In Scene.tsx, when an assembly is selected (isAssemblySelected is true
+      and the dragged part belongs to that assembly), handleDragStart and the
+      pointer-move handler should move the assembly via moveAssembly rather
+      than moving the individual part via movePart. The drag plane and grab
+      offset should be computed from the assembly's world position (assembly
+      position + part local position gives world center). On pointer-up,
+      commit the final world position to the assembly; part local positions
+      remain unchanged throughout. Add a browser test verifying that dragging
+      a part while its assembly is selected moves all sibling parts together.
+    deps: [135]
+    status: pending
+
   - id: 134
     phase: 7
     name: Auto-frame camera after project load
@@ -1546,4 +1598,4 @@ tasks:
       project with off-origin parts, the camera target is near the scene
       centroid rather than [0,0,0].
     deps: [133]
-    status: done
+    status: accepted

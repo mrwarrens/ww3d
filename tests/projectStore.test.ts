@@ -523,6 +523,25 @@ describe('projectStore', () => {
       useProjectStore.getState().undo()
       expect(useProjectStore.getState().project.parts[0].assemblyId).toBeUndefined()
     })
+
+    it('stores local position (world minus assembly offset) when assembly has non-zero position', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          assemblies: state.project.assemblies.map((a) =>
+            a.id === assemblyId ? { ...a, position: { x: 3, y: 0, z: 4 } } : a
+          ),
+        },
+      }))
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 5, y: 0.375, z: 7 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+
+      useProjectStore.getState().assignPartToAssembly(partId, assemblyId)
+
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.position).toEqual({ x: 2, y: 0.375, z: 3 }) // {5,0.375,7} - {3,0,4}
+    })
   })
 
   describe('removePartFromAssembly', () => {
@@ -566,6 +585,37 @@ describe('projectStore', () => {
 
       useProjectStore.getState().undo()
       expect(useProjectStore.getState().project.parts[0].assemblyId).toBe(assemblyId)
+    })
+
+    it('restores world position (local plus assembly offset) when assembly has non-zero position', () => {
+      const assemblyId = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          assemblies: state.project.assemblies.map((a) =>
+            a.id === assemblyId ? { ...a, position: { x: 3, y: 0, z: 4 } } : a
+          ),
+        },
+      }))
+      // Part with local position {2, 0.375, 3} (world would be {5, 0.375, 7})
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 3 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: state.project.parts.map((p) =>
+            p.id === partId ? { ...p, assemblyId: assemblyId } : p
+          ),
+        },
+        history: [],
+        future: [],
+      }))
+
+      useProjectStore.getState().removePartFromAssembly(partId)
+
+      const part = useProjectStore.getState().project.parts[0]
+      expect(part.assemblyId).toBeUndefined()
+      expect(part.position).toEqual({ x: 5, y: 0.375, z: 7 }) // {2,0.375,3} + {3,0,4}
     })
   })
 
@@ -642,6 +692,18 @@ describe('projectStore', () => {
       expect(assemblies).toHaveLength(0)
       expect(parts[0].assemblyId).toBeUndefined()
       expect(parts[1].assemblyId).toBeUndefined()
+    })
+
+    it('part positions are unchanged because new assembly starts at origin', () => {
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 5 } })
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 4, y: 0.375, z: 1 } })
+      const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+
+      useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Cabinet')
+
+      const { parts } = useProjectStore.getState().project
+      expect(parts[0].position).toEqual({ x: 2, y: 0.375, z: 5 })
+      expect(parts[1].position).toEqual({ x: 4, y: 0.375, z: 1 })
     })
   })
 
@@ -804,7 +866,7 @@ describe('projectStore', () => {
       })
     })
 
-    it('applies x+1, z+1 offset to each copied part position', () => {
+    it('offsets new assembly by x+1, z+1 and keeps member part local positions unchanged', () => {
       const srcId = useProjectStore.getState().addAssembly('Cabinet')
       useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 3 } })
       const partId = useProjectStore.getState().project.parts[0].id
@@ -818,11 +880,15 @@ describe('projectStore', () => {
       }))
 
       const newId = useProjectStore.getState().duplicateAssembly(srcId)!
-      const { parts } = useProjectStore.getState().project
+      const { parts, assemblies } = useProjectStore.getState().project
       const original = parts.find((p) => p.id === partId)!
       const copy = parts.find((p) => p.assemblyId === newId)!
-      expect(copy.position.x).toBe(original.position.x + 1)
-      expect(copy.position.z).toBe(original.position.z + 1)
+      const srcAssembly = assemblies.find((a) => a.id === srcId)!
+      const newAssembly = assemblies.find((a) => a.id === newId)!
+      expect(newAssembly.position.x).toBe(srcAssembly.position.x + 1)
+      expect(newAssembly.position.z).toBe(srcAssembly.position.z + 1)
+      expect(copy.position.x).toBe(original.position.x)
+      expect(copy.position.z).toBe(original.position.z)
       expect(copy.position.y).toBe(original.position.y)
     })
 
@@ -1025,11 +1091,10 @@ describe('projectStore', () => {
       expect(assembly.position).toEqual({ x: 5, y: 0, z: 3 })
     })
 
-    it('shifts all member parts by the delta', () => {
+    it('does not change member part stored positions', () => {
       const id = useProjectStore.getState().addAssembly('Cabinet')
       useProjectStore.getState().addPart({ ...baseInit, position: { x: 1, y: 0.375, z: 2 } })
       const partId = useProjectStore.getState().project.parts[0].id
-      // assign part to assembly via direct setState (no history push)
       useProjectStore.setState((state) => ({
         project: {
           ...state.project,
@@ -1038,10 +1103,9 @@ describe('projectStore', () => {
           ),
         },
       }))
-      // assembly starts at {x:0,y:0,z:0}; move to {x:5,y:0,z:0} → delta x+5
       useProjectStore.getState().moveAssembly(id, { x: 5, y: 0, z: 0 })
       const part = useProjectStore.getState().project.parts[0]
-      expect(part.position.x).toBe(6)
+      expect(part.position.x).toBe(1)
       expect(part.position.z).toBe(2)
     })
 
@@ -1061,6 +1125,25 @@ describe('projectStore', () => {
       useProjectStore.getState().moveAssembly(id1, { x: 10, y: 0, z: 10 })
       const part = useProjectStore.getState().project.parts[0]
       expect(part.position).toEqual({ x: 0, y: 0.375, z: 0 })
+    })
+
+    it('updates assembly position only and never modifies member part positions', () => {
+      const id = useProjectStore.getState().addAssembly('Cabinet')
+      useProjectStore.getState().addPart({ ...baseInit, position: { x: 1, y: 0.375, z: 2 } })
+      const partId = useProjectStore.getState().project.parts[0].id
+      useProjectStore.setState((state) => ({
+        project: {
+          ...state.project,
+          parts: state.project.parts.map((p) =>
+            p.id === partId ? { ...p, assemblyId: id } : p
+          ),
+        },
+      }))
+      useProjectStore.getState().moveAssembly(id, { x: 10, y: 0, z: 8 })
+      const assembly = useProjectStore.getState().project.assemblies[0]
+      const part = useProjectStore.getState().project.parts[0]
+      expect(assembly.position).toEqual({ x: 10, y: 0, z: 8 })
+      expect(part.position).toEqual({ x: 1, y: 0.375, z: 2 })
     })
 
     it('pushes to undo history; undo restores previous positions', () => {
