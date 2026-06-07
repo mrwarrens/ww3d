@@ -67,6 +67,7 @@ function AxisLines({ length }: { length: number }) {
 
 interface DragState {
   partId: string
+  assemblyId?: string
   planeNormal: 'x' | 'y' | 'z'
   boardStartPos: { x: number; y: number; z: number }
   offsetX: number
@@ -103,6 +104,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   const removeChildPart = useProjectStore((s) => s.removeChildPart)
   const duplicateParts = useProjectStore((s) => s.duplicateParts)
   const movePart = useProjectStore((s) => s.movePart)
+  const moveAssembly = useProjectStore((s) => s.moveAssembly)
   const gl = useThree((s) => s.gl)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const camera = useThree((s) => s.camera)
@@ -143,6 +145,8 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
   selectedIdsRef.current = selectedIds
   const partsRef = useRef(parts)
   partsRef.current = parts
+  const isAssemblySelectedRef = useRef(isAssemblySelected)
+  isAssemblySelectedRef.current = isAssemblySelected
 
   // Only livePos is state — it drives re-renders during drag.
   // Everything else is in refs so handlers never go stale.
@@ -251,15 +255,29 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     const grabHit = new THREE.Vector3()
     e.ray.intersectPlane(dragPlaneRef.current, grabHit)
 
-    draggingRef.current = {
-      partId: part.id,
-      planeNormal,
-      boardStartPos: { ...partWorldPos },
-      offsetX: grabHit.x - partWorldPos.x,
-      offsetY: grabHit.y - partWorldPos.y,
-      offsetZ: grabHit.z - partWorldPos.z,
+    if (isAssemblySelectedRef.current && part.assemblyId && asmPos) {
+      // Assembly drag: livePos tracks the assembly position; offsets are relative to asmPos
+      draggingRef.current = {
+        partId: part.id,
+        assemblyId: part.assemblyId,
+        planeNormal,
+        boardStartPos: { ...asmPos },
+        offsetX: grabHit.x - asmPos.x,
+        offsetY: grabHit.y - asmPos.y,
+        offsetZ: grabHit.z - asmPos.z,
+      }
+      setLivePos({ ...asmPos })
+    } else {
+      draggingRef.current = {
+        partId: part.id,
+        planeNormal,
+        boardStartPos: { ...partWorldPos },
+        offsetX: grabHit.x - partWorldPos.x,
+        offsetY: grabHit.y - partWorldPos.y,
+        offsetZ: grabHit.z - partWorldPos.z,
+      }
+      setLivePos({ ...partWorldPos })
     }
-    setLivePos({ ...partWorldPos })
 
     // DOM-level handlers: raycasting against the THREE.Plane bypasses any
     // mesh-occlusion issues that arise with the invisible-plane approach.
@@ -290,7 +308,13 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     const up = (_ev: PointerEvent) => {
       const d = draggingRef.current
       const pos = livePosRef.current
-      if (d && pos) movePart(d.partId, { x: pos.x, y: pos.y, z: pos.z })
+      if (d && pos) {
+        if (d.assemblyId) {
+          moveAssembly(d.assemblyId, { x: pos.x, y: pos.y, z: pos.z })
+        } else {
+          movePart(d.partId, { x: pos.x, y: pos.y, z: pos.z })
+        }
+      }
       if (controls) controls.enabled = true
       draggingRef.current = null
       dragPlaneRef.current = null
@@ -307,7 +331,7 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
     gl.domElement.setPointerCapture(e.pointerId)
     gl.domElement.addEventListener('pointermove', move)
     gl.domElement.addEventListener('pointerup', up)
-  }, [camera, controls, gl, movePart, raycaster])
+  }, [camera, controls, gl, moveAssembly, movePart, raycaster])
 
   return (
     <>
@@ -343,12 +367,20 @@ export default function Scene({ selectedIds, onSelectIds, onSelectAssembly, came
         const worldPos = asmPos
           ? { x: p.position.x + asmPos.x, y: p.position.y + asmPos.y, z: p.position.z + asmPos.z }
           : p.position
+        let displayPos = worldPos
+        if (livePos) {
+          if (draggingRef.current?.assemblyId && draggingRef.current.assemblyId === p.assemblyId) {
+            displayPos = { x: p.position.x + livePos.x, y: p.position.y + livePos.y, z: p.position.z + livePos.z }
+          } else if (draggingRef.current?.partId === p.id && !draggingRef.current.assemblyId) {
+            displayPos = livePos
+          }
+        }
         return (
           <Board
             key={p.id}
             ref={(mesh) => { if (mesh) meshRefs.current.set(p.id, mesh); else meshRefs.current.delete(p.id) }}
             {...p}
-            position={draggingRef.current?.partId === p.id && livePos ? livePos : worldPos}
+            position={displayPos}
             isSelected={selectedIds.includes(p.id)}
             onSelect={() => onSelectIds([p.id])}
             onDragStart={(e) => handleDragStart(e, p)}

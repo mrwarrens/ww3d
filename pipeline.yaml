@@ -1581,8 +1581,7 @@ tasks:
       remain unchanged throughout. Add a browser test verifying that dragging
       a part while its assembly is selected moves all sibling parts together.
     deps: [135]
-    status: pending
-
+    status: done
   - id: 134
     phase: 7
     name: Auto-frame camera after project load
