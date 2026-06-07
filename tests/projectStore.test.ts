@@ -866,7 +866,7 @@ describe('projectStore', () => {
       })
     })
 
-    it('offsets new assembly by x+1, z+1 and keeps member part local positions unchanged', () => {
+    it('places new assembly at same position as source and keeps member part local positions unchanged', () => {
       const srcId = useProjectStore.getState().addAssembly('Cabinet')
       useProjectStore.getState().addPart({ ...baseInit, position: { x: 2, y: 0.375, z: 3 } })
       const partId = useProjectStore.getState().project.parts[0].id
@@ -885,8 +885,9 @@ describe('projectStore', () => {
       const copy = parts.find((p) => p.assemblyId === newId)!
       const srcAssembly = assemblies.find((a) => a.id === srcId)!
       const newAssembly = assemblies.find((a) => a.id === newId)!
-      expect(newAssembly.position.x).toBe(srcAssembly.position.x + 1)
-      expect(newAssembly.position.z).toBe(srcAssembly.position.z + 1)
+      expect(newAssembly.position.x).toBe(srcAssembly.position.x)
+      expect(newAssembly.position.y).toBe(srcAssembly.position.y)
+      expect(newAssembly.position.z).toBe(srcAssembly.position.z)
       expect(copy.position.x).toBe(original.position.x)
       expect(copy.position.z).toBe(original.position.z)
       expect(copy.position.y).toBe(original.position.y)

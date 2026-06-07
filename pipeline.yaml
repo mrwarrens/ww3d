@@ -1566,8 +1566,7 @@ tasks:
       Update the duplicate-assembly browser test to assert that the duplicated
       assembly position and each part's position exactly match the originals.
     deps: [135]
-    status: pending
-
+    status: done
   - id: 137
     phase: 7
     name: Drag a part drags the whole assembly when assembly is selected

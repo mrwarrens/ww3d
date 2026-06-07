@@ -120,4 +120,25 @@ describe('Duplicate an Assembly (Cmd+D)', () => {
       expect(members).toHaveLength(2)
     }
   })
+
+  it('duplicate assembly lands at same position as source (no offset)', () => {
+    useProjectStore.getState().addPart({
+      length: 4, width: 3,
+      position: { x: 0, y: BOARD_THICKNESS / 2, z: 0 },
+      color: '#ff0000',
+    })
+    const partIds = useProjectStore.getState().project.parts.map((p) => p.id)
+    useProjectStore.getState().groupPartsIntoAssembly(partIds, 'Assembly 1')
+
+    const assemblyId = useProjectStore.getState().project.assemblies[0].id
+    useProjectStore.getState().moveAssembly(assemblyId, { x: 3, y: 0, z: 5 })
+
+    const sourcePos = useProjectStore.getState().project.assemblies[0].position
+    useProjectStore.getState().duplicateAssembly(assemblyId)
+
+    const { assemblies } = useProjectStore.getState().project
+    const duplicate = assemblies.find((a) => a.id !== assemblyId)!
+
+    expect(duplicate.position).toEqual(sourcePos)
+  })
 })

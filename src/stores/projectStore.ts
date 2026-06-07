@@ -125,7 +125,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!source) return null
     const newAssembly = {
       ...createAssembly(source.name),
-      position: { x: source.position.x + 1, y: source.position.y, z: source.position.z + 1 },
+      position: { ...source.position },
     }
     const memberParts = get().project.parts.filter((p) => p.assemblyId === id)
     const newParts = memberParts.map((p) => ({
